@@ -49,6 +49,15 @@ Sono state eliminate le segnalazioni relative a chiavi esterne senza indice, riv
 - Build locale di produzione e `npm run verify:build` superati prima della pubblicazione. Nessun codice applicativo cambiato durante l’attivazione dell’hosting.
 - **Limite del controllo esterno:** il browser dell’agente non ha completato l’avvio (`Browser Use could not read requirements`, poi trasporto disconnesso). La richiesta HTTP dal terminale è stata respinta dal proxy dell’ambiente (`Tunnel connection failed: 403 Forbidden`). Questi errori non sono una verifica della risposta del sito: il deploy è confermato dal servizio Cloudflare, ma pagina, login e header ricevuti da un browser reale restano da collaudare.
 
+
+## Revisione logo, caratteri e icone
+
+Il 14 novembre 2026, su richiesta esplicita dell'utente, il commit `2a1142e1b5bc8abb92e85a6675e0bb9c9e4644da` è stato inviato su GitHub `main`. Include il logo rivisto, Fraunces normale/corsivo locale, nove icone SVG coordinate, font nella cache PWA e confronti visuali con licenze. Sono conservate le correzioni già presenti su `main` per safe area, schede Premi, testi lunghi e spaziature.
+
+Dopo l'integrazione sono stati ripetuti con esito positivo i 43 test, le build demo e produzione, il controllo PWA e le verifiche Chromium delle viste e della riapertura offline. Nessuna verifica su iPhone reale implicita.
+
+Al controllo successivo al push l'API Cloudflare indica ancora come deploy di produzione `b88b5509-cee2-4b54-b2e6-755df152448d`, commit `bc6cfbba57f71f9baf1249027d29b6b9c9838974`; non risultano deploy del nuovo commit. Il trigger automatico resta abilitato nella configurazione, ma questa pubblicazione non è confermata. Il tentativo di avvio manuale è stato rifiutato dal controllo automatico delle autorizzazioni, che richiede consenso esplicito alla pubblicazione su Cloudflare oltre al push; nessun deploy manuale è stato eseguito. Per il controllo HTTP pubblico il proxy dell'ambiente continua a rispondere 403 al tunnel, senza fornire la risposta del sito.
+
 ## Ancora da verificare
 
 - Login reale con password e chiamate PostgREST dal browser. Il tentativo HTTP dall'ambiente di sviluppo non ha potuto risolvere il dominio del progetto (`EAI_AGAIN`); la connessione MCP al database funziona. Non dichiarare quel controllo HTTP superato.

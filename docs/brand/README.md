@@ -47,4 +47,4 @@ Build demo, verifica manifest/icone/caratteri/cache offline e 43 test esistenti 
 
 Riapertura della demo in Chromium senza rete superata: Fraunces normale e corsivo presenti nella cache e caricati dopo la riapertura; font, logo e icone senza richieste a risorse esterne o errori JavaScript. Lo script `verify:build` controlla il formato WOFF2 e l'inclusione di ciascun font nella cache del service worker, per prevenire regressioni dell'aspetto offline.
 
-Non verificati Safari o un iPhone reale; questa revisione non è stata pubblicata. Le installazioni esistenti possono conservare l'icona Home precedente anche dopo un successivo aggiornamento del sito.
+Non verificati Safari o un iPhone reale. Revisione inviata su `main` con commit `2a1142e`, dopo integrazione delle correzioni di safe area e spaziature e ripetizione dei controlli; al controllo dopo il push il deploy Cloudflare è ancora quello precedente, quindi questa revisione non risulta pubblicata. Le installazioni esistenti possono conservare l'icona Home precedente anche dopo un successivo aggiornamento del sito.
