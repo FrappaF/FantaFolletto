@@ -14,7 +14,7 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 - L'utente ha scelto una webapp con account e dati condivisi e ha approvato **React + Vite**.
 - La direzione di design confermata è **Diario**. La proposta alternativa Missione non è la direzione da sviluppare.
 - Le priorità espresse sono **ottimizzazione per iPhone, velocità e stabilità**, con budget di hosting molto contenuto.
-- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Al momento della stesura non esiste ancora un'app implementata.
+- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato l'avvio dello sviluppo e una roadmap per sprint: ora esiste la demo locale dello sprint 1, descritta sotto.
 
 ## 2. Stato e grado delle decisioni
 
@@ -32,7 +32,7 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 
 ### Baseline proposta dalla ricerca
 
-Le scelte seguenti costituiscono il punto di partenza tecnico consigliato, non una configurazione già presente né decisioni tutte approvate singolarmente:
+Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla ricerca. Le parti effettivamente adottate sono elencate nello stato reale; le altre non sono ancora configurate né tutte approvate singolarmente:
 
 - TypeScript per il codice applicativo.
 - Cloudflare Pages per ospitare il frontend statico.
@@ -42,14 +42,20 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato, non u
 - `vite-plugin-pwa` per manifest, risorse offline e gestione degli aggiornamenti.
 - CSS leggero, carattere di sistema e icone essenziali per il design.
 
-### Stato reale alla creazione del documento
+### Stato reale dopo lo sprint 1
 
-- Repository inizialmente vuoto; questa consegna introduce la documentazione su `main`.
-- Nessun frontend, dipendenza applicativa, schema SQL, account o servizio di hosting configurato.
-- È stato esplorato un concept interattivo nella conversazione, con dati fittizi; non costituisce l'applicazione.
-- Non sono stati eseguiti test sul telefono reale.
+- React + Vite + TypeScript implementati; build statica, CSS con safe area, navigazione e modalità scura, admin caricato separatamente.
+- Schermate Diario Oggi, Record e Premi; selezione/ricerca eventi, registrazione, annullamento tracciato, cronologia e classifica personale per giorni/settimane.
+- Anteprima admin: riepilogo, creazione/modifica/archiviazione eventi e premi, esportazione JSON. Non è protetta da login e viene indicata come demo.
+- IndexedDB locale dedicato alla demo, transazioni atomiche, deduplicazione degli identificativi, snapshot di punti/nome/versione, aggiornamento tra schede. La UI conferma dopo la persistenza; dati incompatibili non vengono azzerati.
+- Eventi e premi iniziali sono esempi modificabili. I progressi premi sono derivati dai dati attuali: non esistono ancora assegnazioni storiche, consegne o condizioni definitive.
+- Nessun backend Supabase, schema SQL, account reale, condivisione tra dispositivi o hosting configurato. Nessun service worker, installazione PWA o coda verso il server: il salvataggio locale non è la sincronizzazione offline definitiva.
+- Test automatici su dominio/calendario, IndexedDB simulato e percorso UI in jsdom; workflow GitHub per test e build. Anteprima visuale non verificata per indisponibilità del relay dell'ambiente; nessun test sul telefono reale.
+- La roadmap e i criteri di completamento sono in [ROADMAP.md](ROADMAP.md); l'avvio e i limiti sono in [README.md](../README.md).
 
 Aggiornare questa sezione quando lo stato cambia. Non confondere il comportamento desiderato con quello effettivamente disponibile.
+
+Le sezioni architetturali seguenti descrivono il comportamento finale da raggiungere: lo stato qui sopra specifica quali parti esistono davvero. La demo locale non è un'autorizzazione a usare un selettore di ruolo nella versione con account.
 
 ## 3. Idea di gioco e perimetro
 
@@ -271,6 +277,8 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Scelta del concept Diario | Guida per interfaccia e tono del prodotto |
 | 2026-11-14 | Admin abilitato a gestire eventi e premi | Superata la proposta di admin in sola lettura |
 | 2026-11-14 | Contesto persistente nel repository, richiamato da AGENTS.md | Rilettura e manutenzione richieste per le modifiche future |
+| 2026-11-14 | Avvio dello sviluppo e roadmap richiesta dall'utente | Quattro sprint: Diario locale, dati condivisi/account, affidabilità offline/PWA, verifica e consegna |
+| 2026-11-14 | Sprint 1 implementato con TypeScript e persistenza IndexedDB demo | Esperienza provabile senza servizi esterni; nessun account, sincronizzazione o premio definitivo simulato come reale |
 
 ## 12. Fonti della ricerca
 
