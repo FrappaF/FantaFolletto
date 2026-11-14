@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trophy } from 'lucide-react'
+import { RecordIcon } from './DiaryIcons'
 import type { Diary } from '../domain/model'
 import { formatDay, rankings, statistics } from '../domain/stats'
 import { EmptyState, SectionHeading } from './ui'
@@ -63,7 +63,7 @@ export function Records({
               <li key={row.date}>
                 <span className={`rank ${index === 0 ? 'first' : ''}`}>
                   {index === 0 ? (
-                    <Trophy size={19} aria-label="Primo posto" />
+                    <RecordIcon size={19} aria-label="Primo posto" />
                   ) : (
                     index + 1
                   )}

@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
-import { BookOpen, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { DiaryView } from '../App'
 import { Modal } from '../components/ui'
+import { Brand } from '../components/Brand'
 import { makeClient, type RemoteConfig } from './client'
 import { useRemoteDiary } from './useRemoteDiary'
 
@@ -108,10 +109,9 @@ export default function RemoteApplication({
     return (
       <div className="app login-page">
         <section className="panel">
-          <span className="empty-icon">
-            <BookOpen size={29} aria-hidden="true" />
-          </span>
-          <span className="eyebrow">FantaFolletto</span>
+          <div className="login-brand">
+            <Brand />
+          </div>
           <h1>
             Una nuova pagina
             <br />

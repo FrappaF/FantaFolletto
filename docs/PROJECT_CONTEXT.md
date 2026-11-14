@@ -40,13 +40,15 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - TanStack Query per richieste, cache e aggiornamento dei dati.
 - IndexedDB per cache locale e coda persistente degli inserimenti.
 - `vite-plugin-pwa` per manifest, risorse offline e gestione degli aggiornamenti.
-- CSS leggero, carattere di sistema e icone essenziali per il design.
+- CSS leggero, carattere di sistema per i testi operativi e Fraunces locale per l'identità e i titoli; icone SVG essenziali per il design.
 
 ### Stato reale dopo la pubblicazione
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
 - Spaziatura superiore: 24 px aggiuntivi oltre la safe area su tutte le pagine, 48 px per il login, anche nella versione aggiunta alla Home. La regola per schermi larghi conserva questo spazio. Modifica richiesta dopo il riscontro dell’utente sul login troppo in alto e sulle pagine vicine alla Dynamic Island; verifica finale sul dispositivo ancora necessaria.
 - Revisione spaziature: la vista Premi usa un contenitore a griglia con 24 px tra catalogo e premi conquistati, anche senza premi disponibili. Rimosso il margine superiore annullato dalla regola generica dei pannelli; niente paragrafi vuoti per descrizioni assenti e niente margine finale aggiuntivo nel messaggio dei premi ancora vuoti. Marchio, azioni, classifiche e titoli gestiscono meglio spazi stretti e testi lunghi.
+- Identità visiva rivista su richiesta dell'utente: F avorio con cappello da folletto, campanellino e scintilla dorati su verde bosco; lettering serif con seconda parte corsiva. Un unico componente `Brand` per intestazione e accesso; favicon e icone PWA/iPhone derivate dallo stesso originale. Modifica presente nel codice locale, non ancora pubblicata. Originale e note in `docs/brand/`; verifiche Chromium della demo a 320/375/393/430/768 px, temi chiaro/scuro e spazio per due azioni dell'intestazione superate. Nessuna prova su iPhone reale implicita.
+- Dopo il confronto visuale Lora/Fraunces/DM Serif Display, l'utente ha scelto **Fraunces**: normale e corsivo variabili latini ospitati nell'app (circa 81 KiB complessivi, OFL 1.1), usati per nome, titoli, punteggi principali e citazione. Testi operativi e moduli mantengono il carattere di sistema. Font inclusi nella cache PWA e verificati dallo script di build. Nove icone SVG originali in `DiaryIcons.tsx` coordinano navigazione, premi, stati vuoti ed eventi demo; i comandi mantengono Lucide. Corrette le associazioni risata/cuore e pioggia/sole. Gli eventi con identificativi non riconosciuti usano la scintilla generica, senza modificare il modello dati. Verificati in Chromium demo Oggi/Record/Premi, selettore eventi e riepilogo admin nei due temi a 320/375/393/430/768 px; riapertura senza rete con entrambi i font e le icone disponibile, senza risorse esterne o errori JavaScript. I 43 test esistenti e la build PWA sono superati. Confronti visuali in `docs/brand/`; anche questa revisione è locale, non pubblicata e non collaudata su Safari/iPhone reale.
 - Due modalità distinte: demo locale esplicita, oppure `remote` con login email/password e ruolo letto dal database. La produzione senza configurazione non apre una demo né un falso admin. `.env.example` descrive le sole variabili pubbliche; `.env.demo` abilita una build demo separata.
 - Schema Supabase applicato al progetto reale, con migrazioni `20261114130522_diary.sql` e `20261114131302_tighten_diary_permissions.sql`: profili e ruoli protetti, eventi/versioni, episodi, premi, assegnazioni storiche, consegne e audit admin. RLS e grant negano le scritture dirette dal browser; le RPC controllano ruolo, versione e deduplicazione.
 - Login/logout e recupero assistito dall'operatore implementati nel codice; nessuna registrazione pubblica o email di recupero promessa senza configurazione. `scripts/reset-password.mjs` usa una chiave segreta solo fuori dal frontend e una password da stdin nascosto.
@@ -116,10 +118,18 @@ Indicazioni tratte dal concept selezionato:
 - Superfici chiare e morbide, con adattamento alla modalità scura.
 - Verde come accento principale; riferimento iniziale del concept: `#27744e`.
 - Fondo chiaro iniziale `#fafbf8` e testo scuro verdastro `#20382a`, da verificare per contrasto nei componenti reali.
-- Carattere di sistema, numeri grandi per il punteggio, gerarchia semplice.
+- Carattere di sistema per testi e comandi; Fraunces locale per nome, titoli e punteggi principali, numeri grandi e gerarchia semplice.
 - Angoli arrotondati e decorazioni contenute.
 - Testi brevi, in italiano, con tono affettuoso e giocoso.
 - Le scelte cromatiche sono una baseline modificabile; la preferenza confermata riguarda la direzione Diario, non ogni singolo valore grafico.
+
+### Identità visiva implementata
+
+Il 14 novembre 2026 l'utente ha richiesto un logo più curato. La proposta implementata usa una F il cui tratto superiore diventa un cappello da folletto, accompagnato da campanellino e scintilla dorati. Il simbolo avorio su verde bosco richiama il nome e le piccole conquiste personali. Nel confronto successivo tra Lora, Fraunces e DM Serif Display, l'utente ha scelto esplicitamente Fraunces, che ora sostituisce il precedente lettering serif di sistema. «Folletto» rimane in corsivo. Il carattere è servito localmente e incluso nella cache offline; non si dipende da richieste a Google Fonts.
+
+`src/components/Brand.tsx` mantiene coerenti intestazione del diario e accesso. Favicon, icona Home iPhone e icone PWA usano lo stesso simbolo; il file maskable ha fondo pieno e margini per il ritaglio. Il sorgente raster e le indicazioni di esportazione sono in [brand/README.md](brand/README.md). La direzione Diario e i colori dell'interfaccia restano quelli definiti sopra.
+
+`src/components/DiaryIcons.tsx` contiene nove simboli SVG con tratto arrotondato, dettagli oro e la scintilla a quattro punte del logo: diario, coccarda record, regalo, scintilla, caffè, impronta, sorriso, pioggia e tesserino del nome. Le icone decorative sono escluse dall'albero accessibile; un'icona con etichetta esplicita espone il ruolo immagine. Frecce, chiusura, aggiunta, annullamento, impostazioni e sincronizzazione mantengono i simboli Lucide già utilizzati. La personalizzazione non aggiunge un selettore di icone al catalogo né nuovi campi nel database.
 
 ### Navigazione della giocatrice
 
@@ -244,7 +254,7 @@ L'SMTP predefinito di Supabase ha limitazioni sulle email verso utenti esterni a
 
 ### Prestazioni
 
-- Caratteri di sistema e poche risorse iniziali.
+- Caratteri di sistema per i testi operativi e due file Fraunces latini locali per la tipografia espressiva; precaricamento del solo normale, `font-display: swap` e cache offline per entrambi.
 - Caricamento separato delle viste admin quando utile.
 - Riscontro immediato del tocco e stato locale coerente con la coda persistente.
 - Cache per il riutilizzo dell'app, con dati datati riconoscibili.
@@ -313,6 +323,8 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Utente autorizza l’agente a pubblicare tramite Cloudflare | Pages collegato a GitHub `main`, produzione remota su `fantafolletto.pages.dev`, anteprime automatiche disabilitate; deploy confermato da Cloudflare, verifica browser/iPhone ancora da completare |
 | 2026-11-14 | Utente segnala login Home troppo in alto e pagine vicine alla Dynamic Island | Spazio superiore aggiuntivo rispetto alla safe area: 48 px sul login e 24 px nelle altre pagine, preservato anche sugli schermi larghi |
 | 2026-11-14 | Utente segnala spaziature irregolari mostrando le schede Premi attaccate | Griglia con distanza esplicita fra sezioni, descrizioni vuote omesse e allineamenti protetti per contenuti lunghi; revisione visuale locale in Chromium con dati fittizi |
+| 2026-11-14 | Utente richiede una revisione più curata del logo | Realizzata identità F/cappello/scintilla, lettering serif e risorse coordinate per app/PWA/iPhone; verifica locale superata, pubblicazione di questa modifica non eseguita |
+| 2026-11-14 | Utente richiede prove di font e coerenza delle icone; sceglie Fraunces tra tre anteprime | Fraunces normale/corsivo locale per identità e titoli; carattere di sistema nei comandi; nove SVG coordinati e associazioni degli eventi corrette; font inclusi nella cache PWA, revisione non pubblicata |
 
 ## 12. Fonti della ricerca
 

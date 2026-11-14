@@ -24,6 +24,15 @@ const worker = await readFile(resolve(output, 'sw.js'), 'utf8')
 const cached = new Set(
   [...worker.matchAll(/url:\s*["']([^"']+)["']/g)].map((match) => match[1]),
 )
+for (const font of await readdir(resolve(output, 'fonts'))) {
+  if (!font.endsWith('.woff2')) continue
+  const file = await readFile(resolve(output, 'fonts', font))
+  assert.equal(file.toString('ascii', 0, 4), 'wOF2')
+  assert.ok(
+    cached.has(`fonts/${font}`),
+    `Il carattere deve essere disponibile offline: ${font}`,
+  )
+}
 assert.ok(
   cached.has('index.html'),
   'La pagina iniziale deve essere disponibile offline',

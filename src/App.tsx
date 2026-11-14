@@ -1,14 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
-  BookOpen,
   Check,
-  Gift,
-  Leaf,
   Plus,
   Settings2,
-  Sparkles,
-  Trophy,
   WifiOff,
   X,
   LogOut,
@@ -36,6 +31,13 @@ import { SyncStatus, type RemoteState } from './components/SyncStatus'
 import { Awards } from './components/Awards'
 import { PwaPrompt } from './components/PwaPrompt'
 import { InstallHint } from './components/InstallHint'
+import { Brand } from './components/Brand'
+import {
+  DiaryIcon,
+  GiftIcon,
+  RecordIcon,
+  SparkleIcon,
+} from './components/DiaryIcons'
 
 const Admin = lazy(() => import('./components/Admin'))
 const RemoteApplication = lazy(() => import('./remote/RemoteApplication'))
@@ -198,7 +200,7 @@ export function DiaryView({
       )}
       <header className="app-header">
         <a
-          className="brand"
+          className="brand-home"
           href="#"
           onClick={(event) => {
             event.preventDefault()
@@ -207,13 +209,7 @@ export function DiaryView({
           }}
           aria-label="FantaFolletto, torna a Oggi"
         >
-          <span className="brand-mark">
-            <Leaf size={22} strokeWidth={1.7} />
-          </span>
-          <span>
-            fanta<span className="brand-light">folletto</span>
-            <small>Il diario delle piccole avventure</small>
-          </span>
+          <Brand />
         </a>
         <div className="header-actions">
           {(!remote || remote.role === 'admin') && (
@@ -253,7 +249,7 @@ export function DiaryView({
         )}
         {!diary ? (
           <section className="panel loading-state" aria-live="polite">
-            <BookOpen size={32} aria-hidden="true" />
+            <DiaryIcon size={32} />
             <h1>
               {error || remote?.syncError
                 ? 'Il diario ha bisogno di una mano'
@@ -327,7 +323,7 @@ export function DiaryView({
                       aria-label="Il riepilogo della tua giornata"
                     >
                       <div className="score-flower" aria-hidden="true">
-                        <Sparkles size={108} strokeWidth={0.6} />
+                        <SparkleIcon size={108} strokeWidth={0.6} />
                       </div>
                       <span className="score-label">
                         La tua giornata, in punti
@@ -476,9 +472,9 @@ export function DiaryView({
         <nav className="bottom-nav" aria-label="Navigazione principale">
           {(
             [
-              { id: 'today', label: 'Oggi', icon: BookOpen },
-              { id: 'records', label: 'Record', icon: Trophy },
-              { id: 'rewards', label: 'Premi', icon: Gift },
+              { id: 'today', label: 'Oggi', icon: DiaryIcon },
+              { id: 'records', label: 'Record', icon: RecordIcon },
+              { id: 'rewards', label: 'Premi', icon: GiftIcon },
             ] as const
           ).map((item) => (
             <button

@@ -1,5 +1,21 @@
+/* Fraunces, sottoinsieme latino originale Fontsource, licenza OFL 1.1. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-italic.woff2') format('woff2');
+}
+
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-ui);
   color: #20382a;
   background: #fafbf8;
   font-synthesis: none;
@@ -19,6 +35,8 @@
   --danger: #a43d36;
   --shadow: 0 8px 32px #243b2510;
   --page-top-space: 24px;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .header-actions {
@@ -201,6 +219,12 @@ p {
 svg {
   flex-shrink: 0;
 }
+.diary-icon-accent {
+  stroke: var(--gold);
+}
+.score-flower .diary-icon-accent {
+  stroke: currentColor;
+}
 small {
   font-size: 12px;
 }
@@ -238,40 +262,65 @@ small {
   gap: 10px;
   padding: 15px 0 27px;
 }
+.brand-home {
+  min-width: 0;
+  text-decoration: none;
+  border-radius: 14px;
+}
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  text-decoration: none;
   min-width: 0;
-  font-size: clamp(18px, 5.4vw, 21px);
-  font-weight: 720;
-  letter-spacing: -0.8px;
+  max-width: 100%;
+  color: var(--ink);
 }
-.brand > span:last-child {
+.brand-copy {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.brand-light {
-  font-weight: 430;
+.brand-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5.6vw, 25px);
+  font-weight: 650;
+  letter-spacing: -0.85px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.brand-name em {
+  font-weight: 450;
 }
 .brand small {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 450;
   color: var(--muted);
-  letter-spacing: 0.05px;
-  margin-top: 4px;
+  letter-spacing: 0.1px;
+  line-height: 1.5;
+  margin-top: 5px;
 }
 .brand-mark {
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
+  display: block;
   border-radius: 14px;
-  background: var(--green-soft);
-  color: var(--green);
+  background: #20563d;
+}
+.login-brand {
+  margin-bottom: 34px;
+}
+.login-brand .brand-mark {
+  width: 64px;
+  height: 64px;
+  border-radius: 19px;
+}
+.login-brand .brand-name {
+  font-size: clamp(22px, 6vw, 30px);
+}
+.login-brand .brand small {
+  font-size: 10px;
 }
 .icon-button {
   border: 0;
@@ -313,6 +362,21 @@ main {
 .page-title {
   margin: 10px 0 26px;
 }
+.page-title h1,
+.login-page h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 7.65vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.75px;
+  line-height: 1.2;
+}
+.section-heading h2,
+.reward-card h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
 .page-title > p {
   color: var(--muted);
   font-size: 14px;
@@ -340,7 +404,8 @@ main {
   align-items: baseline;
   gap: 10px;
   font-size: 75px;
-  font-weight: 550;
+  font-family: var(--font-display);
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: -4px;
   margin: 9px 0 18px;
@@ -349,6 +414,7 @@ main {
   overflow-wrap: anywhere;
 }
 .score-number > span {
+  font-family: var(--font-ui);
   font-size: 15px;
   letter-spacing: 0;
   font-weight: 450;
@@ -458,7 +524,6 @@ main {
   margin: 0 0 16px;
 }
 .section-heading h2 {
-  font-size: 16px;
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -619,8 +684,6 @@ main {
   font-weight: 550;
 }
 .reward-card h3 {
-  font-size: 19px;
-  letter-spacing: -0.4px;
   overflow-wrap: anywhere;
 }
 .reward-card p {
@@ -687,7 +750,7 @@ progress::-moz-progress-bar {
   margin: 0;
 }
 .diary-quote {
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-style: italic;
   text-align: center;
   color: var(--muted);
@@ -748,6 +811,8 @@ progress::-moz-progress-bar {
   line-height: 1.5;
 }
 .stat-grid strong {
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 36px;
   letter-spacing: -1px;
   display: block;
@@ -921,7 +986,10 @@ dialog::backdrop {
   margin-bottom: 13px;
 }
 .modal-heading h2 {
+  font-family: var(--font-display);
   font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
   overflow-wrap: anywhere;
 }
 .modal-heading > div {

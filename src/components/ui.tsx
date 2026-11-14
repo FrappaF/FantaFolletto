@@ -1,28 +1,30 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { ArrowUpRight, X } from 'lucide-react'
 import {
-  ArrowUpRight,
-  Coffee,
-  Dog,
-  Gift,
-  Heart,
-  Sparkles,
-  Sun,
-  X,
-} from 'lucide-react'
+  CoffeeIcon,
+  GiftIcon,
+  NameIcon,
+  PawIcon,
+  RainIcon,
+  SmileIcon,
+  SparkleIcon,
+} from './DiaryIcons'
 import type { Diary, Reward } from '../domain/model'
 import { rewardProgress } from '../domain/stats'
 
 export function EventIcon({ id }: { id: string }) {
   const Icon =
     id === 'coffee'
-      ? Coffee
+      ? CoffeeIcon
       : id === 'pet'
-        ? Dog
+        ? PawIcon
         : id === 'laugh'
-          ? Heart
+          ? SmileIcon
           : id === 'rain'
-            ? Sun
-            : Sparkles
+            ? RainIcon
+            : id === 'name'
+              ? NameIcon
+              : SparkleIcon
   return (
     <span className={`event-icon event-icon-${id}`}>
       <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
@@ -39,7 +41,7 @@ export function EmptyState({
   children: ReactNode
   icon?: 'sparkles' | 'gift'
 }) {
-  const Icon = icon === 'gift' ? Gift : Sparkles
+  const Icon = icon === 'gift' ? GiftIcon : SparkleIcon
   return (
     <div className="empty-state">
       <span className="empty-icon">
@@ -120,7 +122,7 @@ export function RewardCard({
     >
       <div className="reward-top">
         <span className="reward-icon">
-          <Gift size={23} strokeWidth={1.6} aria-hidden="true" />
+          <GiftIcon size={23} />
         </span>
         <span className="badge">
           {reward.period === 'week' ? 'Questa settimana' : 'Senza scadenza'}
