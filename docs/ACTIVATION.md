@@ -91,3 +91,12 @@ Gli advisor segnalano otto RPC `SECURITY DEFINER` intenzionali, con controlli di
 Push su `main`: `803004729bdefdbd945c0b8e5a886e557f1ed394`. Deploy di produzione `940b7983-8a62-4f17-a206-4aa47a419b58`, build e fase deploy `success`, concluso il 14 novembre 2026 alle **22:50:05 UTC**. URL stabile [fantafolletto.pages.dev](https://fantafolletto.pages.dev). Avviato manualmente sul branch `main`: al controllo dopo il push non risultava un deploy automatico nuovo. La configurazione automatica non è stata modificata.
 
 Richiesta HTTP pubblica dall’ambiente: `403 Forbidden` con risposta del proxy Envoy. Questa prova non certifica rendering o login del sito; la pubblicazione è confermata dal servizio Cloudflare. Nessuna cancellazione di dati o cache richiesta. Nell’app già aperta usare «Aggiorna app» quando disponibile, completando prima eventuali invii.
+
+
+## Spaziature Note e Combo — 14 novembre 2026
+
+Su richiesta esplicita dell’utente, eseguito pull con rebase da `main` fino a `8bd1016`, includendo il nuovo cestino negli episodi. Commit `c871829d0ad82141bdb5f81fb21ce5db4fe7d2cf` inviato su `main`: spaziature delle raccolte, campi della nuova nota uniformi e pulsanti di salvataggio a destra. Dopo l’integrazione: 82 test, build di produzione e verifica PWA superati. Controlli responsive precedenti in Chromium a 320/375/393/430/768 px nei due temi; nessuna verifica Safari/iPhone reale dichiarata.
+
+Cloudflare Pages: pubblicazione avviata manualmente da `main`, deploy `2b73c932-8970-44a0-aaa6-3fac5a57445e`, build e deploy `success`, completato alle **23:43:41 UTC**. URL di produzione [fantafolletto.pages.dev](https://fantafolletto.pages.dev). Nessun nuovo deploy automatico osservato al controllo immediatamente successivo al push; configurazione Git invariata. Nessuna modifica al database o ai dati di gioco.
+
+La richiesta HTTP pubblica è stata bloccata dal proxy dell’ambiente (`CONNECT tunnel failed`, 403); il rilascio è confermato dall’API Cloudflare, senza dichiarare superati rendering pubblico o login reale. Nell’app già aperta usare «Aggiorna app» quando compare.
