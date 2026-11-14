@@ -1,19 +1,56 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function PwaPrompt() {
   const [blocked, setBlocked] = useState(false)
   const [error, setError] = useState('')
+  const registration = useRef<ServiceWorkerRegistration | undefined>(undefined)
+  const checking = useRef(false)
+  const checkForUpdate = useCallback(async () => {
+    if (
+      !registration.current ||
+      checking.current ||
+      document.visibilityState === 'hidden' ||
+      !navigator.onLine
+    )
+      return
+    checking.current = true
+    try {
+      await registration.current.update()
+    } catch {
+      // Un controllo senza rete non invalida la versione già disponibile offline.
+    } finally {
+      checking.current = false
+    }
+  }, [])
   const {
     needRefresh: [needRefresh],
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
+    immediate: true,
+    onRegisteredSW: (_url, value) => {
+      registration.current = value
+      void checkForUpdate()
+    },
     onRegisterError: () =>
       setError(
         'La modalità offline non è ancora pronta. Riapri il diario online per completarla.',
       ),
   })
+  useEffect(() => {
+    const check = () => void checkForUpdate()
+    window.addEventListener('focus', check)
+    window.addEventListener('online', check)
+    document.addEventListener('visibilitychange', check)
+    const interval = window.setInterval(check, 5 * 60 * 1000)
+    return () => {
+      window.removeEventListener('focus', check)
+      window.removeEventListener('online', check)
+      document.removeEventListener('visibilitychange', check)
+      window.clearInterval(interval)
+    }
+  }, [checkForUpdate])
   useEffect(() => {
     const update = () =>
       setBlocked(

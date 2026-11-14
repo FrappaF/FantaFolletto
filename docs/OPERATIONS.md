@@ -33,8 +33,11 @@ Usare un progetto Supabase di prova nuovo, senza utenti o dati reali. Il riprist
 - Prima di cambiare schema fare un backup e verificare la migrazione su un progetto di prova.
 - Le code attuali sono `schemaVersion: 1`, con namespace progetto + account. Una futura versione deve leggerle o migrare esplicitamente i dati; in caso di incompatibilità l'app conserva e segnala, senza azzerare.
 - Il service worker conserva soltanto risorse statiche. La nuova versione si attiva su richiesta quando non ci sono moduli, scritture o operazioni pendenti. Non introdurre aggiornamenti forzati che saltino questa protezione.
+- La disponibilità di nuove versioni viene controllata alla registrazione, al ritorno in primo piano, alla riconnessione e ogni cinque minuti mentre la pagina è visibile e online. Un errore temporaneo non invalida le risorse già disponibili offline. Il controllo non applica la versione senza conferma.
 - I browser aperti durante un aggiornamento possono avere regole vecchie. Il server conserva le versioni e la validità temporale, e i ritentativi usano lo stesso identificativo.
 - Non cancellare lo storage locale per risolvere un errore prima di aver verificato gli inserimenti ancora in coda. Il logout li conserva per lo stesso account.
+
+Se Safari mostra ancora font, logo o icone precedenti, ricaricare la pagina, attendere il download della nuova versione e premere «Aggiorna app» quando compare. Se il pulsante è disabilitato, chiudere i moduli e attendere il completamento degli invii. Nella prova locale Chromium una scheda con la vecchia foglia è passata a F/Fraunces/nuove icone senza perdere l'episodio demo già salvato. Questo controllo non certifica il comportamento del Safari reale. Non suggerire la cancellazione di dati del sito o la rimozione della PWA per aggiornare la grafica.
 
 ## Disponibilità e limiti
 
