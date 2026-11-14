@@ -57,7 +57,7 @@ Per tornare alle prove locali usare `VITE_APP_MODE=demo` in un ambiente di svilu
 
 ## 5. Pubblicazione su Cloudflare Pages
 
-Il progetto esistente `fantafolletto` è già collegato al repository GitHub: i push su `main` avviano il deploy di produzione. Le anteprime automatiche sono disabilitate; il loro ambiente è predisposto come demo senza accesso ai dati reali. Per ricreare un ambiente nuovo, collegare il repository a un progetto Pages statico con queste impostazioni:
+Il progetto esistente `fantafolletto` è già collegato al repository GitHub: il trigger dei push su `main` è configurato come abilitato, ma non è ancora verificato: il push controllato non ha prodotto una nuova build. Verificare in Deployments e avviare manualmente la pubblicazione se necessario. Le anteprime automatiche sono disabilitate; il loro ambiente è predisposto come demo senza accesso ai dati reali. Per ricreare un ambiente nuovo, collegare il repository a un progetto Pages statico con queste impostazioni:
 
 | Campo | Valore |
 | --- | --- |

@@ -43,7 +43,7 @@ Sono state eliminate le segnalazioni relative a chiavi esterne senza indice, riv
 ## Pubblicazione Cloudflare Pages
 
 - URL di produzione: **[https://fantafolletto.pages.dev](https://fantafolletto.pages.dev)**, progetto Pages `fantafolletto`, collegato al repository GitHub esistente `FrappaF/FantaFolletto`.
-- Pubblicazione automatica abilitata per `main`; anteprime automatiche e commenti sulle PR disabilitati. Nessun dominio, servizio o abbonamento a pagamento attivato.
+- Pubblicazione automatica configurata come abilitata per `main`; il push di aggiornamento della documentazione non ha prodotto una nuova build durante il controllo, quindi il trigger automatico non è ancora verificato. Il collegamento Git risulta presente anche all’endpoint dedicato; nessuna disconnessione effettuata. Gli aggiornamenti possono essere avviati manualmente tramite l’integrazione. Anteprime automatiche e commenti sulle PR disabilitati. Nessun dominio, servizio o abbonamento a pagamento attivato.
 - Build `npm run build`, output `dist`, radice repository, `NODE_VERSION=24`. Produzione con `VITE_APP_MODE=remote`, URL del progetto Supabase e chiave publishable pubblica. Le variabili preview sono separate: modalità demo e nessuna configurazione Supabase reale. Nessuna chiave segreta nel bundle o nei file versionati.
 - Primo deploy: `57733178-25e9-4d66-a887-e554232149bc`, sorgente `61485989a45bc6c760bc0a7ea196bde55e7b8d00`, completato alle **13:50:43 UTC**. API Cloudflare: fase `deploy`, stato `success`; log di clonazione e build riusciti, sei regole header riconosciute, 14 file pubblicati.
 - Build locale di produzione e `npm run verify:build` superati prima della pubblicazione. Nessun codice applicativo cambiato durante l’attivazione dell’hosting.
