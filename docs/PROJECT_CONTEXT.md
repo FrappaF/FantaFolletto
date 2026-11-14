@@ -58,7 +58,7 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - Test locali su dominio/calendario, IndexedDB simulato, riconciliazione e UI in jsdom; migrazione/RPC/RLS eseguite in PostgreSQL PGlite con identità Supabase simulate. Workflow GitHub per test e build. I controlli locali non certificano Auth/PostgREST o Safari; la successiva verifica database ospitata è distinta e descritta sotto.
 - **Supabase predisposto:** progetto FantaFolletto `eynngtnxtomcwblmughq` creato dall’utente, attivo in `eu-west-1`; schema e correzioni advisor applicati tramite MCP. Due utenti Auth confermati dall’utente e ruoli admin/player assegnati. `.env.local` configurato, ignorato da Git; nessun dato personale o segreto nel repository.
 - Verifica transazionale sul database ospitato superata: ruoli, RPC, divieti di scrittura diretta, punti, ritentativi, premi, annullamenti e storico; rollback finale, catalogo e dati di gioco ancora vuoti. Nuova migrazione con indici, policy che valutano i claim una volta per statement e revoca dell’accesso client al trigger automatico RLS.
-- Non è stato eseguito un login reale dal frontend: le prove database impostano i claim del ruolo SQL, non producono sessioni Auth. Il tentativo HTTP dall’ambiente ha fallito la risoluzione DNS (`EAI_AGAIN`). La disattivazione del signup pubblico va confermata dalla dashboard, non esposta dal connettore attuale.
+- Non è stato eseguito un login reale dal frontend: le prove database impostano i claim del ruolo SQL, non producono sessioni Auth. Il tentativo HTTP dall’ambiente ha fallito la risoluzione DNS (`EAI_AGAIN`). L’utente ha confermato il 14 novembre 2026 che “Allow new users to sign up” è disattivato nella dashboard; registrare questa conferma senza presentarla come verifica automatica del connettore, che non espone tale impostazione.
 - **Hosting non ancora configurato**, nessuna pubblicazione web o prova su iPhone. Backup/ripristino ospitato e misure LCP/INP da fare; verifica visuale ancora non eseguita. Dettagli, limiti e link degli advisor in [ACTIVATION.md](ACTIVATION.md).
 - Attivazione passo passo in [SETUP.md](SETUP.md), manutenzione in [OPERATIONS.md](OPERATIONS.md), criteri degli sprint in [ROADMAP.md](ROADMAP.md), avvio in [README.md](../README.md).
 
@@ -280,7 +280,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 
 - Catalogo e premi reali: nomi, punti, soglie e descrizioni da preparare con l'admin. Gli esempi non diventano automaticamente regole del regalo.
 - Eventuali estensioni a limiti di ripetizione, retrodatazione, periodi personalizzati e normalizzazione dei record: fuori dalla prima versione.
-- Collegamento dal browser ai due account Supabase già predisposti, signup pubblico disabilitato e condizioni Free; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
+- Collegamento dal browser ai due account Supabase già predisposti e condizioni Free; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
 - Verifica del modello/iOS reale, Safari e Home, accessibilità, affidabilità offline e prestazioni sul telefono.
 - Pubblicazione Cloudflare Pages, prova di backup/ripristino e catalogo definitivo prima della consegna.
 
@@ -301,6 +301,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Codice account/condivisione, coda offline e PWA implementato e testato localmente | Attivazione e collaudo ospitato/iPhone ancora necessari; produzione senza configurazione chiusa |
 | 2026-11-14 | Progetto Supabase creato e integrazione autorizzata dall’utente; account indicati per admin e giocatrice | Migrazioni applicate, profili assegnati e configurazione locale reale; nessuna email/UUID personale versionata |
 | 2026-11-14 | Verifica sul database ospitato con rollback e revisione advisor | Core dati verificato senza lasciare dati demo; Auth/PostgREST dal browser e consegna iPhone restano da collaudare |
+| 2026-11-14 | Utente conferma “Allow new users to sign up” già disattivato | Signup pubblico chiuso secondo conferma della dashboard; non richiedere nuovamente questa conferma |
 
 ## 12. Fonti della ricerca
 

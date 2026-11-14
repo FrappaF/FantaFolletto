@@ -4,6 +4,8 @@ Progetto **FantaFolletto**, riferimento `eynngtnxtomcwblmughq`, regione `eu-west
 
 ## Completato
 
+- Registrazione pubblica disabilitata: conferma esplicita dell’utente dalla dashboard il 14 novembre 2026. Il connettore non espone questa impostazione, quindi non si tratta di una verifica automatica.
+
 - Database inizialmente privo di tabelle applicative e migrazioni; schema applicato tramite MCP con cronologia remota.
 - Migrazioni applicate e allineate ai file locali: `20261114130522_diary.sql` e `20261114131302_tighten_diary_permissions.sql`.
 - Due utenti Auth creati e confermati dall'utente nella dashboard; profili assegnati dall'agente ai ruoli **admin** e **player** secondo gli indirizzi indicati dall'utente. Email, UUID e password personali non sono salvati nella documentazione versionata.
@@ -40,7 +42,6 @@ Sono state eliminate le segnalazioni relative a chiavi esterne senza indice, riv
 
 ## Ancora da verificare
 
-- Registrazione pubblica disabilitata nelle impostazioni Auth: da confermare dalla dashboard. Il connettore disponibile non espone questa impostazione; l'app nega comunque l'accesso ai dati a utenti senza profilo.
 - Login reale con password e chiamate PostgREST dal browser. Il tentativo HTTP dall'ambiente di sviluppo non ha potuto risolvere il dominio del progetto (`EAI_AGAIN`); la connessione MCP al database funziona. Non dichiarare quel controllo HTTP superato.
 - Hosting del frontend su Cloudflare Pages, variabili pubbliche nel suo ambiente di build e collaudo su iPhone/Safari/Home.
 - Catalogo e premi reali da preparare con l'admin; backup/ripristino del servizio ancora da provare.

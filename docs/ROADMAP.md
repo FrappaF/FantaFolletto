@@ -92,6 +92,6 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 - Assegnati i profili ai due utenti confermati. Configurazione locale privata, senza chiavi segrete.
 - Prova con rollback: autorizzazione, deduplicazione, punti server, premi, annullamenti e storico superati; nessun dato di gioco rimasto.
 - Correzioni advisor per indici, policy e trigger RLS automatico. Rimangono avvisi documentati per le RPC autorizzate, la protezione password Pro non attivata e gli indici ancora poco usati.
-- Login/PostgREST dal browser, signup disabilitato da confermare, hosting e iPhone restano da verificare: vedi [ACTIVATION.md](ACTIVATION.md).
+- Signup pubblico disabilitato confermato dall’utente. Login/PostgREST dal browser, hosting e iPhone restano da verificare: vedi [ACTIVATION.md](ACTIVATION.md).
 
 - Verifica dopo il collegamento: **43 test automatici**, build con configurazione reale e controllo PWA superati; la demo nei test rimane isolata anche in un checkout configurato.
