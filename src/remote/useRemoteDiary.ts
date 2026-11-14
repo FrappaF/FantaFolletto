@@ -1,3 +1,4 @@
+import { previewEvent } from '../domain/scoring'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { AdminCommand, Command } from '../domain/model'
@@ -122,6 +123,10 @@ export function useRemoteDiary(
           )
           if (!event)
             throw new Error('Evento non più disponibile. Aggiorna il catalogo.')
+          const projected = projectDiary(current)!
+          const estimate = previewEvent(projected, event, command.at)
+          if (!estimate.available)
+            throw new Error('Questa sfida è già stata segnata oggi.')
           saved = await enqueue(key, {
             type: 'record',
             operationId: command.id,
@@ -131,7 +136,7 @@ export function useRemoteDiary(
               eventId: event.id,
               eventVersion: command.version ?? event.version,
               name: command.snapshot?.name ?? event.name,
-              points: command.snapshot?.points ?? event.points,
+              ...estimate.entry,
               occurredAt: command.at,
             },
           })
@@ -150,13 +155,25 @@ export function useRemoteDiary(
       } else {
         if (current.snapshot.role !== 'admin')
           throw new Error('Operazione riservata all’admin.')
-        const id = 'value' in command ? command.value.id : command.id
+        const id =
+          command.type === 'save-scoring'
+            ? ''
+            : 'value' in command
+              ? command.value.id
+              : command.id
         const expectedVersion =
           command.expectedVersion ??
-          (command.type.includes('event')
-            ? current.snapshot.events.find((item) => item.id === id)?.version
-            : current.snapshot.rewards.find((item) => item.id === id)
-                ?.version) ??
+          (command.type === 'save-scoring'
+            ? Math.max(
+                0,
+                ...(current.snapshot.scoringRules ?? []).map(
+                  (rule) => rule.version,
+                ),
+              )
+            : command.type.includes('event')
+              ? current.snapshot.events.find((item) => item.id === id)?.version
+              : current.snapshot.rewards.find((item) => item.id === id)
+                  ?.version) ??
           0
         await transport.manage({ ...command, expectedVersion })
         channel.current?.postMessage('changed')

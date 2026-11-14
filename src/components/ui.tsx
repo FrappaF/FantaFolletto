@@ -6,25 +6,35 @@ import {
   NameIcon,
   PawIcon,
   RainIcon,
+  RecordIcon,
   SmileIcon,
   SparkleIcon,
 } from './DiaryIcons'
 import type { Diary, Reward } from '../domain/model'
 import { rewardProgress } from '../domain/stats'
 
-export function EventIcon({ id }: { id: string }) {
-  const Icon =
-    id === 'coffee'
-      ? CoffeeIcon
-      : id === 'pet'
-        ? PawIcon
-        : id === 'laugh'
-          ? SmileIcon
-          : id === 'rain'
-            ? RainIcon
-            : id === 'name'
-              ? NameIcon
-              : SparkleIcon
+export function EventIcon({
+  id,
+  categoryId,
+}: {
+  id: string
+  categoryId?: string
+}) {
+  const eventIcons: Record<string, typeof SparkleIcon> = {
+    coffee: CoffeeIcon,
+    pet: PawIcon,
+    laugh: SmileIcon,
+    rain: RainIcon,
+    name: NameIcon,
+  }
+  const categoryIcons: Record<string, typeof SparkleIcon> = {
+    encounters: CoffeeIcon,
+    animals: PawIcon,
+    wins: RecordIcon,
+    mishaps: SmileIcon,
+    challenges: RecordIcon,
+  }
+  const Icon = eventIcons[id] ?? categoryIcons[categoryId ?? ''] ?? SparkleIcon
   return (
     <span className={`event-icon event-icon-${id}`}>
       <Icon size={21} strokeWidth={1.7} aria-hidden="true" />

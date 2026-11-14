@@ -59,6 +59,7 @@ beforeAll(async () => {
     .sort()) {
     await db.exec(readFileSync(new URL(file, migrations), 'utf8'))
   }
+  await db.exec('update public.scoring_rules set increment_percent=0,max_multiplier=1;')
   await db.query('insert into public.profiles values ($1, $2), ($3, $4)', [
     player,
     'player',
@@ -123,7 +124,7 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
     const id = opId()
     await manage(command, id)
     await manage(command, id)
-    expect((await db.query('select version from public.events')).rows).toEqual([
+    expect((await db.query("select version from public.events where id = '20000000-0000-4000-8000-000000000001'")).rows).toEqual([
       { version: 1 },
     ])
     await expect(
@@ -251,7 +252,7 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
   it('accetta una vecchia regola solo nel periodo in cui era valida, entro sette giorni', async () => {
     const at = (
       await db.query<{ at: string }>(
-        'select valid_from::text as at from public.event_versions where version = 1',
+        "select valid_from::text as at from public.event_versions where version = 1 and event_id = '20000000-0000-4000-8000-000000000001'",
       )
     ).rows[0].at
     await record(opId(), 1, at)

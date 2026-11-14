@@ -11,7 +11,7 @@ Sul piano Free prevedere copie manuali prima di migrazioni e periodicamente dura
 Il backup deve comprendere:
 
 - Schema, funzioni, policy, grant e versioni delle migrazioni applicate.
-- Dati delle tabelle applicative: `profiles`, `events`, `event_versions`, `entries`, `rewards`, `awards`, `admin_audit`.
+- Dati delle tabelle applicative: `profiles`, `event_categories`, `events`, `event_versions`, `scoring_rules`, `entries`, `rewards`, `awards`, `admin_audit`.
 - Utenti e identità Auth, mantenendo gli UUID: `profiles.id` referenzia `auth.users.id`. Verificare quali dati Auth vengono inclusi dai comandi ufficiali della versione CLI in uso; non supporlo da un dump generico di `public`.
 - Configurazione del progetto e Auth, regioni, signup disabilitato e variabili pubbliche del frontend. Le chiavi segrete e le password restano nel gestore password, separate dalle copie consultabili.
 
@@ -60,3 +60,11 @@ La prima versione scarica uno snapshot completo, adeguato al volume di una gioca
 | Backup e ripristino del servizio reale | Da eseguire |
 
 Non presentare i controlli simulati come collaudo del servizio ospitato o del telefono.
+
+## Catalogo e combo giornaliera
+
+In admin → Eventi assegna categoria, rarità e ripetizione. Le sei categorie sono predefinite nel database; la gestione dei loro nomi/icone non è esposta nella UI. Gli eventi precedenti di prova sono consultabili con «Mostra gli archiviati» e non sono disponibili alla giocatrice. Le sfide si registrano manualmente una volta al giorno e non hanno moltiplicatore.
+
+In admin → Combo puoi cambiare percentuale (0–1000% intero) e tetto (×1–×20 con un decimale). L’anteprima parte da 10 punti. Le modifiche valgono dal giorno seguente in Europe/Rome; se salvi più volte, prevale l’ultima versione per quel giorno. 0% o ×1 disattivano il bonus. La baseline iniziale è +20%, tetto ×3.
+
+Le ripetizioni si contano per evento, anche dopo una modifica del nome o dei punti. Il server ordina gli episodi per data e identificativo. Annullamenti e invii offline in ritardo ricalcolano i bonus del relativo evento/giorno, usando le impostazioni storiche degli episodi, e riconciliano i premi. I punti in attesa e le anticipazioni nel catalogo sono stime. Le vecchie code restano leggibili e non si eliminano.

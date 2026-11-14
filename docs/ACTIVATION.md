@@ -62,6 +62,14 @@ Al controllo successivo al push l'API Cloudflare indica ancora come deploy di pr
 
 - Login reale con password e chiamate PostgREST dal browser. Il tentativo HTTP dall'ambiente di sviluppo non ha potuto risolvere il dominio del progetto (`EAI_AGAIN`); la connessione MCP al database funziona. Non dichiarare quel controllo HTTP superato.
 - Apertura del frontend pubblicato e collaudo su iPhone/Safari/Home, incluso aggiornamento PWA e riapertura offline.
-- Catalogo e premi reali da preparare con l'admin; backup/ripristino del servizio ancora da provare.
+- Catalogo iniziale di 37 eventi ora attivato; ulteriori aggiustamenti e premi si gestiscono dall’admin. Backup/ripristino del servizio ancora da provare.
 
 Le istruzioni di attivazione generale sono in [SETUP.md](SETUP.md), quelle operative in [OPERATIONS.md](OPERATIONS.md).
+
+## Aggiornamento catalogo e combo
+
+Applicate `20261114161017_categories_combo.sql` e `20261114163107_approved_catalog.sql`, con 37 eventi attivi, sei categorie, rarità e otto sfide giornaliere. Quattro eventi di prova precedenti archiviati, premi ed episodi conservati. La prima richiesta di cancellazione definitiva non è stata completata dal meccanismo di conferma del connettore; la migrazione finale usa esclusivamente archiviazione reversibile. Nessuna cancellazione di dati di gioco eseguita.
+
+Impostazioni iniziali +20%, tetto ×3, entrambe modificabili dall’admin dal giorno seguente. RPC sul database ospitato verificate in una transazione con claim/ruoli SQL e rollback: crescita 10/12/14, ricalcolo dopo annullamento, limite giornaliero, autorizzazione e programmazione del tetto ×4,5. Nessun login Auth dichiarato come verificato da questo test.
+
+Advisor aggiornati: confermate le quattro RPC SECURITY DEFINER autorizzate e la protezione password Pro non attiva; solo avvisi informativi per indici ancora poco usati. Verifica visuale locale a 390 CSS px completata con dati fittizi; Safari/Home e affidabilità sul dispositivo restano da verificare.

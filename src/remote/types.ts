@@ -1,3 +1,4 @@
+import { previewEvent, recalculateCombos } from '../domain/scoring'
 import type { Diary, Entry } from '../domain/model'
 
 export type RemoteSnapshot = Diary & {
@@ -42,8 +43,25 @@ export function projectDiary(cache: AccountCache): RemoteSnapshot | undefined {
   for (const operation of cache.queue) {
     if (operation.type === 'record') {
       if (!diary.entries.some((entry) => entry.id === operation.entry.id)) {
+        const definition = diary.events.find(
+          (event) => event.id === operation.entry.eventId,
+        )
+        const estimate = previewEvent(
+          diary,
+          {
+            ...definition,
+            id: operation.entry.eventId,
+            name: operation.entry.name,
+            description: '',
+            points: operation.entry.basePoints ?? operation.entry.points,
+            version: operation.entry.eventVersion,
+            archived: false,
+          },
+          operation.entry.occurredAt,
+        )
         diary.entries.push({
           ...operation.entry,
+          ...estimate.entry,
           sync: operation.status === 'blocked' ? 'error' : 'pending',
         })
       }
@@ -56,5 +74,5 @@ export function projectDiary(cache: AccountCache): RemoteSnapshot | undefined {
         )
     }
   }
-  return diary
+  return recalculateCombos(diary)
 }

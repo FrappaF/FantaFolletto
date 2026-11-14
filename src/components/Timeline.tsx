@@ -37,6 +37,7 @@ export function Timeline({
                 {formatDay(entry.occurredAt)} ·{' '}
                 {time.format(new Date(entry.occurredAt))}
               </time>
+              {!!entry.bonusPoints && ` · combo ${entry.comboIndex} · bonus +${entry.bonusPoints}`}
               {entry.voidedAt && ' · Annullato'}
               {entry.sync === 'pending' && ' · In attesa di invio'}
               {entry.sync === 'error' && ' · Da correggere'}

@@ -1,3 +1,5 @@
+import { CategoryFilters, EventMeta } from './components/EventCatalog'
+import { previewEvent } from './domain/scoring'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
@@ -103,6 +105,7 @@ export function DiaryView({
   const [admin, setAdmin] = useState(false)
   const [picker, setPicker] = useState(false)
   const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
   const [toast, setToast] = useState<{ text: string; entryId?: string }>()
   const [now, setNow] = useState(new Date())
   const [online, setOnline] = useState(navigator.onLine)
@@ -141,6 +144,7 @@ export function DiaryView({
     setRecording(true)
     const event = diary!.events.find((item) => item.id === eventId)!
     const id = newId()
+    const estimate = previewEvent(diary!, event, new Date())
     try {
       if (
         await execute({
@@ -156,7 +160,7 @@ export function DiaryView({
         setSearch('')
         setNow(new Date())
         setToast({
-          text: `${event.name} · ${pointsLabel(event.points)} punti`,
+          text: `${event.name} · ${pointsLabel(estimate.entry.points)} punti${remote ? ' stimati' : ''}`,
           entryId: id,
         })
       }
@@ -349,6 +353,8 @@ export function DiaryView({
                         className="primary-button record-button"
                         onClick={() => {
                           setSearch('')
+                          setCategory('')
+                          setNow(new Date())
                           setPicker(true)
                         }}
                       >
@@ -526,6 +532,11 @@ export function DiaryView({
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
+          <CategoryFilters
+            diary={diary}
+            value={category}
+            onChange={setCategory}
+          />
           {error && (
             <p className="form-error" role="alert">
               {error}
@@ -536,32 +547,45 @@ export function DiaryView({
               .filter(
                 (event) =>
                   !event.archived &&
+                  (!category || event.categoryId === category) &&
                   `${event.name} ${event.description}`
                     .toLocaleLowerCase('it')
                     .includes(search.toLocaleLowerCase('it')),
               )
-              .map((event) => (
-                <button
-                  key={event.id}
-                  className="event-choice"
-                  disabled={busy || recording}
-                  onClick={() => void record(event.id)}
-                >
-                  <EventIcon id={event.id} />
-                  <span>
-                    <strong>{event.name}</strong>
-                    <small>{event.description}</small>
-                  </span>
-                  <b>
-                    {pointsLabel(event.points)}
-                    <small>pt</small>
-                  </b>
-                </button>
-              ))}
+              .map((event) => {
+                const score = previewEvent(diary, event, now)
+                return (
+                  <button
+                    key={event.id}
+                    className="event-choice"
+                    disabled={busy || recording || !score.available}
+                    onClick={() => void record(event.id)}
+                  >
+                    <EventIcon id={event.id} categoryId={event.categoryId} />
+                    <span>
+                      <strong>{event.name}</strong>
+                      <small>{event.description}</small>
+                      <EventMeta event={event} diary={diary} />
+                      <small className="combo-hint">
+                        {!score.available
+                          ? 'Già segnata oggi'
+                          : event.repeat === 'daily'
+                            ? 'Bonus giornaliero'
+                            : `${score.entry.comboIndex}ª volta oggi${score.entry.bonusPoints ? ` · bonus +${score.entry.bonusPoints}` : ''}`}
+                      </small>
+                    </span>
+                    <b>
+                      {pointsLabel(score.entry.points)}
+                      <small>pt</small>
+                    </b>
+                  </button>
+                )
+              })}
           </div>
           {!diary.events.some(
             (event) =>
               !event.archived &&
+              (!category || event.categoryId === category) &&
               `${event.name} ${event.description}`
                 .toLocaleLowerCase('it')
                 .includes(search.toLocaleLowerCase('it')),
@@ -574,7 +598,7 @@ export function DiaryView({
           )}
           <p className="demo-footnote">
             {remote
-              ? 'Non servono nomi o dati dei clienti.'
+              ? 'Punti stimati fino alla conferma. La combo riparte a mezzanotte italiana. Non servono dati dei clienti.'
               : 'Catalogo dimostrativo. Nessun dato sui clienti è necessario.'}
           </p>
         </Modal>

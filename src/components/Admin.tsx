@@ -1,3 +1,12 @@
+import { CategoryFilters, EventMeta } from './EventCatalog'
+import {
+  categoriesFor,
+  comboPoints,
+  formatRuleDay,
+  rarityLabels,
+  ruleFor,
+} from '../domain/scoring'
+import type { ScoringRule } from '../domain/model'
 import { useState, type FormEvent } from 'react'
 import {
   Archive,
@@ -44,9 +53,12 @@ export default function Admin({
   shared?: boolean
   refreshing?: boolean
 }) {
-  const [tab, setTab] = useState<'summary' | 'events' | 'rewards'>('summary')
+  const [tab, setTab] = useState<'summary' | 'events' | 'rewards' | 'rules'>(
+    'summary',
+  )
   const [editor, setEditor] = useState<Editor>()
   const [archive, setArchive] = useState<ArchiveTarget>()
+  const [category, setCategory] = useState('')
   const [showArchived, setShowArchived] = useState(false)
   const [delivery, setDelivery] = useState<{
     id: string
@@ -116,6 +128,7 @@ export default function Admin({
             ['summary', 'Riepilogo'],
             ['events', 'Eventi'],
             ['rewards', 'Premi'],
+            ['rules', 'Combo'],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -176,7 +189,20 @@ export default function Admin({
           )}
         </>
       )}
-      {tab !== 'summary' && (
+      {tab === 'rules' && (
+        <ScoringSettings
+          key={Math.max(
+            0,
+            ...(diary.scoringRules ?? []).map((rule) => rule.version),
+          )}
+          diary={diary}
+          now={now}
+          busy={busy}
+          error={error}
+          execute={execute}
+        />
+      )}
+      {(tab === 'events' || tab === 'rewards') && (
         <section className="panel">
           <SectionHeading
             title={
@@ -209,17 +235,28 @@ export default function Admin({
             />
             Mostra gli archiviati
           </label>
+          {tab === 'events' && (
+            <CategoryFilters
+              diary={diary}
+              value={category}
+              onChange={setCategory}
+            />
+          )}
           <div className="catalog-list">
             {tab === 'events'
               ? diary.events
-                  .filter((item) => showArchived || !item.archived)
+                  .filter(
+                    (item) =>
+                      (showArchived || !item.archived) &&
+                      (!category || item.categoryId === category),
+                  )
                   .map((item) => (
                     <article
                       key={item.id}
                       className={`catalog-item ${item.archived ? 'archived' : ''}`}
                     >
                       <div className="catalog-item-heading">
-                        <EventIcon id={item.id} />
+                        <EventIcon id={item.id} categoryId={item.categoryId} />
                         <div>
                           <h3>{item.name}</h3>
                           <span>
@@ -229,7 +266,8 @@ export default function Admin({
                           </span>
                         </div>
                       </div>
-                      <p>{item.description}</p>
+                      <EventMeta event={item} diary={diary} />
+                      {item.description && <p>{item.description}</p>}
                       {!item.archived && (
                         <div className="item-actions">
                           <button
@@ -308,7 +346,11 @@ export default function Admin({
                   ))}
           </div>
           {(tab === 'events' ? diary.events : diary.rewards).filter(
-            (item) => showArchived || !item.archived,
+            (item) =>
+              (showArchived || !item.archived) &&
+              (tab !== 'events' ||
+                !category ||
+                ('categoryId' in item && item.categoryId === category)),
           ).length === 0 && (
             <EmptyState title="Si parte da una bella idea">
               Crea il primo elemento con il pulsante qui sopra.
@@ -318,6 +360,7 @@ export default function Admin({
       )}
       {editor && (
         <EditorForm
+          diary={diary}
           editor={editor}
           busy={busy}
           error={error}
@@ -413,12 +456,14 @@ export default function Admin({
 }
 
 function EditorForm({
+  diary,
   editor,
   busy,
   error,
   execute,
   onClose,
 }: {
+  diary: Diary
   editor: Editor
   busy: boolean
   error: string
@@ -439,7 +484,13 @@ function EditorForm({
       editor.kind === 'event'
         ? {
             type: 'save-event',
-            value: { ...common, points: Number(form.get('points')) },
+            value: {
+              ...common,
+              points: Number(form.get('points')),
+              categoryId: String(form.get('categoryId')),
+              rarity: String(form.get('rarity')) as EventDefinition['rarity'],
+              repeat: String(form.get('repeat')) as EventDefinition['repeat'],
+            },
           }
         : {
             type: 'save-reward',
@@ -491,21 +542,66 @@ function EditorForm({
             />
           </label>
           {editor.kind === 'event' ? (
-            <label>
-              Punti
-              <input
-                name="points"
-                type="number"
-                min={-1000}
-                max={1000}
-                step={1}
-                defaultValue={editor.value?.points ?? 10}
-                required
-              />
-              <span className="field-hint">
-                Puoi usare punti negativi per un malus.
-              </span>
-            </label>
+            <>
+              <label>
+                Categoria
+                <select
+                  name="categoryId"
+                  defaultValue={
+                    editor.value?.categoryId ?? categoriesFor(diary)[0]?.id
+                  }
+                  required
+                >
+                  {categoriesFor(diary).map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.icon} {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Rarità
+                <select
+                  name="rarity"
+                  defaultValue={editor.value?.rarity ?? 'normal'}
+                >
+                  {Object.entries(rarityLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Ripetizione
+                <select
+                  name="repeat"
+                  defaultValue={editor.value?.repeat ?? 'unlimited'}
+                >
+                  <option value="unlimited">
+                    Ripetibile · combo sui punti positivi
+                  </option>
+                  <option value="daily">
+                    Una volta al giorno · senza combo
+                  </option>
+                </select>
+              </label>
+              <label>
+                Punti
+                <input
+                  name="points"
+                  type="number"
+                  min={-1000}
+                  max={1000}
+                  step={1}
+                  defaultValue={editor.value?.points ?? 10}
+                  required
+                />
+                <span className="field-hint">
+                  Puoi usare punti negativi per un malus, senza moltiplicatore.
+                </span>
+              </label>
+            </>
           ) : (
             <>
               <label>
@@ -544,5 +640,152 @@ function EditorForm({
         </fieldset>
       </form>
     </Modal>
+  )
+}
+
+function ScoringSettings({
+  diary,
+  now,
+  busy,
+  error,
+  execute,
+}: {
+  diary: Diary
+  now: Date
+  busy: boolean
+  error: string
+  execute: (command: Command) => Promise<boolean>
+}) {
+  const latest = [...(diary.scoringRules ?? [])].sort(
+    (a, b) => b.version - a.version,
+  )[0]
+  const current = ruleFor(diary, now)
+  const [increment, setIncrement] = useState(latest?.incrementPercent ?? 20)
+  const [maximum, setMaximum] = useState(latest?.maxMultiplier ?? 3)
+  const [saved, setSaved] = useState(false)
+  const [operationId, setOperationId] = useState(newId)
+  const preview: ScoringRule = {
+    version: 0,
+    effectiveDay: '',
+    incrementPercent: increment,
+    maxMultiplier: maximum,
+  }
+  return (
+    <section className="panel scoring-settings">
+      <SectionHeading title="La combo della giornata" />
+      <p className="section-description">
+        Ogni ripetizione dello stesso evento aggiunge una percentuale dei punti
+        base. Si riparte a mezzanotte italiana. Sfide giornaliere e malus
+        restano senza bonus.
+      </p>
+      <p className="rules-current">
+        <strong>Oggi:</strong> +{current?.incrementPercent ?? 0}% per
+        ripetizione, tetto ×{current?.maxMultiplier ?? 1}.
+      </p>
+      {latest &&
+        latest.effectiveDay > (current?.effectiveDay ?? '') &&
+        latest.version !== current?.version && (
+          <p className="rules-current">
+            Dal {formatRuleDay(latest.effectiveDay)}: +{latest.incrementPercent}
+            %, tetto ×{latest.maxMultiplier}.
+          </p>
+        )}
+      <form
+        onSubmit={async (event) => {
+          event.preventDefault()
+          if (
+            await execute({
+              type: 'save-scoring',
+              value: { incrementPercent: increment, maxMultiplier: maximum },
+              expectedVersion: latest?.version ?? 0,
+              operationId,
+            })
+          ) {
+            setSaved(true)
+            setOperationId(newId())
+          }
+        }}
+      >
+        <fieldset disabled={busy}>
+          <label>
+            Incremento per ripetizione (%)
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={1000}
+              step={1}
+              required
+              value={Number.isNaN(increment) ? '' : increment}
+              onChange={(event) => {
+                setIncrement(event.target.valueAsNumber)
+                setSaved(false)
+                setOperationId(newId())
+              }}
+            />
+            <span className="field-hint">
+              0 disattiva il bonus. Esempio: 20 significa +20% dei punti base a
+              ogni ripetizione.
+            </span>
+          </label>
+          <label>
+            Moltiplicatore massimo
+            <input
+              type="number"
+              inputMode="decimal"
+              min={1}
+              max={20}
+              step={0.1}
+              required
+              value={Number.isNaN(maximum) ? '' : maximum}
+              onChange={(event) => {
+                setMaximum(event.target.valueAsNumber)
+                setSaved(false)
+                setOperationId(newId())
+              }}
+            />
+            <span className="field-hint">
+              Da ×1 a ×20; puoi usare un decimale. ×1 disattiva il bonus.
+            </span>
+          </label>
+          <div
+            className="combo-preview"
+            aria-label="Esempio su un evento da 10 punti"
+          >
+            <strong>Esempio · evento da 10 punti</strong>
+            <ol>
+              {[1, 2, 3, 4, 5].map((index) => (
+                <li key={index}>
+                  <span>{index}ª volta</span>
+                  <b>
+                    {Number.isFinite(increment) &&
+                    Number.isFinite(maximum) &&
+                    maximum >= 1 &&
+                    increment >= 0
+                      ? comboPoints(10, index, preview)
+                      : '—'}{' '}
+                    pt
+                  </b>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <p className="field-hint">
+            Le modifiche partono domani, a mezzanotte italiana. Se salvi di
+            nuovo, per domani vale l’ultima versione. I giorni precedenti
+            conservano le proprie regole.
+          </p>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          {saved && <p role="status">Regole salvate per domani.</p>}
+          <button className="primary-button full-width" type="submit">
+            {busy ? 'Salvataggio…' : 'Salva per domani'}
+          </button>
+        </fieldset>
+      </form>
+    </section>
   )
 }
