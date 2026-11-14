@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import type { Entry } from '../domain/model'
 import { formatDay, pointsLabel } from '../domain/stats'
 import { EmptyState, EventIcon } from './ui'
@@ -55,7 +55,7 @@ export function Timeline({
               onClick={() => onUndo(entry.id)}
               disabled={busy}
             >
-              <RotateCcw size={17} />
+              <Trash2 size={17} aria-hidden="true" />
             </button>
           )}
         </li>
