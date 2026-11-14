@@ -1,14 +1,11 @@
+import { CategoryFilters, EventMeta } from './components/EventCatalog'
+import { previewEvent } from './domain/scoring'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
-  BookOpen,
   Check,
-  Gift,
-  Leaf,
   Plus,
   Settings2,
-  Sparkles,
-  Trophy,
   WifiOff,
   X,
   LogOut,
@@ -40,6 +37,13 @@ import { PwaPrompt } from './components/PwaPrompt'
 import { InstallHint } from './components/InstallHint'
 import { Combos } from './components/Combos'
 import { DailyNotes } from './components/DailyNotes'
+import { Brand } from './components/Brand'
+import {
+  DiaryIcon,
+  GiftIcon,
+  RecordIcon,
+  SparkleIcon,
+} from './components/DiaryIcons'
 
 const Admin = lazy(() => import('./components/Admin'))
 const RemoteApplication = lazy(() => import('./remote/RemoteApplication'))
@@ -105,6 +109,7 @@ export function DiaryView({
   const [admin, setAdmin] = useState(false)
   const [picker, setPicker] = useState(false)
   const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
   const [toast, setToast] = useState<{ text: string; entryId?: string }>()
   const [now, setNow] = useState(new Date())
   const [online, setOnline] = useState(navigator.onLine)
@@ -143,6 +148,7 @@ export function DiaryView({
     setRecording(true)
     const event = diary!.events.find((item) => item.id === eventId)!
     const id = newId()
+    const estimate = previewEvent(diary!, event, new Date())
     try {
       if (
         await execute({
@@ -158,7 +164,7 @@ export function DiaryView({
         setSearch('')
         setNow(new Date())
         setToast({
-          text: `${event.name} · ${pointsLabel(event.points)} punti`,
+          text: `${event.name} · ${pointsLabel(estimate.entry.points)} punti${remote ? ' stimati' : ''}`,
           entryId: id,
         })
       }
@@ -202,7 +208,7 @@ export function DiaryView({
       )}
       <header className="app-header">
         <a
-          className="brand"
+          className="brand-home"
           href="#"
           onClick={(event) => {
             event.preventDefault()
@@ -211,13 +217,7 @@ export function DiaryView({
           }}
           aria-label="FantaFolletto, torna a Oggi"
         >
-          <span className="brand-mark">
-            <Leaf size={22} strokeWidth={1.7} />
-          </span>
-          <span>
-            fanta<span className="brand-light">folletto</span>
-            <small>Il diario delle piccole avventure</small>
-          </span>
+          <Brand />
         </a>
         <div className="header-actions">
           {(!remote || remote.role === 'admin') && (
@@ -257,7 +257,7 @@ export function DiaryView({
         )}
         {!diary ? (
           <section className="panel loading-state" aria-live="polite">
-            <BookOpen size={32} aria-hidden="true" />
+            <DiaryIcon size={32} />
             <h1>
               {error || remote?.syncError
                 ? 'Il diario ha bisogno di una mano'
@@ -331,7 +331,7 @@ export function DiaryView({
                       aria-label="Il riepilogo della tua giornata"
                     >
                       <div className="score-flower" aria-hidden="true">
-                        <Sparkles size={108} strokeWidth={0.6} />
+                        <SparkleIcon size={108} strokeWidth={0.6} />
                       </div>
                       <span className="score-label">
                         La tua giornata, in punti
@@ -357,6 +357,8 @@ export function DiaryView({
                         className="primary-button record-button"
                         onClick={() => {
                           setSearch('')
+                          setCategory('')
+                          setNow(new Date())
                           setPicker(true)
                         }}
                       >
@@ -453,38 +455,41 @@ export function DiaryView({
                       </h1>
                       <p>Piccoli traguardi, sorprese da condividere.</p>
                     </div>
-                    <div className="reward-list">
-                      {rewards.map((reward) => (
-                        <RewardCard
-                          key={reward.id}
-                          diary={diary}
-                          reward={reward}
-                          now={now}
-                        />
-                      ))}
+                    <div className="rewards-content">
+                      {rewards.length > 0 ? (
+                        <div className="reward-list">
+                          {rewards.map((reward) => (
+                            <RewardCard
+                              key={reward.id}
+                              diary={diary}
+                              reward={reward}
+                              now={now}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <section className="panel">
+                          <EmptyState
+                            title="Le sorprese sono in preparazione"
+                            icon="gift"
+                          >
+                            Qui troverai i premi scelti per te.
+                          </EmptyState>
+                        </section>
+                      )}
+                      {remote && (
+                        <section className="panel awards-panel">
+                          <SectionHeading title="I premi conquistati" />
+                          <Awards awards={diary.awards ?? []} />
+                        </section>
+                      )}
+                      {!remote && (
+                        <p className="demo-footnote">
+                          Premi di esempio. Il progresso è dimostrativo: non
+                          costituisce un’assegnazione definitiva.
+                        </p>
+                      )}
                     </div>
-                    {!rewards.length && (
-                      <section className="panel">
-                        <EmptyState
-                          title="Le sorprese sono in preparazione"
-                          icon="gift"
-                        >
-                          Qui troverai i premi scelti per te.
-                        </EmptyState>
-                      </section>
-                    )}
-                    {remote && (
-                      <section className="panel awards-panel">
-                        <SectionHeading title="I premi conquistati" />
-                        <Awards awards={diary.awards ?? []} />
-                      </section>
-                    )}
-                    {!remote && (
-                      <p className="demo-footnote">
-                        Premi di esempio. Il progresso è dimostrativo: non
-                        costituisce un’assegnazione definitiva.
-                      </p>
-                    )}
                   </>
                 )}
               </>
@@ -496,9 +501,9 @@ export function DiaryView({
         <nav className="bottom-nav" aria-label="Navigazione principale">
           {(
             [
-              { id: 'today', label: 'Oggi', icon: BookOpen },
-              { id: 'records', label: 'Record', icon: Trophy },
-              { id: 'rewards', label: 'Premi', icon: Gift },
+              { id: 'today', label: 'Oggi', icon: DiaryIcon },
+              { id: 'records', label: 'Record', icon: RecordIcon },
+              { id: 'rewards', label: 'Premi', icon: GiftIcon },
               { id: 'combos', label: 'Combo', icon: Smile },
               { id: 'notes', label: 'Note', icon: NotebookPen },
             ] as const
@@ -552,6 +557,11 @@ export function DiaryView({
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
+          <CategoryFilters
+            diary={diary}
+            value={category}
+            onChange={setCategory}
+          />
           {error && (
             <p className="form-error" role="alert">
               {error}
@@ -562,32 +572,45 @@ export function DiaryView({
               .filter(
                 (event) =>
                   !event.archived &&
+                  (!category || event.categoryId === category) &&
                   `${event.name} ${event.description}`
                     .toLocaleLowerCase('it')
                     .includes(search.toLocaleLowerCase('it')),
               )
-              .map((event) => (
-                <button
-                  key={event.id}
-                  className="event-choice"
-                  disabled={busy || recording}
-                  onClick={() => void record(event.id)}
-                >
-                  <EventIcon id={event.id} />
-                  <span>
-                    <strong>{event.name}</strong>
-                    <small>{event.description}</small>
-                  </span>
-                  <b>
-                    {pointsLabel(event.points)}
-                    <small>pt</small>
-                  </b>
-                </button>
-              ))}
+              .map((event) => {
+                const score = previewEvent(diary, event, now)
+                return (
+                  <button
+                    key={event.id}
+                    className="event-choice"
+                    disabled={busy || recording || !score.available}
+                    onClick={() => void record(event.id)}
+                  >
+                    <EventIcon id={event.id} categoryId={event.categoryId} />
+                    <span>
+                      <strong>{event.name}</strong>
+                      <small>{event.description}</small>
+                      <EventMeta event={event} diary={diary} />
+                      <small className="combo-hint">
+                        {!score.available
+                          ? 'Già segnata oggi'
+                          : event.repeat === 'daily'
+                            ? 'Bonus giornaliero'
+                            : `${score.entry.comboIndex}ª volta oggi${score.entry.bonusPoints ? ` · bonus +${score.entry.bonusPoints}` : ''}`}
+                      </small>
+                    </span>
+                    <b>
+                      {pointsLabel(score.entry.points)}
+                      <small>pt</small>
+                    </b>
+                  </button>
+                )
+              })}
           </div>
           {!diary.events.some(
             (event) =>
               !event.archived &&
+              (!category || event.categoryId === category) &&
               `${event.name} ${event.description}`
                 .toLocaleLowerCase('it')
                 .includes(search.toLocaleLowerCase('it')),
@@ -600,7 +623,7 @@ export function DiaryView({
           )}
           <p className="demo-footnote">
             {remote
-              ? 'Non servono nomi o dati dei clienti.'
+              ? 'Punti stimati fino alla conferma. La combo riparte a mezzanotte italiana. Non servono dati dei clienti.'
               : 'Catalogo dimostrativo. Nessun dato sui clienti è necessario.'}
           </p>
         </Modal>

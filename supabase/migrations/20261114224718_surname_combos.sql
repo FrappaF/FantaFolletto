@@ -74,24 +74,20 @@ revoke all on function public.add_surname_combo(uuid, text, text, text, timestam
 grant execute on function public.add_surname_combo(uuid, text, text, text, timestamptz),
   public.remove_surname_combo(uuid) to authenticated;
 
-create or replace function public.diary_snapshot() returns jsonb
-language plpgsql security definer set search_path = '' as $$
-declare caller_role text := private.role(); owner uuid; result jsonb;
-begin
-  if caller_role is null then raise exception 'Accesso non autorizzato.' using errcode = '42501'; end if;
-  select id into owner from public.profiles where role = 'player';
-  if owner is null then raise exception 'La giocatrice non è ancora configurata.'; end if;
-  if caller_role = 'player' and owner <> auth.uid() then raise exception 'Accesso non autorizzato.' using errcode = '42501'; end if;
-  select jsonb_build_object(
-    'role', caller_role, 'ownerId', owner, 'fetchedAt', clock_timestamp(), 'schemaVersion', 1,
-    'events', coalesce((select jsonb_agg(jsonb_build_object('id', e.id, 'name', v.name, 'description', v.description, 'points', v.points, 'version', e.version, 'archived', e.archived) order by v.valid_from, e.id) from public.events e join public.event_versions v on v.event_id = e.id and v.version = e.version), '[]'::jsonb),
-    'rewards', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'name', name, 'description', description, 'target', target, 'period', period, 'version', version, 'archived', archived) order by target, id) from public.rewards), '[]'::jsonb),
-    'entries', coalesce((select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('id', id, 'eventId', event_id, 'eventVersion', event_version, 'name', name, 'points', points, 'occurredAt', occurred_at, 'receivedAt', received_at, 'voidedAt', voided_at)) order by occurred_at, id) from public.entries where owner_id = owner), '[]'::jsonb),
-    'combos', coalesce((select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('id', id, 'firstSurname', first_surname, 'secondSurname', second_surname, 'note', note, 'createdAt', created_at, 'removedAt', removed_at)) order by created_at, id) from public.surname_combos), '[]'::jsonb),
-    'awards', coalesce((select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('id', id, 'rewardId', reward_id, 'name', name, 'description', description, 'target', target, 'period', period, 'periodKey', period_key, 'achievedAt', achieved_at, 'revokedAt', revoked_at, 'deliveredAt', delivered_at, 'needsReview', needs_review)) order by achieved_at desc) from public.awards where owner_id = owner), '[]'::jsonb)
-  ) into result;
-  return result;
-end $$;
+-- Conserva la funzione precedente con controlli e campi già attivi (categorie,
+-- bonus e versioni). Il nuovo snapshot aggiunge soltanto la raccolta richiesta.
+alter function public.diary_snapshot() rename to diary_snapshot_before_surnames;
+alter function public.diary_snapshot_before_surnames() set schema private;
+revoke all on function private.diary_snapshot_before_surnames() from public, anon, authenticated;
 
+create function public.diary_snapshot() returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  return private.diary_snapshot_before_surnames() || jsonb_build_object(
+    'combos', coalesce((select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('id', id, 'firstSurname', first_surname, 'secondSurname', second_surname, 'note', note, 'createdAt', created_at, 'removedAt', removed_at)) order by created_at, id) from public.surname_combos), '[]'::jsonb)
+  );
+end $$;
+revoke all on function public.diary_snapshot() from public, anon, authenticated;
+grant execute on function public.diary_snapshot() to authenticated;
 
 commit;

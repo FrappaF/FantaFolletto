@@ -95,3 +95,13 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 - Signup pubblico disabilitato confermato dall’utente. Hosting Cloudflare Pages attivato successivamente; login/PostgREST dal browser e iPhone restano da verificare: vedi [ACTIVATION.md](ACTIVATION.md).
 
 - Verifica dopo il collegamento: **43 test automatici**, build con configurazione reale e controllo PWA superati; la demo nei test rimane isolata anche in un checkout configurato.
+
+## Incremento — Catalogo, categorie e combo
+
+**Stato: implementato, verificato, applicato a Supabase e pubblicato su Pages. Deployment del commit `bfaf811` confermato riuscito dall’API il 14 novembre 2026; dettagli in [ACTIVATION.md](ACTIVATION.md).**
+
+- Catalogo approvato di 37 eventi, sei categorie separate, rarità e sfide una volta al giorno; eventi precedenti di prova archiviati.
+- Filtri nella selezione e nell’admin; modifica categoria/rarità/ripetizione; prossimo punteggio e bonus nel diario.
+- Scheda admin Combo con incremento e tetto modificabili, anteprima e decorrenza da domani in Europe/Rome.
+- Calcolo autorevole lato server, regole versionate, ordine cronologico degli episodi, annullamenti, premi e stime offline coerenti.
+- Verifica locale ampliata a 58 test e prova ospitata con rollback; controllo visuale Chromium a 390 CSS px, senza equivalenza con iPhone reale.

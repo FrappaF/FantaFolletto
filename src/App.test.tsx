@@ -121,8 +121,8 @@ it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisc
   await user.click(screen.getByRole('button', { name: /Segna un evento/ }))
   await user.type(screen.getByRole('searchbox'), 'speciale')
   await user.click(screen.getByRole('button', { name: /Un caffè speciale/ }))
-  await screen.findByText(/Un caffè speciale · \+40 punti/)
-  expect(document.querySelector('.score-number')?.textContent).toBe('50punti')
+  await screen.findByText(/Un caffè speciale · \+48 punti/)
+  expect(document.querySelector('.score-number')?.textContent).toBe('58punti')
   expect(screen.getByRole('heading', { name: 'Un caffè offerto' })).toBeTruthy()
   expect(
     screen.getByRole('heading', { name: 'Un caffè speciale' }),

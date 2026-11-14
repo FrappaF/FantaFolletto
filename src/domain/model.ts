@@ -1,5 +1,23 @@
 import { validDay } from './validation'
 
+import {
+  previewEvent,
+  recalculateCombos,
+  nextRomeDay,
+  defaultCategories,
+} from './scoring'
+export type EventCategory = {
+  id: string
+  name: string
+  icon: string
+  order: number
+}
+export type ScoringRule = {
+  version: number
+  effectiveDay: string
+  incrementPercent: number
+  maxMultiplier: number
+}
 export type EventDefinition = {
   id: string
   name: string
@@ -7,6 +25,9 @@ export type EventDefinition = {
   points: number
   version: number
   archived: boolean
+  categoryId?: string
+  rarity?: 'normal' | 'rare' | 'legendary'
+  repeat?: 'unlimited' | 'daily'
 }
 
 export type Reward = {
@@ -28,6 +49,10 @@ export type Entry = {
   occurredAt: string
   voidedAt?: string
   receivedAt?: string
+  basePoints?: number
+  comboIndex?: number
+  bonusPoints?: number
+  scoringVersion?: number
   sync?: 'pending' | 'error'
 }
 
@@ -74,6 +99,8 @@ export type NoteCommand =
 
 export type Diary = {
   schemaVersion: 1
+  categories?: EventCategory[]
+  scoringRules?: ScoringRule[]
   events: EventDefinition[]
   rewards: Reward[]
   entries: Entry[]
@@ -96,7 +123,16 @@ export type Command = (
   | { type: 'void'; id: string; at: string }
   | {
       type: 'save-event'
-      value: Pick<EventDefinition, 'id' | 'name' | 'description' | 'points'>
+      value: Pick<
+        EventDefinition,
+        | 'id'
+        | 'name'
+        | 'description'
+        | 'points'
+        | 'categoryId'
+        | 'rarity'
+        | 'repeat'
+      >
     }
   | { type: 'archive-event'; id: string }
   | {
@@ -105,6 +141,10 @@ export type Command = (
     }
   | { type: 'archive-reward'; id: string }
   | { type: 'deliver-award'; id: string }
+  | {
+      type: 'save-scoring'
+      value: { incrementPercent: number; maxMultiplier: number }
+    }
 ) & { operationId?: string; expectedVersion?: number }
 
 export type AdminCommand = Exclude<
@@ -118,9 +158,21 @@ export type AdminCommand = Exclude<
 export function initialDiary(): Diary {
   return {
     schemaVersion: 1,
+    categories: defaultCategories,
+    scoringRules: [
+      {
+        version: 1,
+        effectiveDay: '1970-01-01',
+        incrementPercent: 20,
+        maxMultiplier: 3,
+      },
+    ],
     events: [
       {
         id: 'coffee',
+        categoryId: 'encounters',
+        rarity: 'normal',
+        repeat: 'unlimited',
         name: 'Un caffè offerto',
         description: 'Una pausa gentile, tra una porta e l’altra.',
         points: 10,
@@ -129,6 +181,9 @@ export function initialDiary(): Diary {
       },
       {
         id: 'pet',
+        categoryId: 'animals',
+        rarity: 'normal',
+        repeat: 'unlimited',
         name: 'Assistente a quattro zampe',
         description: 'Un animale si unisce alla dimostrazione.',
         points: 15,
@@ -137,6 +192,9 @@ export function initialDiary(): Diary {
       },
       {
         id: 'laugh',
+        categoryId: 'encounters',
+        rarity: 'normal',
+        repeat: 'unlimited',
         name: 'Una risata contagiosa',
         description: 'Quella chiacchierata che migliora la giornata.',
         points: 10,
@@ -145,6 +203,9 @@ export function initialDiary(): Diary {
       },
       {
         id: 'demo',
+        categoryId: 'wins',
+        rarity: 'normal',
+        repeat: 'unlimited',
         name: 'Dimostrazione da applausi',
         description: 'Tutto fila liscio. Che soddisfazione!',
         points: 25,
@@ -153,6 +214,9 @@ export function initialDiary(): Diary {
       },
       {
         id: 'name',
+        categoryId: 'mishaps',
+        rarity: 'normal',
+        repeat: 'unlimited',
         name: 'Oggi mi chiamo…',
         description: 'Ti chiamano con un nome tutto nuovo.',
         points: 5,
@@ -161,6 +225,9 @@ export function initialDiary(): Diary {
       },
       {
         id: 'rain',
+        categoryId: 'mishaps',
+        rarity: 'normal',
+        repeat: 'unlimited',
         name: 'Anche sotto la pioggia',
         description: 'Il meteo non ferma il tuo buonumore.',
         points: 15,
@@ -296,7 +363,10 @@ export function applyCommand(state: Diary, command: Command): Diary {
         )
       if (!Number.isFinite(Date.parse(command.at)))
         throw new Error('La data non è valida.')
-      return {
+      const score = previewEvent(state, event, command.at)
+      if (!score.available)
+        throw new Error('Questa sfida è già stata segnata oggi.')
+      return recalculateCombos({
         ...state,
         entries: [
           ...state.entries,
@@ -305,24 +375,52 @@ export function applyCommand(state: Diary, command: Command): Diary {
             eventId: event.id,
             eventVersion: event.version,
             name: event.name,
-            points: event.points,
+            ...score.entry,
             occurredAt: command.at,
           },
         ],
-      }
+      })
     }
     case 'void': {
       if (!state.entries.some((entry) => entry.id === command.id))
         throw new Error('Episodio non trovato.')
       if (!Number.isFinite(Date.parse(command.at)))
         throw new Error('La data non è valida.')
-      return {
+      return recalculateCombos({
         ...state,
         entries: state.entries.map((entry) =>
           entry.id === command.id && !entry.voidedAt
             ? { ...entry, voidedAt: command.at }
             : entry,
         ),
+      })
+    }
+    case 'save-scoring': {
+      const { incrementPercent, maxMultiplier } = command.value
+      checkInteger(incrementPercent, 0, 1000)
+      if (
+        !Number.isFinite(maxMultiplier) ||
+        maxMultiplier < 1 ||
+        maxMultiplier > 20 ||
+        Math.abs(maxMultiplier * 10 - Math.round(maxMultiplier * 10)) > 1e-8
+      )
+        throw new Error(
+          'Il tetto deve essere tra ×1 e ×20, con un decimale al massimo.',
+        )
+      const version =
+        Math.max(0, ...(state.scoringRules ?? []).map((rule) => rule.version)) +
+        1
+      if (
+        command.expectedVersion !== undefined &&
+        command.expectedVersion !== version - 1
+      )
+        throw new Error('Le regole sono cambiate. Ricarica prima di salvare.')
+      return {
+        ...state,
+        scoringRules: [
+          ...(state.scoringRules ?? []),
+          { ...command.value, version, effectiveDay: nextRomeDay(new Date()) },
+        ],
       }
     }
     case 'save-event': {
@@ -330,10 +428,25 @@ export function applyCommand(state: Diary, command: Command): Diary {
       checkText(value.name, 60)
       checkText(value.description, 180, false)
       checkInteger(value.points, -1000, 1000)
+      if (
+        value.categoryId &&
+        !(state.categories ?? defaultCategories).some(
+          (category) => category.id === value.categoryId,
+        )
+      )
+        throw new Error('Categoria non valida.')
+      if (
+        value.rarity &&
+        !['normal', 'rare', 'legendary'].includes(value.rarity)
+      )
+        throw new Error('Rarità non valida.')
+      if (value.repeat && !['unlimited', 'daily'].includes(value.repeat))
+        throw new Error('Ripetizione non valida.')
       const previous = state.events.find((event) => event.id === value.id)
       if (previous?.archived)
         throw new Error('Un evento archiviato non può essere modificato.')
       const event: EventDefinition = {
+        ...previous,
         ...value,
         name: value.name.trim(),
         description: value.description.trim(),

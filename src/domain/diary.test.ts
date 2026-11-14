@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { applyCommand, initialDiary } from './model'
+import { applyCommand, initialDiary, type Diary } from './model'
 import { dayKey, rankings, rewardProgress, statistics, weekKey } from './stats'
+
+const legacyDiary = (): Diary => ({ ...initialDiary(), scoringRules: undefined })
 
 const at = '2026-11-14T10:00:00.000Z'
 const now = new Date(at)
@@ -8,7 +10,7 @@ const record = { type: 'record', id: 'one', eventId: 'coffee', at } as const
 
 describe('integrità del diario', () => {
   it('un ritentativo non conta due volte lo stesso episodio', () => {
-    const state = applyCommand(initialDiary(), record)
+    const state = applyCommand(legacyDiary(), record)
     expect(applyCommand(state, record).entries).toHaveLength(1)
     expect(statistics(state, now).total).toBe(10)
     expect(() => applyCommand(state, { ...record, eventId: 'pet' })).toThrow(
@@ -20,7 +22,7 @@ describe('integrità del diario', () => {
   })
 
   it('modificare e archiviare il catalogo non riscrive lo storico', () => {
-    let state = applyCommand(initialDiary(), record)
+    let state = applyCommand(legacyDiary(), record)
     state = applyCommand(state, {
       type: 'save-event',
       value: { id: 'coffee', name: 'Caffè nuovo', description: '', points: 50 },
@@ -44,7 +46,7 @@ describe('integrità del diario', () => {
   })
 
   it('annullare è idempotente, tracciato e aggiorna statistiche e progressi', () => {
-    let state = initialDiary()
+    let state = legacyDiary()
     for (let i = 0; i < 4; i++)
       state = applyCommand(state, { ...record, id: String(i), eventId: 'demo' })
     expect(rewardProgress(state, state.rewards[0], now).reached).toBe(true)
@@ -75,7 +77,7 @@ describe('integrità del diario', () => {
       description: '',
       points: -10,
     }
-    let state = applyCommand(initialDiary(), {
+    let state = applyCommand(legacyDiary(), {
       type: 'save-event',
       value: event,
     })
@@ -109,7 +111,7 @@ describe('integrità del diario', () => {
   })
 
   it('crea, modifica e archivia un premio senza perdere la definizione', () => {
-    let state = applyCommand(initialDiary(), {
+    let state = applyCommand(legacyDiary(), {
       type: 'save-reward',
       value: {
         id: 'trip',
@@ -155,7 +157,7 @@ describe('calendario Europe/Rome', () => {
     expect(dayKey('2026-10-25T00:30:00Z')).toBe(dayKey('2026-10-25T01:30:00Z'))
   })
   it('il nuovo lunedì azzera solo il progresso settimanale', () => {
-    const state = applyCommand(initialDiary(), record)
+    const state = applyCommand(legacyDiary(), record)
     expect(statistics(state, new Date('2026-11-16T12:00:00Z'))).toMatchObject({
       week: 0,
       today: 0,

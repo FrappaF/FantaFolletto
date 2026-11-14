@@ -11,7 +11,7 @@ Sul piano Free prevedere copie manuali prima di migrazioni e periodicamente dura
 Il backup deve comprendere:
 
 - Schema, funzioni, policy, grant e versioni delle migrazioni applicate.
-- Dati delle tabelle applicative: `profiles`, `events`, `event_versions`, `entries`, `rewards`, `awards`, `admin_audit`.
+- Dati delle tabelle applicative: `profiles`, `event_categories`, `events`, `event_versions`, `scoring_rules`, `entries`, `rewards`, `awards`, `admin_audit`, `surname_combos`, `daily_notes`.
 - Utenti e identità Auth, mantenendo gli UUID: `profiles.id` referenzia `auth.users.id`. Verificare quali dati Auth vengono inclusi dai comandi ufficiali della versione CLI in uso; non supporlo da un dump generico di `public`.
 - Configurazione del progetto e Auth, regioni, signup disabilitato e variabili pubbliche del frontend. Le chiavi segrete e le password restano nel gestore password, separate dalle copie consultabili.
 
@@ -29,12 +29,15 @@ Usare un progetto Supabase di prova nuovo, senza utenti o dati reali. Il riprist
 
 ## Aggiornamenti
 
-- Il frontend è su [fantafolletto.pages.dev](https://fantafolletto.pages.dev), progetto Cloudflare Pages `fantafolletto`. Ogni push su GitHub `main` avvia una nuova build di produzione; controllare l’esito in Workers & Pages → fantafolletto → Deployments prima di considerare pubblicata una modifica. Le anteprime automatiche sono disabilitate e il loro ambiente è separato in modalità demo. Modificare variabili `VITE_*` richiede una nuova build.
+- Il frontend è su [fantafolletto.pages.dev](https://fantafolletto.pages.dev), progetto Cloudflare Pages `fantafolletto`. Il trigger automatico su GitHub `main` risulta abilitato nella configurazione, ma non è ancora verificato dopo un push; controllare l’esito in Workers & Pages → fantafolletto → Deployments prima di considerare pubblicata una modifica, avviando un deploy manuale se non compare una nuova build. Le anteprime automatiche sono disabilitate e il loro ambiente è separato in modalità demo. Modificare variabili `VITE_*` richiede una nuova build.
 - Prima di cambiare schema fare un backup e verificare la migrazione su un progetto di prova.
 - Le code attuali sono `schemaVersion: 1`, con namespace progetto + account. Una futura versione deve leggerle o migrare esplicitamente i dati; in caso di incompatibilità l'app conserva e segnala, senza azzerare.
 - Il service worker conserva soltanto risorse statiche. La nuova versione si attiva su richiesta quando non ci sono moduli, scritture o operazioni pendenti. Non introdurre aggiornamenti forzati che saltino questa protezione.
+- La disponibilità di nuove versioni viene controllata alla registrazione, al ritorno in primo piano, alla riconnessione e ogni cinque minuti mentre la pagina è visibile e online. Un errore temporaneo non invalida le risorse già disponibili offline. Il controllo non applica la versione senza conferma.
 - I browser aperti durante un aggiornamento possono avere regole vecchie. Il server conserva le versioni e la validità temporale, e i ritentativi usano lo stesso identificativo.
 - Non cancellare lo storage locale per risolvere un errore prima di aver verificato gli inserimenti ancora in coda. Il logout li conserva per lo stesso account.
+
+Se Safari mostra ancora font, logo o icone precedenti, ricaricare la pagina, attendere il download della nuova versione e premere «Aggiorna app» quando compare. Se il pulsante è disabilitato, chiudere i moduli e attendere il completamento degli invii. Nella prova locale Chromium una scheda con la vecchia foglia è passata a F/Fraunces/nuove icone senza perdere l'episodio demo già salvato. Questo controllo non certifica il comportamento del Safari reale. Non suggerire la cancellazione di dati del sito o la rimozione della PWA per aggiornare la grafica.
 
 ## Disponibilità e limiti
 
@@ -60,3 +63,17 @@ La prima versione scarica uno snapshot completo, adeguato al volume di una gioca
 | Backup e ripristino del servizio reale | Da eseguire |
 
 Non presentare i controlli simulati come collaudo del servizio ospitato o del telefono.
+
+## Catalogo e combo giornaliera
+
+In admin → Eventi assegna categoria, rarità e ripetizione. Le sei categorie sono predefinite nel database; la gestione dei loro nomi/icone non è esposta nella UI. Gli eventi precedenti di prova sono consultabili con «Mostra gli archiviati» e non sono disponibili alla giocatrice. Le sfide si registrano manualmente una volta al giorno e non hanno moltiplicatore.
+
+In admin → Combo puoi cambiare percentuale (0–1000% intero) e tetto (×1–×20 con un decimale). L’anteprima parte da 10 punti. Le modifiche valgono dal giorno seguente in Europe/Rome; se salvi più volte, prevale l’ultima versione per quel giorno. 0% o ×1 disattivano il bonus. La baseline iniziale è +20%, tetto ×3.
+
+Le ripetizioni si contano per evento, anche dopo una modifica del nome o dei punti. Il server ordina gli episodi per data e identificativo. Annullamenti e invii offline in ritardo ricalcolano i bonus del relativo evento/giorno, usando le impostazioni storiche degli episodi, e riconciliano i premi. I punti in attesa e le anticipazioni nel catalogo sono stime. Le vecchie code restano leggibili e non si eliminano.
+
+## Raccolte Cognomi e Note
+
+Le voci «Cognomi» e «Note» nell’admin consentono a entrambi gli account di curare le raccolte, separate dai punteggi. Nel diario la raccolta cognomi si chiama «Combo»; la scheda admin «Combo» resta dedicata alle regole dei bonus. Le rimozioni sono tracciate, le operazioni offline restano nella coda dell’account e l’export comprende anche le raccolte.
+
+Le migrazioni di novembre aggiungono tabelle e conservano gli snapshot precedenti nel namespace privato, senza accesso client. Le copie delle funzioni permettono un ripristino limitato delle definizioni, non un ripristino dei dati o del servizio. Durante questo rilascio l’esportazione completa dei dati e delle identità Auth è stata rifiutata dall’approvazione automatica: backup completo e prova di ripristino rimangono non eseguiti.

@@ -1,5 +1,21 @@
+/* Fraunces, sottoinsieme latino originale Fontsource, licenza OFL 1.1. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-italic.woff2') format('woff2');
+}
+
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-ui);
   color: #20382a;
   background: #fafbf8;
   font-synthesis: none;
@@ -18,15 +34,19 @@
   --gold: #856b32;
   --danger: #a43d36;
   --shadow: 0 8px 32px #243b2510;
+  --page-top-space: 24px;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .header-actions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 5px;
 }
 .login-page {
-  padding-top: max(45px, env(safe-area-inset-top));
+  --page-top-space: 48px;
 }
 .login-page h1 {
   margin-bottom: 18px;
@@ -86,9 +106,6 @@
 }
 .award-list button {
   margin-top: 13px;
-}
-.awards-panel {
-  margin-top: 24px;
 }
 .pwa-prompt {
   position: sticky;
@@ -202,6 +219,12 @@ p {
 svg {
   flex-shrink: 0;
 }
+.diary-icon-accent {
+  stroke: var(--gold);
+}
+.score-flower .diary-icon-accent {
+  stroke: currentColor;
+}
 small {
   font-size: 12px;
 }
@@ -209,7 +232,7 @@ small {
   max-width: 640px;
   margin: 0 auto;
   padding: 0 24px;
-  padding-top: env(safe-area-inset-top);
+  padding-top: calc(var(--page-top-space) + env(safe-area-inset-top, 0px));
 }
 .demo-banner {
   display: flex;
@@ -239,34 +262,65 @@ small {
   gap: 10px;
   padding: 15px 0 27px;
 }
+.brand-home {
+  min-width: 0;
+  text-decoration: none;
+  border-radius: 14px;
+}
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  text-decoration: none;
-  font-size: 21px;
-  font-weight: 720;
-  letter-spacing: -0.8px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--ink);
 }
-.brand-light {
-  font-weight: 430;
+.brand-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.brand-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5.6vw, 25px);
+  font-weight: 650;
+  letter-spacing: -0.85px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.brand-name em {
+  font-weight: 450;
 }
 .brand small {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 450;
   color: var(--muted);
-  letter-spacing: 0.05px;
-  margin-top: 4px;
+  letter-spacing: 0.1px;
+  line-height: 1.5;
+  margin-top: 5px;
 }
 .brand-mark {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: block;
   border-radius: 14px;
-  background: var(--green-soft);
-  color: var(--green);
+  background: #20563d;
+}
+.login-brand {
+  margin-bottom: 34px;
+}
+.login-brand .brand-mark {
+  width: 64px;
+  height: 64px;
+  border-radius: 19px;
+}
+.login-brand .brand-name {
+  font-size: clamp(22px, 6vw, 30px);
+}
+.login-brand .brand small {
+  font-size: 10px;
 }
 .icon-button {
   border: 0;
@@ -308,6 +362,21 @@ main {
 .page-title {
   margin: 10px 0 26px;
 }
+.page-title h1,
+.login-page h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 7.65vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.75px;
+  line-height: 1.2;
+}
+.section-heading h2,
+.reward-card h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
 .page-title > p {
   color: var(--muted);
   font-size: 14px;
@@ -335,7 +404,8 @@ main {
   align-items: baseline;
   gap: 10px;
   font-size: 75px;
-  font-weight: 550;
+  font-family: var(--font-display);
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: -4px;
   margin: 9px 0 18px;
@@ -344,6 +414,7 @@ main {
   overflow-wrap: anywhere;
 }
 .score-number > span {
+  font-family: var(--font-ui);
   font-size: 15px;
   letter-spacing: 0;
   font-weight: 450;
@@ -453,7 +524,11 @@ main {
   margin: 0 0 16px;
 }
 .section-heading h2 {
-  font-size: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.section-heading .text-button {
+  flex-shrink: 0;
 }
 .text-button {
   display: inline-flex;
@@ -609,8 +684,7 @@ main {
   font-weight: 550;
 }
 .reward-card h3 {
-  font-size: 19px;
-  letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
 }
 .reward-card p {
   color: var(--muted);
@@ -667,8 +741,16 @@ progress::-moz-progress-bar {
   display: grid;
   gap: 18px;
 }
+.rewards-content {
+  display: grid;
+  gap: 24px;
+}
+.rewards-content > .panel,
+.rewards-content > .demo-footnote {
+  margin: 0;
+}
 .diary-quote {
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-style: italic;
   text-align: center;
   color: var(--muted);
@@ -829,6 +911,8 @@ progress::-moz-progress-bar {
   line-height: 1.5;
 }
 .stat-grid strong {
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 36px;
   letter-spacing: -1px;
   display: block;
@@ -876,6 +960,7 @@ progress::-moz-progress-bar {
   padding-bottom: 3px;
 }
 .rank {
+  flex-shrink: 0;
   width: 35px;
   height: 35px;
   display: grid;
@@ -891,7 +976,9 @@ progress::-moz-progress-bar {
 }
 .ranking li > div {
   flex: 1;
+  min-width: 0;
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 .ranking li strong {
   display: block;
@@ -999,7 +1086,14 @@ dialog::backdrop {
   margin-bottom: 13px;
 }
 .modal-heading h2 {
+  font-family: var(--font-display);
   font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  overflow-wrap: anywhere;
+}
+.modal-heading > div {
+  min-width: 0;
 }
 .modal-heading .eyebrow {
   margin-bottom: 5px;
@@ -1162,6 +1256,9 @@ fieldset {
   font-size: 12px;
   margin: -4px 0 20px;
 }
+.panel > .section-description:last-child {
+  margin-bottom: 0;
+}
 .catalog-list {
   display: grid;
   gap: 12px;
@@ -1246,7 +1343,8 @@ fieldset {
 
 @media (min-width: 750px) {
   .app {
-    padding: 0 35px;
+    padding-left: 35px;
+    padding-right: 35px;
   }
   .app-header {
     padding-top: 22px;
@@ -1385,4 +1483,109 @@ fieldset {
       transform: translateY(0);
     }
   }
+}
+
+/* Catalogo: filtri a capo, senza scorrimento orizzontale su iPhone. */
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+.category-filters button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 10px 12px;
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.category-filters button[aria-pressed='true'] {
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: var(--green);
+}
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.rarity {
+  border-radius: 8px;
+  padding: 0 5px;
+  font-weight: 700;
+}
+.rarity-rare {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.rarity-legendary {
+  background: #f4ead2;
+  color: #795d22;
+}
+.event-choice > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.event-choice > b {
+  flex-shrink: 0;
+}
+.event-choice:disabled {
+  opacity: 0.55;
+}
+.event-choice .combo-hint {
+  color: var(--green);
+  font-weight: 600;
+  margin-top: 6px;
+}
+.catalog-item .event-meta {
+  margin-top: 10px;
+}
+.rules-current {
+  margin: 0 0 16px;
+  background: var(--green-soft);
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.combo-preview {
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: 16px;
+  margin: 20px 0;
+}
+.combo-preview > strong {
+  font-size: 14px;
+}
+.combo-preview ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+}
+.combo-preview li {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 60px;
+  font-size: 12px;
+}
+.combo-preview b {
+  color: var(--green);
+  font-size: 18px;
+}
+.scoring-settings {
+  max-width: 700px;
+}
+.admin-tabs button {
+  min-width: 0;
 }

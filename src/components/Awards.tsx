@@ -29,7 +29,7 @@ export function Awards({
                 : 'Conquistato'}
           </span>
           <h3>{award.name}</h3>
-          <p>{award.description}</p>
+          {award.description && <p>{award.description}</p>}
           <p>
             {award.target} punti ·{' '}
             {award.period === 'week'
