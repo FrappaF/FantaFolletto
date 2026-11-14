@@ -82,8 +82,12 @@ Le due sezioni sono state integrate con il `main` remoto, preservando le categor
 
 Prove RPC ospitate per entrambi i ruoli superate con `ROLLBACK`: creazione, ritentativi, dati incompatibili respinti, lettura condivisa e rimozioni. Verificati i divieti di scrittura diretta, chiamata anonima e chiamata dei wrapper privati. Conteggi applicativi conservati; raccolte nuove vuote dopo le prove. Non è un collaudo Auth/PostgREST dal browser.
 
-82 test locali, build di produzione e controlli PWA; pubblicazione del frontend da confermare dopo il push. L’admin distingue «Combo» (regole dei bonus) da «Cognomi» (raccolta divertente).
+82 test locali, build di produzione e controlli PWA superati; frontend pubblicato e confermato dall’API Cloudflare. L’admin distingue «Combo» (regole dei bonus) da «Cognomi» (raccolta divertente).
 
 Il backup completo non è stato esportato: l’approvazione automatica ha rifiutato la lettura estesa di dati applicativi e identità Auth, non compresa nell’autorizzazione alla pubblicazione. Sono state effettuate soltanto aggiunte e conservate le definizioni precedenti. Non dichiarare eseguito un backup completo o una prova di ripristino del servizio.
 
 Gli advisor segnalano otto RPC `SECURITY DEFINER` intenzionali, con controlli di ruolo nel database e permessi anonimi revocati, e il consueto avviso Auth. Nessuna nuova concessione di scritture dirette o accessi ai wrapper privati. [RPC privilegiate](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable); [protezione password](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+Push su `main`: `803004729bdefdbd945c0b8e5a886e557f1ed394`. Deploy di produzione `940b7983-8a62-4f17-a206-4aa47a419b58`, build e fase deploy `success`, concluso il 14 novembre 2026 alle **22:50:05 UTC**. URL stabile [fantafolletto.pages.dev](https://fantafolletto.pages.dev). Avviato manualmente sul branch `main`: al controllo dopo il push non risultava un deploy automatico nuovo. La configurazione automatica non è stata modificata.
+
+Richiesta HTTP pubblica dall’ambiente: `403 Forbidden` con risposta del proxy Envoy. Questa prova non certifica rendering o login del sito; la pubblicazione è confermata dal servizio Cloudflare. Nessuna cancellazione di dati o cache richiesta. Nell’app già aperta usare «Aggiorna app» quando disponibile, completando prima eventuali invii.
