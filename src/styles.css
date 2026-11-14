@@ -792,10 +792,40 @@ progress::-moz-progress-bar {
 .bottom-nav button + button {
   margin-left: 5px;
 }
+.diary-collection {
+  display: grid;
+  gap: 24px;
+  padding-top: 10px;
+}
+.diary-collection > .page-title,
+.diary-collection > .panel,
+.diary-collection > .demo-footnote,
+.collection-actions > .record-button {
+  margin: 0;
+}
+.collection-actions {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.note-feedback,
+.combo-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--green);
+  font-size: 13px;
+}
+.note-feedback svg,
+.combo-feedback svg {
+  margin-top: 3px;
+}
 .daily-notes {
   display: grid;
   gap: 16px;
-  margin-top: 20px;
+}
+.daily-notes > .panel {
+  margin: 0;
 }
 .note-list {
   list-style: none;
@@ -828,13 +858,6 @@ progress::-moz-progress-bar {
   margin-top: 8px;
   color: var(--muted);
   font-size: 12px;
-}
-.note-feedback {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--green);
-  font-size: 13px;
 }
 .note-preview {
   margin: 20px 0;
@@ -885,12 +908,13 @@ progress::-moz-progress-bar {
 .combo-plus {
   color: var(--green);
 }
-.combo-feedback {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--green);
-  font-size: 13px;
+.note-list > li:first-child .note-card,
+.combo-list > li:first-child .combo-card {
+  padding-top: 0;
+}
+.note-list > li:last-child .note-card,
+.combo-list > li:last-child .combo-card {
+  padding-bottom: 0;
 }
 .stat-grid {
   display: grid;
@@ -1207,6 +1231,37 @@ fieldset {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 22px;
+}
+.collection-form,
+.collection-form > fieldset {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.collection-form label,
+.collection-form > .form-actions,
+.collection-form > .form-error {
+  margin: 0;
+}
+.collection-form label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+}
+.collection-form input,
+.collection-form textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+.collection-form input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-inline-size: 0;
+  inline-size: 100%;
+}
+.collection-form input[type='date']::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
 }
 .form-error,
 .error-banner {

@@ -91,6 +91,7 @@ export function Combos({
 
   return (
     <section
+      className="diary-collection"
       data-update-blocked={adding || !!removing || saving ? 'true' : 'false'}
     >
       <div className="page-title">
@@ -100,21 +101,23 @@ export function Combos({
         </h1>
         <p>Da soli o in combo: certe scoperte meritano un posto nel diario.</p>
       </div>
-      <button
-        className="primary-button record-button"
-        onClick={() => {
-          setMessage('')
-          setAdding(true)
-        }}
-      >
-        <Plus size={21} aria-hidden="true" /> Aggiungi una combo
-      </button>
-      {message && (
-        <p className="combo-feedback" role="status">
-          <Check size={16} aria-hidden="true" />
-          {message}
-        </p>
-      )}
+      <div className="collection-actions">
+        <button
+          className="primary-button record-button"
+          onClick={() => {
+            setMessage('')
+            setAdding(true)
+          }}
+        >
+          <Plus size={21} aria-hidden="true" /> Aggiungi una combo
+        </button>
+        {message && (
+          <p className="combo-feedback" role="status">
+            <Check size={16} aria-hidden="true" />
+            {message}
+          </p>
+        )}
+      </div>
       <section
         className="panel combo-collection"
         aria-label="Raccolta di cognomi divertenti"
@@ -191,7 +194,7 @@ export function Combos({
           <p className="modal-description">
             Un cognome può bastare. Il secondo è facoltativo.
           </p>
-          <form onSubmit={(event) => void save(event)}>
+          <form className="collection-form" onSubmit={(event) => void save(event)}>
             <fieldset disabled={busy || saving}>
               <label>
                 Primo cognome
@@ -229,13 +232,15 @@ export function Combos({
                 {error}
               </p>
             )}
-            <button
-              className="primary-button"
-              type="submit"
-              disabled={busy || saving || !first.trim()}
-            >
-              {saving || busy ? 'Salvo…' : 'Salva combo'}
-            </button>
+            <div className="form-actions">
+              <button
+                className="primary-button"
+                type="submit"
+                disabled={busy || saving || !first.trim()}
+              >
+                {saving || busy ? 'Salvo…' : 'Salva combo'}
+              </button>
+            </div>
           </form>
         </Modal>
       )}

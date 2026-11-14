@@ -92,6 +92,7 @@ export function DailyNotes({
 
   return (
     <section
+      className="diary-collection"
       data-update-blocked={adding || !!removing || saving ? 'true' : 'false'}
     >
       <div className="page-title">
@@ -104,22 +105,24 @@ export function DailyNotes({
           vuoi ricordare.
         </p>
       </div>
-      <button
-        className="primary-button record-button"
-        onClick={() => {
-          if (!text) setDay(dayKey(now))
-          setMessage('')
-          setAdding(true)
-        }}
-      >
-        <Plus size={21} aria-hidden="true" /> Scrivi una nota
-      </button>
-      {message && (
-        <p className="note-feedback" role="status">
-          <Check size={16} aria-hidden="true" />
-          {message}
-        </p>
-      )}
+      <div className="collection-actions">
+        <button
+          className="primary-button record-button"
+          onClick={() => {
+            if (!text) setDay(dayKey(now))
+            setMessage('')
+            setAdding(true)
+          }}
+        >
+          <Plus size={21} aria-hidden="true" /> Scrivi una nota
+        </button>
+        {message && (
+          <p className="note-feedback" role="status">
+            <Check size={16} aria-hidden="true" />
+            {message}
+          </p>
+        )}
+      </div>
       <p className="demo-footnote">
         {shared
           ? 'Le note sono condivise con l’altro account.'
@@ -193,7 +196,7 @@ export function DailyNotes({
           <p className="modal-description">
             Puoi aggiungere più note alla stessa giornata.
           </p>
-          <form onSubmit={(event) => void save(event)}>
+          <form className="collection-form" onSubmit={(event) => void save(event)}>
             <fieldset disabled={working}>
               <label>
                 Giornata
@@ -206,35 +209,39 @@ export function DailyNotes({
                   onChange={(event) => setDay(event.target.value)}
                 />
               </label>
-              <label>
-                Cosa è successo?
-                <textarea
-                  autoFocus
-                  required
-                  maxLength={2000}
-                  rows={7}
-                  value={text}
-                  placeholder="Oggi è successa una cosa da ricordare…"
-                  onChange={(event) => setText(event.target.value)}
-                  aria-describedby="note-length"
-                />
-              </label>
-              <p id="note-length" className="field-hint">
-                {text.length} / 2000 caratteri
-              </p>
+              <div>
+                <label>
+                  Cosa è successo?
+                  <textarea
+                    autoFocus
+                    required
+                    maxLength={2000}
+                    rows={7}
+                    value={text}
+                    placeholder="Oggi è successa una cosa da ricordare…"
+                    onChange={(event) => setText(event.target.value)}
+                    aria-describedby="note-length"
+                  />
+                </label>
+                <p id="note-length" className="field-hint">
+                  {text.length} / 2000 caratteri
+                </p>
+              </div>
             </fieldset>
             {error && (
               <p className="form-error" role="alert">
                 {error}
               </p>
             )}
-            <button
-              className="primary-button"
-              type="submit"
-              disabled={working || !text.trim() || !validDay(day)}
-            >
-              {working ? 'Salvo…' : 'Salva nota'}
-            </button>
+            <div className="form-actions">
+              <button
+                className="primary-button"
+                type="submit"
+                disabled={working || !text.trim() || !validDay(day)}
+              >
+                {working ? 'Salvo…' : 'Salva nota'}
+              </button>
+            </div>
           </form>
         </Modal>
       )}
