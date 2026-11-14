@@ -127,7 +127,7 @@ export function RewardCard({
         </span>
       </div>
       <h3>{reward.name}</h3>
-      <p>{reward.description}</p>
+      {reward.description && <p>{reward.description}</p>}
       <div className="progress-meta">
         <span>
           {progress.reached

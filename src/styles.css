@@ -23,6 +23,7 @@
 
 .header-actions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 5px;
 }
@@ -87,9 +88,6 @@
 }
 .award-list button {
   margin-top: 13px;
-}
-.awards-panel {
-  margin-top: 24px;
 }
 .pwa-prompt {
   position: sticky;
@@ -245,9 +243,14 @@ small {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  font-size: 21px;
+  min-width: 0;
+  font-size: clamp(18px, 5.4vw, 21px);
   font-weight: 720;
   letter-spacing: -0.8px;
+}
+.brand > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .brand-light {
   font-weight: 430;
@@ -261,6 +264,7 @@ small {
   margin-top: 4px;
 }
 .brand-mark {
+  flex-shrink: 0;
   width: 42px;
   height: 42px;
   display: grid;
@@ -455,6 +459,11 @@ main {
 }
 .section-heading h2 {
   font-size: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.section-heading .text-button {
+  flex-shrink: 0;
 }
 .text-button {
   display: inline-flex;
@@ -612,6 +621,7 @@ main {
 .reward-card h3 {
   font-size: 19px;
   letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
 }
 .reward-card p {
   color: var(--muted);
@@ -667,6 +677,14 @@ progress::-moz-progress-bar {
 .reward-list {
   display: grid;
   gap: 18px;
+}
+.rewards-content {
+  display: grid;
+  gap: 24px;
+}
+.rewards-content > .panel,
+.rewards-content > .demo-footnote {
+  margin: 0;
 }
 .diary-quote {
   font-family: Georgia, serif;
@@ -777,6 +795,7 @@ progress::-moz-progress-bar {
   padding-bottom: 3px;
 }
 .rank {
+  flex-shrink: 0;
   width: 35px;
   height: 35px;
   display: grid;
@@ -792,7 +811,9 @@ progress::-moz-progress-bar {
 }
 .ranking li > div {
   flex: 1;
+  min-width: 0;
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 .ranking li strong {
   display: block;
@@ -901,6 +922,10 @@ dialog::backdrop {
 }
 .modal-heading h2 {
   font-size: 22px;
+  overflow-wrap: anywhere;
+}
+.modal-heading > div {
+  min-width: 0;
 }
 .modal-heading .eyebrow {
   margin-bottom: 5px;
@@ -1061,6 +1086,9 @@ fieldset {
   color: var(--muted);
   font-size: 12px;
   margin: -4px 0 20px;
+}
+.panel > .section-description:last-child {
+  margin-bottom: 0;
 }
 .catalog-list {
   display: grid;

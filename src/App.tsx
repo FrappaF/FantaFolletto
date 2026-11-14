@@ -430,38 +430,41 @@ export function DiaryView({
                       </h1>
                       <p>Piccoli traguardi, sorprese da condividere.</p>
                     </div>
-                    <div className="reward-list">
-                      {rewards.map((reward) => (
-                        <RewardCard
-                          key={reward.id}
-                          diary={diary}
-                          reward={reward}
-                          now={now}
-                        />
-                      ))}
+                    <div className="rewards-content">
+                      {rewards.length > 0 ? (
+                        <div className="reward-list">
+                          {rewards.map((reward) => (
+                            <RewardCard
+                              key={reward.id}
+                              diary={diary}
+                              reward={reward}
+                              now={now}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <section className="panel">
+                          <EmptyState
+                            title="Le sorprese sono in preparazione"
+                            icon="gift"
+                          >
+                            Qui troverai i premi scelti per te.
+                          </EmptyState>
+                        </section>
+                      )}
+                      {remote && (
+                        <section className="panel awards-panel">
+                          <SectionHeading title="I premi conquistati" />
+                          <Awards awards={diary.awards ?? []} />
+                        </section>
+                      )}
+                      {!remote && (
+                        <p className="demo-footnote">
+                          Premi di esempio. Il progresso è dimostrativo: non
+                          costituisce un’assegnazione definitiva.
+                        </p>
+                      )}
                     </div>
-                    {!rewards.length && (
-                      <section className="panel">
-                        <EmptyState
-                          title="Le sorprese sono in preparazione"
-                          icon="gift"
-                        >
-                          Qui troverai i premi scelti per te.
-                        </EmptyState>
-                      </section>
-                    )}
-                    {remote && (
-                      <section className="panel awards-panel">
-                        <SectionHeading title="I premi conquistati" />
-                        <Awards awards={diary.awards ?? []} />
-                      </section>
-                    )}
-                    {!remote && (
-                      <p className="demo-footnote">
-                        Premi di esempio. Il progresso è dimostrativo: non
-                        costituisce un’assegnazione definitiva.
-                      </p>
-                    )}
                   </>
                 )}
               </>
