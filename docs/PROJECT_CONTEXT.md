@@ -14,7 +14,7 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 - L'utente ha scelto una webapp con account e dati condivisi e ha approvato **React + Vite**.
 - La direzione di design confermata è **Diario**. La proposta alternativa Missione non è la direzione da sviluppare.
 - Le priorità espresse sono **ottimizzazione per iPhone, velocità e stabilità**, con budget di hosting molto contenuto.
-- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato l'avvio dello sviluppo e una roadmap per sprint: sono implementati la demo locale e il codice degli sprint 2–3, con Supabase ora predisposto e verificato a livello database; pubblicazione e collaudo finale dal browser/iPhone restano da eseguire.
+- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato sviluppo e pubblicazione: sono implementati la demo locale e il codice degli sprint 2–3, con Supabase predisposto e verificato a livello database. Il frontend è pubblicato su Cloudflare Pages; il collaudo finale dal browser/iPhone resta da eseguire.
 
 ## 2. Stato e grado delle decisioni
 
@@ -42,7 +42,7 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - `vite-plugin-pwa` per manifest, risorse offline e gestione degli aggiornamenti.
 - CSS leggero, carattere di sistema e icone essenziali per il design.
 
-### Stato reale dopo il collegamento Supabase
+### Stato reale dopo la pubblicazione
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
 - Due modalità distinte: demo locale esplicita, oppure `remote` con login email/password e ruolo letto dal database. La produzione senza configurazione non apre una demo né un falso admin. `.env.example` descrive le sole variabili pubbliche; `.env.demo` abilita una build demo separata.
@@ -59,7 +59,8 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - **Supabase predisposto:** progetto FantaFolletto `eynngtnxtomcwblmughq` creato dall’utente, attivo in `eu-west-1`; schema e correzioni advisor applicati tramite MCP. Due utenti Auth confermati dall’utente e ruoli admin/player assegnati. `.env.local` configurato, ignorato da Git; nessun dato personale o segreto nel repository.
 - Verifica transazionale sul database ospitato superata: ruoli, RPC, divieti di scrittura diretta, punti, ritentativi, premi, annullamenti e storico; rollback finale, catalogo e dati di gioco ancora vuoti. Nuova migrazione con indici, policy che valutano i claim una volta per statement e revoca dell’accesso client al trigger automatico RLS.
 - Non è stato eseguito un login reale dal frontend: le prove database impostano i claim del ruolo SQL, non producono sessioni Auth. Il tentativo HTTP dall’ambiente ha fallito la risoluzione DNS (`EAI_AGAIN`). L’utente ha confermato il 14 novembre 2026 che “Allow new users to sign up” è disattivato nella dashboard; registrare questa conferma senza presentarla come verifica automatica del connettore, che non espone tale impostazione.
-- **Hosting non ancora configurato**, nessuna pubblicazione web o prova su iPhone. Backup/ripristino ospitato e misure LCP/INP da fare; verifica visuale ancora non eseguita. Dettagli, limiti e link degli advisor in [ACTIVATION.md](ACTIVATION.md).
+- **Pubblicato su [fantafolletto.pages.dev](https://fantafolletto.pages.dev)**: progetto Cloudflare Pages `fantafolletto`, repository GitHub esistente, produzione automatica da `main`, build `npm run build`, output `dist`, Node 24. Variabili pubbliche Supabase configurate in produzione con modalità `remote`; anteprime automatiche disabilitate e ambiente preview predisposto solo come demo. Nessun servizio a pagamento attivato.
+- Primo deploy confermato riuscito dall’API e dai log Cloudflare il 14 novembre 2026; build locale e controllo PWA superati. Il browser dell’agente non ha completato l’avvio per errore di requisiti/trasporto; il controllo HTTP dall’ambiente è stato respinto dal proxy. Nessuna verifica visuale, login reale o prova iPhone dichiarata come superata. Backup/ripristino ospitato e misure LCP/INP da fare. Dettagli, limiti e link degli advisor in [ACTIVATION.md](ACTIVATION.md).
 - Attivazione passo passo in [SETUP.md](SETUP.md), manutenzione in [OPERATIONS.md](OPERATIONS.md), criteri degli sprint in [ROADMAP.md](ROADMAP.md), avvio in [README.md](../README.md).
 
 Aggiornare questa sezione quando lo stato cambia. Non confondere il comportamento desiderato con quello effettivamente disponibile.
@@ -282,7 +283,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 - Eventuali estensioni a limiti di ripetizione, retrodatazione, periodi personalizzati e normalizzazione dei record: fuori dalla prima versione.
 - Collegamento dal browser ai due account Supabase già predisposti e condizioni Free; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
 - Verifica del modello/iOS reale, Safari e Home, accessibilità, affidabilità offline e prestazioni sul telefono.
-- Pubblicazione Cloudflare Pages, prova di backup/ripristino e catalogo definitivo prima della consegna.
+- Collaudo del frontend già pubblicato su Cloudflare Pages, prova di backup/ripristino e catalogo definitivo prima della consegna.
 
 ## 11. Registro delle decisioni
 
@@ -302,6 +303,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Progetto Supabase creato e integrazione autorizzata dall’utente; account indicati per admin e giocatrice | Migrazioni applicate, profili assegnati e configurazione locale reale; nessuna email/UUID personale versionata |
 | 2026-11-14 | Verifica sul database ospitato con rollback e revisione advisor | Core dati verificato senza lasciare dati demo; Auth/PostgREST dal browser e consegna iPhone restano da collaudare |
 | 2026-11-14 | Utente conferma “Allow new users to sign up” già disattivato | Signup pubblico chiuso secondo conferma della dashboard; non richiedere nuovamente questa conferma |
+| 2026-11-14 | Utente autorizza l’agente a pubblicare tramite Cloudflare | Pages collegato a GitHub `main`, produzione remota su `fantafolletto.pages.dev`, anteprime automatiche disabilitate; deploy confermato da Cloudflare, verifica browser/iPhone ancora da completare |
 
 ## 12. Fonti della ricerca
 

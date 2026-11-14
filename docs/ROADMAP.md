@@ -57,7 +57,7 @@ Coda per progetto/account, riconciliazione, errori recuperabili, Web Locks quand
 
 **Stato: preparazione parziale; consegna finale non ancora completata.**
 
-Pronti build, impostazioni Pages, header CSP/cache, guida Home, export e procedure di manutenzione. Il progetto Supabase e gli account sono predisposti; rimangono catalogo definitivo, pubblicazione, login dal browser, prove sul telefono, misure prestazioni e backup/ripristino effettivo. Vedere [OPERATIONS.md](OPERATIONS.md).
+Frontend pubblicato su [Cloudflare Pages](https://fantafolletto.pages.dev), con GitHub `main` e variabili Supabase di produzione; deploy confermato riuscito da Cloudflare. Pronti header CSP/cache, guida Home, export e procedure di manutenzione. Supabase e account sono predisposti; rimangono catalogo definitivo, login e verifica visuale dal browser, prove sul telefono, misure prestazioni e backup/ripristino effettivo. Il browser dell’agente ha avuto un errore di avvio/trasporto. Vedere [ACTIVATION.md](ACTIVATION.md) e [OPERATIONS.md](OPERATIONS.md).
 
 - Verifica su iPhone reale: Safari e Home, tastiera, safe area, testo ingrandito, connessione instabile e accessibilità.
 - Misure prestazioni, dimensione bundle e verifica aggiornamenti di versione con operazioni pendenti.
@@ -92,6 +92,6 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 - Assegnati i profili ai due utenti confermati. Configurazione locale privata, senza chiavi segrete.
 - Prova con rollback: autorizzazione, deduplicazione, punti server, premi, annullamenti e storico superati; nessun dato di gioco rimasto.
 - Correzioni advisor per indici, policy e trigger RLS automatico. Rimangono avvisi documentati per le RPC autorizzate, la protezione password Pro non attivata e gli indici ancora poco usati.
-- Signup pubblico disabilitato confermato dall’utente. Login/PostgREST dal browser, hosting e iPhone restano da verificare: vedi [ACTIVATION.md](ACTIVATION.md).
+- Signup pubblico disabilitato confermato dall’utente. Hosting Cloudflare Pages attivato successivamente; login/PostgREST dal browser e iPhone restano da verificare: vedi [ACTIVATION.md](ACTIVATION.md).
 
 - Verifica dopo il collegamento: **43 test automatici**, build con configurazione reale e controllo PWA superati; la demo nei test rimane isolata anche in un checkout configurato.

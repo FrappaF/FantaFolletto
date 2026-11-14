@@ -4,7 +4,9 @@ Una webapp da regalare: gli episodi del lavoro porta a porta diventano punti, re
 
 ## Stato
 
-Sono implementati il Diario, il codice per **account Supabase e dati condivisi**, la **coda offline** e la **PWA**. Sono presenti migrazione SQL, policy, test e istruzioni di attivazione. Il progetto Supabase è ora predisposto: migrazioni applicate, due account confermati con ruoli e configurazione locale reale. Verifica delle RPC sul database ospitato superata con rollback dei dati di prova. **Frontend non ancora pubblicato** e login dal browser/iPhone da collaudare: dettagli in [ACTIVATION.md](docs/ACTIVATION.md).
+**Indirizzo del diario: [fantafolletto.pages.dev](https://fantafolletto.pages.dev).**
+
+Sono implementati il Diario, il codice per **account Supabase e dati condivisi**, la **coda offline** e la **PWA**. Supabase è predisposto con migrazioni applicate e due account confermati con ruoli. Verifica delle RPC sul database ospitato superata con rollback dei dati di prova. Il frontend è pubblicato su Cloudflare Pages, collegato a GitHub `main`, con configurazione Supabase di produzione. Cloudflare conferma il deploy riuscito; il browser di verifica dell’agente ha avuto un errore di avvio/trasporto, quindi login e rendering dal browser/iPhone restano da collaudare. Dettagli in [ACTIVATION.md](docs/ACTIVATION.md).
 
 Stack: React, Vite, TypeScript, Supabase JS, TanStack Query, IndexedDB e vite-plugin-pwa. Nessun servizio a pagamento viene creato dagli script di sviluppo.
 

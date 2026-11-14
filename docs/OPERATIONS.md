@@ -29,6 +29,7 @@ Usare un progetto Supabase di prova nuovo, senza utenti o dati reali. Il riprist
 
 ## Aggiornamenti
 
+- Il frontend è su [fantafolletto.pages.dev](https://fantafolletto.pages.dev), progetto Cloudflare Pages `fantafolletto`. Ogni push su GitHub `main` avvia una nuova build di produzione; controllare l’esito in Workers & Pages → fantafolletto → Deployments prima di considerare pubblicata una modifica. Le anteprime automatiche sono disabilitate e il loro ambiente è separato in modalità demo. Modificare variabili `VITE_*` richiede una nuova build.
 - Prima di cambiare schema fare un backup e verificare la migrazione su un progetto di prova.
 - Le code attuali sono `schemaVersion: 1`, con namespace progetto + account. Una futura versione deve leggerle o migrare esplicitamente i dati; in caso di incompatibilità l'app conserva e segnala, senza azzerare.
 - Il service worker conserva soltanto risorse statiche. La nuova versione si attiva su richiesta quando non ci sono moduli, scritture o operazioni pendenti. Non introdurre aggiornamenti forzati che saltino questa protezione.
@@ -52,6 +53,7 @@ La prima versione scarica uno snapshot completo, adeguato al volume di una gioca
 | Riconciliazione con timeout, doppioni e annullamenti pendenti | IndexedDB simulato e trasporto controllato |
 | Login e separazione visiva giocatrice/admin | jsdom e Auth simulata |
 | Manifest, icone, service worker e build | Verifica della build statica |
+| Cloudflare Pages e configurazione di produzione | Primo deploy riuscito confermato da API e log Cloudflare; verifica browser impedita da errore di avvio/trasporto dell’ambiente |
 | Supabase Auth/PostgREST ospitati e due browser reali | Da eseguire dopo attivazione |
 | Safari/Home, offline dopo riapertura e aggiornamento PWA | Da eseguire su iPhone |
 | LCP/INP su iPhone | Non misurati |

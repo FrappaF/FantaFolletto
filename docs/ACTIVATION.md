@@ -1,4 +1,4 @@
-# Collegamento Supabase — verifica del 14 novembre 2026
+# Attivazione Supabase e Cloudflare — 14 novembre 2026
 
 Progetto **FantaFolletto**, riferimento `eynngtnxtomcwblmughq`, regione `eu-west-1`, PostgreSQL 17. Stato rilevato: `ACTIVE_HEALTHY`. Il progetto è stato creato dall'utente e collegato tramite l'integrazione Supabase autorizzata in questa chat.
 
@@ -40,10 +40,19 @@ Sono state eliminate le segnalazioni relative a chiavi esterne senza indice, riv
 - **Protezione contro password compromesse disabilitata**: rilevata dall'advisor Auth; la funzione è disponibile dal piano Pro. Nessun upgrade o costo attivato. Gli utenti scelgono password distinte e robuste nella dashboard; l'agente non le conosce. [Requisiti e rimedio](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 - **Indici non ancora utilizzati**: informazione normale su un diario vuoto; non rimuovere gli indici necessari sulla base di questo primo controllo. [Significato dell'avviso](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
 
+## Pubblicazione Cloudflare Pages
+
+- URL di produzione: **[https://fantafolletto.pages.dev](https://fantafolletto.pages.dev)**, progetto Pages `fantafolletto`, collegato al repository GitHub esistente `FrappaF/FantaFolletto`.
+- Pubblicazione automatica abilitata per `main`; anteprime automatiche e commenti sulle PR disabilitati. Nessun dominio, servizio o abbonamento a pagamento attivato.
+- Build `npm run build`, output `dist`, radice repository, `NODE_VERSION=24`. Produzione con `VITE_APP_MODE=remote`, URL del progetto Supabase e chiave publishable pubblica. Le variabili preview sono separate: modalità demo e nessuna configurazione Supabase reale. Nessuna chiave segreta nel bundle o nei file versionati.
+- Primo deploy: `57733178-25e9-4d66-a887-e554232149bc`, sorgente `61485989a45bc6c760bc0a7ea196bde55e7b8d00`, completato alle **13:50:43 UTC**. API Cloudflare: fase `deploy`, stato `success`; log di clonazione e build riusciti, sei regole header riconosciute, 14 file pubblicati.
+- Build locale di produzione e `npm run verify:build` superati prima della pubblicazione. Nessun codice applicativo cambiato durante l’attivazione dell’hosting.
+- **Limite del controllo esterno:** il browser dell’agente non ha completato l’avvio (`Browser Use could not read requirements`, poi trasporto disconnesso). La richiesta HTTP dal terminale è stata respinta dal proxy dell’ambiente (`Tunnel connection failed: 403 Forbidden`). Questi errori non sono una verifica della risposta del sito: il deploy è confermato dal servizio Cloudflare, ma pagina, login e header ricevuti da un browser reale restano da collaudare.
+
 ## Ancora da verificare
 
 - Login reale con password e chiamate PostgREST dal browser. Il tentativo HTTP dall'ambiente di sviluppo non ha potuto risolvere il dominio del progetto (`EAI_AGAIN`); la connessione MCP al database funziona. Non dichiarare quel controllo HTTP superato.
-- Hosting del frontend su Cloudflare Pages, variabili pubbliche nel suo ambiente di build e collaudo su iPhone/Safari/Home.
+- Apertura del frontend pubblicato e collaudo su iPhone/Safari/Home, incluso aggiornamento PWA e riapertura offline.
 - Catalogo e premi reali da preparare con l'admin; backup/ripristino del servizio ancora da provare.
 
 Le istruzioni di attivazione generale sono in [SETUP.md](SETUP.md), quelle operative in [OPERATIONS.md](OPERATIONS.md).

@@ -1,6 +1,6 @@
 # Attivazione del diario condiviso
 
-Procedura generale per chi gestisce il progetto. **FantaFolletto è ora predisposto su Supabase:** migrazioni e ruoli sono già applicati e `.env.local` è configurato. Non rieseguire l’inizializzazione sul progetto esistente; esito e verifiche mancanti sono in [ACTIVATION.md](ACTIVATION.md). I passaggi iniziali sotto servono per ricreare un ambiente nuovo. Il riferimento di prodotto è [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+Procedura generale per chi gestisce il progetto. **FantaFolletto è predisposto su Supabase e pubblicato su [Cloudflare Pages](https://fantafolletto.pages.dev):** migrazioni e ruoli applicati, `.env.local` e ambiente di produzione configurati. Non rieseguire l’inizializzazione né creare un secondo progetto Pages per l’ambiente esistente; esito e verifiche mancanti sono in [ACTIVATION.md](ACTIVATION.md). I passaggi iniziali sotto servono per ricreare un ambiente nuovo. Il riferimento di prodotto è [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
 ## 1. Creare il progetto Supabase
 
@@ -57,7 +57,7 @@ Per tornare alle prove locali usare `VITE_APP_MODE=demo` in un ambiente di svilu
 
 ## 5. Pubblicazione su Cloudflare Pages
 
-Collegare il repository GitHub esistente a un progetto Pages statico. Impostazioni:
+Il progetto esistente `fantafolletto` è già collegato al repository GitHub: i push su `main` avviano il deploy di produzione. Le anteprime automatiche sono disabilitate; il loro ambiente è predisposto come demo senza accesso ai dati reali. Per ricreare un ambiente nuovo, collegare il repository a un progetto Pages statico con queste impostazioni:
 
 | Campo | Valore |
 | --- | --- |
@@ -73,7 +73,7 @@ Impostare le variabili per produzione e separatamente per le eventuali anteprime
 
 Non sono necessarie Pages Functions, domini a pagamento o Workers applicativi. HTTPS è necessario per il service worker. `public/_headers` definisce CSP e cache; gli asset con hash si possono conservare a lungo, mentre HTML, manifest e service worker richiedono rivalidazione. La build include tutte le risorse dell'app nell'elenco offline, anche le viste caricate su richiesta. Le risposte di Auth e del database non vengono messe nella cache del service worker.
 
-Fonte: [Cloudflare Pages, prezzi](https://developers.cloudflare.com/pages/functions/pricing/). Nessuna pubblicazione viene eseguita da questa documentazione.
+Fonte: [Cloudflare Pages, prezzi](https://developers.cloudflare.com/pages/functions/pricing/). La procedura descrive anche la configurazione già applicata, senza eseguire nuove pubblicazioni da sola.
 
 ## 6. Recupero password senza SMTP
 
