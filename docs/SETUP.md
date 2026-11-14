@@ -1,6 +1,6 @@
 # Attivazione del diario condiviso
 
-Procedura per chi gestisce il progetto. **Non è ancora stata eseguita su un servizio reale.** L'utente ha chiesto di preparare la configurazione, senza un progetto Supabase esistente. Il riferimento di prodotto è [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+Procedura generale per chi gestisce il progetto. **FantaFolletto è ora predisposto su Supabase:** migrazioni e ruoli sono già applicati e `.env.local` è configurato. Non rieseguire l’inizializzazione sul progetto esistente; esito e verifiche mancanti sono in [ACTIVATION.md](ACTIVATION.md). I passaggi iniziali sotto servono per ricreare un ambiente nuovo. Il riferimento di prodotto è [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
 ## 1. Creare il progetto Supabase
 
@@ -13,13 +13,15 @@ Le condizioni verificate il 14 novembre 2026 prevedono progetto Free a $0, 500 M
 
 ## 2. Applicare lo schema e assegnare i ruoli
 
-Sul **progetto nuovo e vuoto**, aprire il SQL editor come proprietario ed eseguire una volta il contenuto di [202611140001_diary.sql](../supabase/migrations/202611140001_diary.sql). La migrazione è transazionale: se fallisce non proseguire con una configurazione parziale. Non rieseguirla su un database già inizializzato.
+Sul **progetto nuovo e vuoto**, aprire il SQL editor come proprietario ed eseguire una volta il contenuto di [20261114130522_diary.sql](../supabase/migrations/20261114130522_diary.sql). La migrazione è transazionale: se fallisce non proseguire con una configurazione parziale. Non rieseguirla su un database già inizializzato.
+
+Applicare poi [20261114131302_tighten_diary_permissions.sql](../supabase/migrations/20261114131302_tighten_diary_permissions.sql), che aggiorna policy/indici e protegge l’eventuale funzione RLS automatica della dashboard.
 
 Poi copiare [provision.sql.example](../supabase/provision.sql.example), sostituire i due segnaposto UUID ed eseguirla nello stesso SQL editor. Il database ammette un solo profilo per ciascun ruolo. I ruoli non provengono dai metadati modificabili dell'utente e non si assegnano dal frontend.
 
 Il catalogo reale parte **vuoto**. Accedere come admin per creare eventi e premi. Nessun dato della demo viene trasferito automaticamente.
 
-Per cambiamenti successivi aggiungere nuove migrazioni versionate; non modificare una migrazione già applicata né usare SQL improvvisato sui dati reali. Questo file iniziale può essere verificato senza servizi esterni con `npm test`: PGlite esegue PostgreSQL con un sostituto locale delle identità Supabase. Non sostituisce il collaudo di Auth e PostgREST reali.
+Per cambiamenti successivi aggiungere nuove migrazioni versionate; non modificare una migrazione già applicata né usare SQL improvvisato sui dati reali. La serie completa di migrazioni può essere verificata senza servizi esterni con `npm test`: PGlite esegue PostgreSQL con un sostituto locale delle identità Supabase. Non sostituisce il collaudo di Auth e PostgREST reali.
 
 ## 3. Collegare il frontend
 

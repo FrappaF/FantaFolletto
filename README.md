@@ -4,7 +4,7 @@ Una webapp da regalare: gli episodi del lavoro porta a porta diventano punti, re
 
 ## Stato
 
-Sono implementati il Diario, il codice per **account Supabase e dati condivisi**, la **coda offline** e la **PWA**. Sono presenti migrazione SQL, policy, test e istruzioni di attivazione. Il progetto Supabase e l'hosting **non sono ancora creati o collegati**: non è una versione già pubblicata o collaudata sul telefono.
+Sono implementati il Diario, il codice per **account Supabase e dati condivisi**, la **coda offline** e la **PWA**. Sono presenti migrazione SQL, policy, test e istruzioni di attivazione. Il progetto Supabase è ora predisposto: migrazioni applicate, due account confermati con ruoli e configurazione locale reale. Verifica delle RPC sul database ospitato superata con rollback dei dati di prova. **Frontend non ancora pubblicato** e login dal browser/iPhone da collaudare: dettagli in [ACTIVATION.md](docs/ACTIVATION.md).
 
 Stack: React, Vite, TypeScript, Supabase JS, TanStack Query, IndexedDB e vite-plugin-pwa. Nessun servizio a pagamento viene creato dagli script di sviluppo.
 

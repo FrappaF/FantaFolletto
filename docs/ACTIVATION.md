@@ -1,0 +1,48 @@
+# Collegamento Supabase — verifica del 14 novembre 2026
+
+Progetto **FantaFolletto**, riferimento `eynngtnxtomcwblmughq`, regione `eu-west-1`, PostgreSQL 17. Stato rilevato: `ACTIVE_HEALTHY`. Il progetto è stato creato dall'utente e collegato tramite l'integrazione Supabase autorizzata in questa chat.
+
+## Completato
+
+- Database inizialmente privo di tabelle applicative e migrazioni; schema applicato tramite MCP con cronologia remota.
+- Migrazioni applicate e allineate ai file locali: `20261114130522_diary.sql` e `20261114131302_tighten_diary_permissions.sql`.
+- Due utenti Auth creati e confermati dall'utente nella dashboard; profili assegnati dall'agente ai ruoli **admin** e **player** secondo gli indirizzi indicati dall'utente. Email, UUID e password personali non sono salvati nella documentazione versionata.
+- `.env.local` configurato con modalità `remote`, URL del progetto e chiave publishable. File ignorato da Git; nessuna chiave segreta o password letta o inserita nel frontend.
+- RLS attivo sulle sette tabelle applicative; accesso anonimo alle tabelle e alle RPC del diario negato. Per `authenticated` le tabelle sono in lettura secondo policy, senza INSERT/UPDATE/DELETE diretti.
+- Funzioni interne private non eseguibili dai client, salvo il solo lookup del proprio ruolo. Le quattro RPC pubbliche richiedono un profilo autorizzato e verificano il ruolo nel corpo della funzione, con `search_path` fissato.
+- Corretto l'accesso client alla funzione di sistema `public.rls_auto_enable()` creata dalla dashboard: revocato EXECUTE ad anonimi e autenticati, lasciando attivo il trigger automatico `ensure_rls`.
+- Aggiunti gli indici sulle chiavi esterne segnalate, l'unicità degli identificativi delle operazioni admin e la valutazione per statement di identità/ruolo nelle policy.
+
+## Verifica sul database ospitato
+
+Transazione di prova eseguita come ruolo PostgreSQL `authenticated`, impostando i claim per i due utenti reali. Si tratta di verifica delle RPC e delle policy sul server, **non di un login con password o JWT dal browser**.
+
+Esito positivo per:
+
+- Riconoscimento del ruolo admin e della giocatrice; la giocatrice non gestisce il catalogo e l'admin non registra episodi.
+- Creazione admin di evento/premio temporanei e ritentativo della stessa operazione senza duplicati.
+- Registrazione con punti stabiliti dalla regola server e ritentativo dello stesso identificativo, acquisito una sola volta.
+- Assegnazione del premio alla soglia, annullamento idempotente e revoca del premio non consegnato.
+- Rifiuto di aggiornamenti diretti ai punti dal client e prova separata con ruolo `anon`: RPC diario e lettura episodi negate.
+- Modifica della regola senza riscrivere il punteggio dell'episodio storico.
+
+La transazione è stata annullata con `ROLLBACK`. Controllo finale: due profili e **zero** eventi, versioni eventi, episodi, premi, assegnazioni e righe di audit. Nessun catalogo demo è stato importato.
+
+Verifica finale del repository: **43 test automatici superati**, build di produzione con configurazione reale e controllo manifest/icone/risorse PWA superati. I test della demo forzano la modalità isolata anche quando `.env.local` collega un progetto reale.
+
+## Advisor dopo le correzioni
+
+Sono state eliminate le segnalazioni relative a chiavi esterne senza indice, rivalutazione di `auth.uid()` per riga e chiamabilità anonima della funzione automatica RLS. Restano:
+
+- **Quattro RPC SECURITY DEFINER chiamabili da utenti autenticati**: esposizione intenzionale per applicare punti/regole lato server senza concedere scritture dirette. Esecuzione anonima revocata, profilo/ruolo verificati e comportamenti vietati provati sul database reale. Non cambiare automaticamente in SECURITY INVOKER per nascondere l'avviso. [Dettagli dell'advisor](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+- **Protezione contro password compromesse disabilitata**: rilevata dall'advisor Auth; la funzione è disponibile dal piano Pro. Nessun upgrade o costo attivato. Gli utenti scelgono password distinte e robuste nella dashboard; l'agente non le conosce. [Requisiti e rimedio](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+- **Indici non ancora utilizzati**: informazione normale su un diario vuoto; non rimuovere gli indici necessari sulla base di questo primo controllo. [Significato dell'avviso](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
+
+## Ancora da verificare
+
+- Registrazione pubblica disabilitata nelle impostazioni Auth: da confermare dalla dashboard. Il connettore disponibile non espone questa impostazione; l'app nega comunque l'accesso ai dati a utenti senza profilo.
+- Login reale con password e chiamate PostgREST dal browser. Il tentativo HTTP dall'ambiente di sviluppo non ha potuto risolvere il dominio del progetto (`EAI_AGAIN`); la connessione MCP al database funziona. Non dichiarare quel controllo HTTP superato.
+- Hosting del frontend su Cloudflare Pages, variabili pubbliche nel suo ambiente di build e collaudo su iPhone/Safari/Home.
+- Catalogo e premi reali da preparare con l'admin; backup/ripristino del servizio ancora da provare.
+
+Le istruzioni di attivazione generale sono in [SETUP.md](SETUP.md), quelle operative in [OPERATIONS.md](OPERATIONS.md).

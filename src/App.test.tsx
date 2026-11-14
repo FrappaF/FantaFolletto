@@ -8,11 +8,13 @@ import {
   within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeAll, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { StrictMode } from 'react'
 
 beforeAll(() => {
+  // A configured developer checkout must still exercise the isolated demo here.
+  vi.stubEnv('VITE_APP_MODE', 'demo')
   // jsdom has no browser dialog/focus engine. Exercise application behavior only.
   HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute('open', '')
@@ -23,6 +25,7 @@ beforeAll(() => {
   window.scrollTo = vi.fn()
 })
 afterEach(cleanup)
+afterAll(() => vi.unstubAllEnvs())
 
 it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisce premi', async () => {
   const user = userEvent.setup()

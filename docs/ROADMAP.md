@@ -20,9 +20,9 @@ Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 s
 
 ## Sprint 2 — Due account, un diario condiviso
 
-**Stato: codice e configurazione preparati, test locali superati; attivazione e collaudo del servizio da eseguire.**
+**Stato: database Supabase predisposto e verifica transazionale ospitata superata; login/PostgREST dal browser da collaudare.**
 
-Implementati migrazione, RLS/grant/RPC, catalogo versionato, premi storici e consegne, login/logout, recupero assistito, admin protetto dal ruolo reale e aggiornamento dati. L’utente ha confermato che non ha ancora un progetto Supabase: creazione, utenti e collegamento non sono stati eseguiti. Procedura in [SETUP.md](SETUP.md).
+Implementati migrazione, RLS/grant/RPC, catalogo versionato, premi storici e consegne, login/logout, recupero assistito, admin protetto dal ruolo reale e aggiornamento dati. L’utente ha creato il progetto e i due utenti; migrazioni, ruoli e configurazione locale applicati. Prove sul server concluse senza lasciare dati demo. Login con password e frontend pubblicato ancora da verificare. Esito in [ACTIVATION.md](ACTIVATION.md), procedura in [SETUP.md](SETUP.md).
 
 1. Configurare un progetto Supabase europeo; verificare quote Free e recupero account. Predisporre due utenti e disabilitare la registrazione pubblica.
 2. Versionare schema e migrazioni: ruoli protetti, catalogo versionato, episodi, annullamenti, premi assegnati e audit admin.
@@ -57,7 +57,7 @@ Coda per progetto/account, riconciliazione, errori recuperabili, Web Locks quand
 
 **Stato: preparazione parziale; consegna finale non ancora completata.**
 
-Pronti build, impostazioni Pages, header CSP/cache, guida Home, export e procedure di manutenzione. Rimangono progetto reale, catalogo definitivo, pubblicazione, prove sul telefono, misure prestazioni e backup/ripristino effettivo. Vedere [OPERATIONS.md](OPERATIONS.md).
+Pronti build, impostazioni Pages, header CSP/cache, guida Home, export e procedure di manutenzione. Il progetto Supabase e gli account sono predisposti; rimangono catalogo definitivo, pubblicazione, login dal browser, prove sul telefono, misure prestazioni e backup/ripristino effettivo. Vedere [OPERATIONS.md](OPERATIONS.md).
 
 - Verifica su iPhone reale: Safari e Home, tastiera, safe area, testo ingrandito, connessione instabile e accessibilità.
 - Misure prestazioni, dimensione bundle e verifica aggiornamenti di versione con operazioni pendenti.
@@ -85,3 +85,13 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 - La migrazione viene eseguita in PostgreSQL PGlite: test su ruoli, RLS, grant, idempotenza, storico, vecchie versioni, premi unici/revocati/consegnati e assenza di sblocchi settimanali retroattivi.
 - Build TypeScript/Vite e generazione manifest/service worker riuscite. Icone PNG 180/192/512 e maskable presenti. Verificata anche la build demo separata nella consegna finale.
 - Nessun Supabase Auth/PostgREST ospitato o iPhone testato. La preparazione tecnica non equivale ai criteri finali di uscita degli sprint: le verifiche esterne restano esplicite.
+
+## Collegamento Supabase reale
+
+- Applicate due migrazioni, allineando i file locali alle versioni della cronologia remota; la migrazione iniziale è rinominata senza modificarne il contenuto.
+- Assegnati i profili ai due utenti confermati. Configurazione locale privata, senza chiavi segrete.
+- Prova con rollback: autorizzazione, deduplicazione, punti server, premi, annullamenti e storico superati; nessun dato di gioco rimasto.
+- Correzioni advisor per indici, policy e trigger RLS automatico. Rimangono avvisi documentati per le RPC autorizzate, la protezione password Pro non attivata e gli indici ancora poco usati.
+- Login/PostgREST dal browser, signup disabilitato da confermare, hosting e iPhone restano da verificare: vedi [ACTIVATION.md](ACTIVATION.md).
+
+- Verifica dopo il collegamento: **43 test automatici**, build con configurazione reale e controllo PWA superati; la demo nei test rimane isolata anche in un checkout configurato.

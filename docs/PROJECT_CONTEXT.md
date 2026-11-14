@@ -14,7 +14,7 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 - L'utente ha scelto una webapp con account e dati condivisi e ha approvato **React + Vite**.
 - La direzione di design confermata è **Diario**. La proposta alternativa Missione non è la direzione da sviluppare.
 - Le priorità espresse sono **ottimizzazione per iPhone, velocità e stabilità**, con budget di hosting molto contenuto.
-- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato l'avvio dello sviluppo e una roadmap per sprint: sono implementati la demo locale e il codice degli sprint 2–3, mentre il collegamento ai servizi e il collaudo finale restano da eseguire.
+- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato l'avvio dello sviluppo e una roadmap per sprint: sono implementati la demo locale e il codice degli sprint 2–3, con Supabase ora predisposto e verificato a livello database; pubblicazione e collaudo finale dal browser/iPhone restano da eseguire.
 
 ## 2. Stato e grado delle decisioni
 
@@ -42,11 +42,11 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - `vite-plugin-pwa` per manifest, risorse offline e gestione degli aggiornamenti.
 - CSS leggero, carattere di sistema e icone essenziali per il design.
 
-### Stato reale dopo lo sviluppo degli sprint 2–3
+### Stato reale dopo il collegamento Supabase
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
 - Due modalità distinte: demo locale esplicita, oppure `remote` con login email/password e ruolo letto dal database. La produzione senza configurazione non apre una demo né un falso admin. `.env.example` descrive le sole variabili pubbliche; `.env.demo` abilita una build demo separata.
-- Schema Supabase versionato in `supabase/migrations/202611140001_diary.sql`: profili e ruoli protetti, eventi/versioni, episodi, premi, assegnazioni storiche, consegne e audit admin. RLS e grant negano le scritture dirette dal browser; le RPC controllano ruolo, versione e deduplicazione.
+- Schema Supabase applicato al progetto reale, con migrazioni `20261114130522_diary.sql` e `20261114131302_tighten_diary_permissions.sql`: profili e ruoli protetti, eventi/versioni, episodi, premi, assegnazioni storiche, consegne e audit admin. RLS e grant negano le scritture dirette dal browser; le RPC controllano ruolo, versione e deduplicazione.
 - Login/logout e recupero assistito dall'operatore implementati nel codice; nessuna registrazione pubblica o email di recupero promessa senza configurazione. `scripts/reset-password.mjs` usa una chiave segreta solo fuori dal frontend e una password da stdin nascosto.
 - Admin: consulta lo snapshot della giocatrice, gestisce online eventi e premi con controllo della versione e identificativo stabile per i ritentativi, conferma consegne ed esporta JSON consultabile. Non registra né annulla episodi al posto della giocatrice.
 - Giocatrice: registra e annulla con coda IndexedDB per progetto/account; conferma locale dopo transazione, punti provvisori distinguibili, riconciliazione idempotente e invii rifiutati visibili/riprovabili/rimuovibili dopo conferma. Le operazioni ambigue restano in coda fino alla lettura di conferma dal server.
@@ -55,8 +55,11 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - Manifest PWA, icone PNG/iPhone, service worker per le sole risorse statiche, indicazioni per la Home e aggiornamento su richiesta. Il pulsante di aggiornamento attende moduli chiusi e assenza di operazioni pendenti. Non si dipende dal Background Sync di Safari; Auth e risposte del database non entrano in Cache Storage.
 - Regole iniziali approvate dall'utente: eventi ripetibili al momento, premi settimanali o totali, revoca dei premi non consegnati dopo annullamento e conservazione con segnalazione di quelli consegnati. I dettagli operativi sono sotto.
 - Catalogo reale vuoto: gli esempi sono confinati alla demo; nessun import automatico nel diario reale. Nome/punti/versione degli episodi e condizioni dei premi assegnati conservano lo storico.
-- Test locali su dominio/calendario, IndexedDB simulato, riconciliazione e UI in jsdom; migrazione/RPC/RLS eseguite in PostgreSQL PGlite con identità Supabase simulate. Workflow GitHub per test e build. Questi controlli non certificano Supabase Auth/PostgREST ospitati né Safari.
-- **Nessun progetto Supabase, utente reale o hosting creato/collegato.** L'utente ha confermato che non esiste ancora un progetto e ha chiesto di preparare la configurazione. Nessuna pubblicazione web o prova su iPhone; backup/ripristino ospitato e misure LCP/INP da fare. Il relay di anteprima era risultato indisponibile durante lo sprint 1; verifica visuale ancora non eseguita.
+- Test locali su dominio/calendario, IndexedDB simulato, riconciliazione e UI in jsdom; migrazione/RPC/RLS eseguite in PostgreSQL PGlite con identità Supabase simulate. Workflow GitHub per test e build. I controlli locali non certificano Auth/PostgREST o Safari; la successiva verifica database ospitata è distinta e descritta sotto.
+- **Supabase predisposto:** progetto FantaFolletto `eynngtnxtomcwblmughq` creato dall’utente, attivo in `eu-west-1`; schema e correzioni advisor applicati tramite MCP. Due utenti Auth confermati dall’utente e ruoli admin/player assegnati. `.env.local` configurato, ignorato da Git; nessun dato personale o segreto nel repository.
+- Verifica transazionale sul database ospitato superata: ruoli, RPC, divieti di scrittura diretta, punti, ritentativi, premi, annullamenti e storico; rollback finale, catalogo e dati di gioco ancora vuoti. Nuova migrazione con indici, policy che valutano i claim una volta per statement e revoca dell’accesso client al trigger automatico RLS.
+- Non è stato eseguito un login reale dal frontend: le prove database impostano i claim del ruolo SQL, non producono sessioni Auth. Il tentativo HTTP dall’ambiente ha fallito la risoluzione DNS (`EAI_AGAIN`). La disattivazione del signup pubblico va confermata dalla dashboard, non esposta dal connettore attuale.
+- **Hosting non ancora configurato**, nessuna pubblicazione web o prova su iPhone. Backup/ripristino ospitato e misure LCP/INP da fare; verifica visuale ancora non eseguita. Dettagli, limiti e link degli advisor in [ACTIVATION.md](ACTIVATION.md).
 - Attivazione passo passo in [SETUP.md](SETUP.md), manutenzione in [OPERATIONS.md](OPERATIONS.md), criteri degli sprint in [ROADMAP.md](ROADMAP.md), avvio in [README.md](../README.md).
 
 Aggiornare questa sezione quando lo stato cambia. Non confondere il comportamento desiderato con quello effettivamente disponibile.
@@ -277,7 +280,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 
 - Catalogo e premi reali: nomi, punti, soglie e descrizioni da preparare con l'admin. Gli esempi non diventano automaticamente regole del regalo.
 - Eventuali estensioni a limiti di ripetizione, retrodatazione, periodi personalizzati e normalizzazione dei record: fuori dalla prima versione.
-- Attivazione Supabase, due utenti e quote Free al momento della creazione; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
+- Collegamento dal browser ai due account Supabase già predisposti, signup pubblico disabilitato e condizioni Free; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
 - Verifica del modello/iOS reale, Safari e Home, accessibilità, affidabilità offline e prestazioni sul telefono.
 - Pubblicazione Cloudflare Pages, prova di backup/ripristino e catalogo definitivo prima della consegna.
 
@@ -296,6 +299,8 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Utente: continuare con gli sprint, progetto Supabase non ancora esistente | Preparare configurazione, migrazione e codice senza creare servizi esterni |
 | 2026-11-14 | Approvate le regole iniziali per eventi ripetibili, periodi premi e annullamenti | Prima versione implementata con condizioni storiche e consegna separata |
 | 2026-11-14 | Codice account/condivisione, coda offline e PWA implementato e testato localmente | Attivazione e collaudo ospitato/iPhone ancora necessari; produzione senza configurazione chiusa |
+| 2026-11-14 | Progetto Supabase creato e integrazione autorizzata dall’utente; account indicati per admin e giocatrice | Migrazioni applicate, profili assegnati e configurazione locale reale; nessuna email/UUID personale versionata |
+| 2026-11-14 | Verifica sul database ospitato con rollback e revisione advisor | Core dati verificato senza lasciare dati demo; Auth/PostgREST dal browser e consegna iPhone restano da collaudare |
 
 ## 12. Fonti della ricerca
 

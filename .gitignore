@@ -7,3 +7,4 @@ dist/
 !.env.demo
 .DS_Store
 coverage/
+supabase/.temp/

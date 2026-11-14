@@ -1,6 +1,6 @@
 # Manutenzione, backup e collaudo
 
-Queste procedure riguardano l'operatore del progetto Supabase, distinto dall'account admin del gioco. Non sono state eseguite su un progetto ospitato: al momento non esiste ancora. Per l'attivazione seguire [SETUP.md](SETUP.md).
+Queste procedure riguardano l'operatore del progetto Supabase, distinto dall'account admin del gioco. Il progetto Supabase è ora predisposto; lo stato e i controlli ospitati eseguiti sono in [ACTIVATION.md](ACTIVATION.md). Backup e prova di ripristino non sono ancora stati eseguiti. Per l'attivazione seguire [SETUP.md](SETUP.md).
 
 ## Backup
 
@@ -48,7 +48,7 @@ La prima versione scarica uno snapshot completo, adeguato al volume di una gioca
 | Ambito | Stato |
 | --- | --- |
 | Regole di gioco, calendario e persistenza locale | Test automatici |
-| Migrazione, RPC, RLS, ruoli e premi | PostgreSQL PGlite, identità Supabase simulate |
+| Migrazione, RPC, RLS, ruoli e premi | PGlite e prova transazionale sul database ospitato con ruoli reali e claim impostati dall’operatore |
 | Riconciliazione con timeout, doppioni e annullamenti pendenti | IndexedDB simulato e trasporto controllato |
 | Login e separazione visiva giocatrice/admin | jsdom e Auth simulata |
 | Manifest, icone, service worker e build | Verifica della build statica |

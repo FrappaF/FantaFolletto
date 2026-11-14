@@ -1,5 +1,5 @@
 import { PGlite } from '@electric-sql/pglite'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 const db = new PGlite()
@@ -49,18 +49,16 @@ beforeAll(async () => {
     create schema auth;
     create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+    create function public.rls_auto_enable() returns event_trigger language plpgsql security definer set search_path = '' as $$ begin null; end $$;
     grant usage on schema auth to authenticated, anon;
     insert into auth.users values ('${player}'), ('${admin}'), ('${stranger}');
   `)
-  await db.exec(
-    readFileSync(
-      new URL(
-        '../../supabase/migrations/202611140001_diary.sql',
-        import.meta.url,
-      ),
-      'utf8',
-    ),
-  )
+  const migrations = new URL('../../supabase/migrations/', import.meta.url)
+  for (const file of readdirSync(migrations)
+    .filter((file) => file.endsWith('.sql'))
+    .sort()) {
+    await db.exec(readFileSync(new URL(file, migrations), 'utf8'))
+  }
   await db.query('insert into public.profiles values ($1, $2), ($3, $4)', [
     player,
     'player',
@@ -73,6 +71,22 @@ afterAll(async () => {
 })
 
 describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () => {
+  it('il trigger automatico RLS non è eseguibile dai client e le operazioni admin sono uniche', async () => {
+    expect(
+      (
+        await db.query(
+          "select has_function_privilege('anon','public.rls_auto_enable()','EXECUTE') as anon_execute, has_function_privilege('authenticated','public.rls_auto_enable()','EXECUTE') as authenticated_execute",
+        )
+      ).rows,
+    ).toEqual([{ anon_execute: false, authenticated_execute: false }])
+    expect(
+      (
+        await db.query(
+          "select indexdef from pg_indexes where indexname = 'admin_audit_command_operation_idx'",
+        )
+      ).rows,
+    ).toHaveLength(1)
+  })
   it('nega anonimi, utenti senza profilo e auto-promozione del ruolo', async () => {
     await expect(
       asUser(null, 'select public.diary_snapshot()'),
