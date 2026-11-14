@@ -38,6 +38,8 @@ export function Timeline({
                 {time.format(new Date(entry.occurredAt))}
               </time>
               {entry.voidedAt && ' · Annullato'}
+              {entry.sync === 'pending' && ' · In attesa di invio'}
+              {entry.sync === 'error' && ' · Da correggere'}
             </span>
           </div>
           <strong className={entry.points < 0 ? 'negative' : ''}>

@@ -12,11 +12,18 @@ import { pointsLabel, statistics } from '../domain/stats'
 import { EmptyState, EventIcon, Modal, SectionHeading } from './ui'
 import { Timeline } from './Timeline'
 import { newId } from '../domain/ids'
+import { Awards } from './Awards'
 
 type Editor =
   | { kind: 'event'; value?: EventDefinition }
   | { kind: 'reward'; value?: Reward }
-type ArchiveTarget = { kind: 'event' | 'reward'; id: string; name: string }
+type ArchiveTarget = {
+  kind: 'event' | 'reward'
+  id: string
+  name: string
+  expectedVersion: number
+  operationId: string
+}
 
 export default function Admin({
   diary,
@@ -25,6 +32,8 @@ export default function Admin({
   error,
   execute,
   onExit,
+  shared = false,
+  refreshing = false,
 }: {
   diary: Diary
   now: Date
@@ -32,18 +41,28 @@ export default function Admin({
   error: string
   execute: (command: Command) => Promise<boolean>
   onExit: () => void
+  shared?: boolean
+  refreshing?: boolean
 }) {
   const [tab, setTab] = useState<'summary' | 'events' | 'rewards'>('summary')
   const [editor, setEditor] = useState<Editor>()
   const [archive, setArchive] = useState<ArchiveTarget>()
   const [showArchived, setShowArchived] = useState(false)
+  const [delivery, setDelivery] = useState<{
+    id: string
+    operationId: string
+  }>()
   const stats = statistics(diary, now)
 
   function download() {
     const data = new Blob(
       [
         JSON.stringify(
-          { exportedAt: new Date().toISOString(), mode: 'local-demo', diary },
+          {
+            exportedAt: new Date().toISOString(),
+            mode: shared ? 'shared' : 'local-demo',
+            diary,
+          },
           null,
           2,
         ),
@@ -53,7 +72,7 @@ export default function Admin({
     const url = URL.createObjectURL(data)
     const link = document.createElement('a')
     link.href = url
-    link.download = `fantafolletto-demo-${now.toISOString().slice(0, 10)}.json`
+    link.download = `fantafolletto-${shared ? 'diario' : 'demo'}-${now.toISOString().slice(0, 10)}.json`
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -72,9 +91,19 @@ export default function Admin({
       <div className="notice">
         <Settings2 size={19} aria-hidden="true" />
         <p>
-          <strong>Anteprima admin, senza accesso protetto.</strong> Le modifiche
-          restano in questo browser. Account separati e dati condivisi sono
-          previsti nello sprint 2.
+          {shared ? (
+            <>
+              <strong>Il diario condiviso della giocatrice.</strong> Eventi e
+              premi si gestiscono online. I punteggi già assegnati restano nello
+              storico.
+            </>
+          ) : (
+            <>
+              <strong>Anteprima admin, senza accesso protetto.</strong> Le
+              modifiche restano in questo browser. Account separati e dati
+              condivisi sono disponibili nella modalità condivisa.
+            </>
+          )}
         </p>
       </div>
       <div
@@ -121,15 +150,30 @@ export default function Admin({
             <div>
               <h2>Una copia del diario</h2>
               <p>
-                Esporta i dati demo in JSON. Il ripristino non è ancora
-                disponibile.
+                {shared
+                  ? 'Esporta gli ultimi dati ricevuti in JSON. È una copia consultabile, non un backup ripristinabile del database.'
+                  : 'Esporta i dati demo in JSON. Il ripristino non è ancora disponibile.'}
               </p>
             </div>
-            <button className="secondary-button" onClick={download}>
+            <button
+              className="secondary-button"
+              onClick={download}
+              disabled={refreshing}
+            >
               <Download size={18} />
-              Esporta demo
+              {shared ? 'Esporta diario' : 'Esporta demo'}
             </button>
           </section>
+          {shared && (
+            <section className="panel">
+              <SectionHeading title="Premi conquistati e consegne" />
+              <Awards
+                awards={diary.awards ?? []}
+                busy={busy}
+                onDeliver={(id) => setDelivery({ id, operationId: newId() })}
+              />
+            </section>
+          )}
         </>
       )}
       {tab !== 'summary' && (
@@ -144,7 +188,9 @@ export default function Admin({
           <p className="section-description">
             {tab === 'events'
               ? 'Le modifiche valgono per i prossimi episodi. I punti già registrati restano nel diario.'
-              : 'Nella demo il progresso segue le condizioni attuali. Non vengono ancora assegnati premi definitivi.'}
+              : shared
+                ? 'I premi già conquistati conservano le loro condizioni originali. Le nuove condizioni possono sbloccare premi sui punti già confermati.'
+                : 'Nella demo il progresso segue le condizioni attuali. Non vengono ancora assegnati premi definitivi.'}
           </p>
           <button
             className="primary-button full-width"
@@ -202,6 +248,8 @@ export default function Admin({
                                 kind: 'event',
                                 id: item.id,
                                 name: item.name,
+                                expectedVersion: item.version,
+                                operationId: newId(),
                               })
                             }
                           >
@@ -246,6 +294,8 @@ export default function Admin({
                                 kind: 'reward',
                                 id: item.id,
                                 name: item.name,
+                                expectedVersion: item.version ?? 0,
+                                operationId: newId(),
                               })
                             }
                           >
@@ -309,12 +359,51 @@ export default function Admin({
                         ? 'archive-event'
                         : 'archive-reward',
                     id: archive.id,
+                    expectedVersion: archive.expectedVersion,
+                    operationId: archive.operationId,
                   })
                 )
                   setArchive(undefined)
               }}
             >
               {busy ? 'Salvataggio…' : 'Archivia'}
+            </button>
+          </div>
+        </Modal>
+      )}
+      {delivery && (
+        <Modal
+          title="Confermare la consegna?"
+          busy={busy}
+          onClose={() => setDelivery(undefined)}
+        >
+          <p className="modal-description">
+            Segnerai questo premio come consegnato. Dopo un annullamento resterà
+            nello storico, con una segnalazione se i punti scendono sotto la
+            soglia.
+          </p>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="form-actions">
+            <button
+              className="secondary-button"
+              disabled={busy}
+              onClick={() => setDelivery(undefined)}
+            >
+              Torna indietro
+            </button>
+            <button
+              className="primary-button"
+              disabled={busy}
+              onClick={async () => {
+                if (await execute({ type: 'deliver-award', ...delivery }))
+                  setDelivery(undefined)
+              }}
+            >
+              Conferma consegna
             </button>
           </div>
         </Modal>
@@ -336,11 +425,13 @@ function EditorForm({
   execute: (command: Command) => Promise<boolean>
   onClose: () => void
 }) {
+  const [itemId] = useState(() => editor.value?.id ?? newId())
+  const [operationId] = useState(newId)
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     const common = {
-      id: editor.value?.id ?? newId(),
+      id: itemId,
       name: String(form.get('name')),
       description: String(form.get('description')),
     }
@@ -358,7 +449,14 @@ function EditorForm({
               period: form.get('period') as Reward['period'],
             },
           }
-    if (await execute(command)) onClose()
+    if (
+      await execute({
+        ...command,
+        operationId,
+        expectedVersion: editor.value?.version ?? 0,
+      })
+    )
+      onClose()
   }
   return (
     <Modal

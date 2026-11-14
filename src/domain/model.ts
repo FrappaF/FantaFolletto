@@ -14,6 +14,7 @@ export type Reward = {
   target: number
   period: 'week' | 'all'
   archived: boolean
+  version?: number
 }
 
 export type Entry = {
@@ -24,6 +25,22 @@ export type Entry = {
   points: number
   occurredAt: string
   voidedAt?: string
+  receivedAt?: string
+  sync?: 'pending' | 'error'
+}
+
+export type Award = {
+  id: string
+  rewardId: string
+  name: string
+  description: string
+  target: number
+  period: 'week' | 'all'
+  periodKey: string
+  achievedAt: string
+  revokedAt?: string
+  deliveredAt?: string
+  needsReview: boolean
 }
 
 export type Diary = {
@@ -31,10 +48,18 @@ export type Diary = {
   events: EventDefinition[]
   rewards: Reward[]
   entries: Entry[]
+  awards?: Award[]
 }
 
-export type Command =
-  | { type: 'record'; id: string; eventId: string; at: string }
+export type Command = (
+  | {
+      type: 'record'
+      id: string
+      eventId: string
+      at: string
+      version?: number
+      snapshot?: { name: string; points: number }
+    }
   | { type: 'void'; id: string; at: string }
   | {
       type: 'save-event'
@@ -46,6 +71,13 @@ export type Command =
       value: Pick<Reward, 'id' | 'name' | 'description' | 'target' | 'period'>
     }
   | { type: 'archive-reward'; id: string }
+  | { type: 'deliver-award'; id: string }
+) & { operationId?: string; expectedVersion?: number }
+
+export type AdminCommand = Exclude<Command, { type: 'record' | 'void' }> & {
+  operationId?: string
+  expectedVersion?: number
+}
 
 export function initialDiary(): Diary {
   return {
@@ -247,5 +279,9 @@ export function applyCommand(state: Diary, command: Command): Diary {
         ),
       }
     }
+    case 'deliver-award':
+      throw new Error(
+        'La consegna dei premi è disponibile solo nel diario condiviso.',
+      )
   }
 }

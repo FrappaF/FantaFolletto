@@ -20,6 +20,118 @@
   --shadow: 0 8px 32px #243b2510;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.login-page {
+  padding-top: max(45px, env(safe-area-inset-top));
+}
+.login-page h1 {
+  margin-bottom: 18px;
+}
+.login-page form {
+  margin-top: 23px;
+}
+.sync-panel {
+  padding: 14px 16px;
+  background: var(--green-soft);
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  margin-bottom: 24px;
+}
+.sync-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.sync-heading strong {
+  font-size: 12px;
+}
+.sync-heading p,
+.sync-copy {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.sync-copy {
+  margin-top: 10px;
+}
+.sync-errors {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.sync-errors h2 {
+  font-size: 14px;
+}
+.sync-errors article {
+  margin: 13px 0;
+}
+.sync-errors strong {
+  font-size: 12px;
+}
+.sync-errors p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.award-list {
+  display: grid;
+  gap: 14px;
+}
+.award-list h3 {
+  margin-top: 10px;
+}
+.award-list button {
+  margin-top: 13px;
+}
+.awards-panel {
+  margin-top: 24px;
+}
+.pwa-prompt {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pwa-prompt p {
+  max-width: 480px;
+  font-size: 12px;
+}
+.auth-error {
+  margin: 0 auto 20px;
+  padding: 16px;
+  color: var(--danger);
+  max-width: 600px;
+}
+.install-hint {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 16px;
+}
+.install-hint summary {
+  cursor: pointer;
+  min-height: 48px;
+  padding: 15px 0;
+  color: var(--green);
+  font-weight: 600;
+}
+.install-hint p {
+  margin: 8px 0 13px;
+}
+
 * {
   box-sizing: border-box;
 }

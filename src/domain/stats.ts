@@ -21,7 +21,7 @@ export function weekKey(instant: string | Date): string {
 }
 
 export const activeEntries = (state: Diary) =>
-  state.entries.filter((entry) => !entry.voidedAt)
+  state.entries.filter((entry) => !entry.voidedAt && entry.sync !== 'error')
 export const sumPoints = (entries: Entry[]) =>
   entries.reduce((sum, entry) => sum + entry.points, 0)
 

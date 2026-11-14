@@ -14,7 +14,7 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 - L'utente ha scelto una webapp con account e dati condivisi e ha approvato **React + Vite**.
 - La direzione di design confermata è **Diario**. La proposta alternativa Missione non è la direzione da sviluppare.
 - Le priorità espresse sono **ottimizzazione per iPhone, velocità e stabilità**, con budget di hosting molto contenuto.
-- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato l'avvio dello sviluppo e una roadmap per sprint: ora esiste la demo locale dello sprint 1, descritta sotto.
+- Prima dello sviluppo è stata richiesta ricerca su architettura e design. Il 14 novembre 2026 l'utente ha autorizzato l'avvio dello sviluppo e una roadmap per sprint: sono implementati la demo locale e il codice degli sprint 2–3, mentre il collegamento ai servizi e il collaudo finale restano da eseguire.
 
 ## 2. Stato e grado delle decisioni
 
@@ -42,20 +42,26 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - `vite-plugin-pwa` per manifest, risorse offline e gestione degli aggiornamenti.
 - CSS leggero, carattere di sistema e icone essenziali per il design.
 
-### Stato reale dopo lo sprint 1
+### Stato reale dopo lo sviluppo degli sprint 2–3
 
-- React + Vite + TypeScript implementati; build statica, CSS con safe area, navigazione e modalità scura, admin caricato separatamente.
-- Schermate Diario Oggi, Record e Premi; selezione/ricerca eventi, registrazione, annullamento tracciato, cronologia e classifica personale per giorni/settimane.
-- Anteprima admin: riepilogo, creazione/modifica/archiviazione eventi e premi, esportazione JSON. Non è protetta da login e viene indicata come demo.
-- IndexedDB locale dedicato alla demo, transazioni atomiche, deduplicazione degli identificativi, snapshot di punti/nome/versione, aggiornamento tra schede. La UI conferma dopo la persistenza; dati incompatibili non vengono azzerati.
-- Eventi e premi iniziali sono esempi modificabili. I progressi premi sono derivati dai dati attuali: non esistono ancora assegnazioni storiche, consegne o condizioni definitive.
-- Nessun backend Supabase, schema SQL, account reale, condivisione tra dispositivi o hosting configurato. Nessun service worker, installazione PWA o coda verso il server: il salvataggio locale non è la sincronizzazione offline definitiva.
-- Test automatici su dominio/calendario, IndexedDB simulato e percorso UI in jsdom; workflow GitHub per test e build. Anteprima visuale non verificata per indisponibilità del relay dell'ambiente; nessun test sul telefono reale.
-- La roadmap e i criteri di completamento sono in [ROADMAP.md](ROADMAP.md); l'avvio e i limiti sono in [README.md](../README.md).
+- React + Vite + TypeScript, design Diario Oggi/Record/Premi, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
+- Due modalità distinte: demo locale esplicita, oppure `remote` con login email/password e ruolo letto dal database. La produzione senza configurazione non apre una demo né un falso admin. `.env.example` descrive le sole variabili pubbliche; `.env.demo` abilita una build demo separata.
+- Schema Supabase versionato in `supabase/migrations/202611140001_diary.sql`: profili e ruoli protetti, eventi/versioni, episodi, premi, assegnazioni storiche, consegne e audit admin. RLS e grant negano le scritture dirette dal browser; le RPC controllano ruolo, versione e deduplicazione.
+- Login/logout e recupero assistito dall'operatore implementati nel codice; nessuna registrazione pubblica o email di recupero promessa senza configurazione. `scripts/reset-password.mjs` usa una chiave segreta solo fuori dal frontend e una password da stdin nascosto.
+- Admin: consulta lo snapshot della giocatrice, gestisce online eventi e premi con controllo della versione e identificativo stabile per i ritentativi, conferma consegne ed esporta JSON consultabile. Non registra né annulla episodi al posto della giocatrice.
+- Giocatrice: registra e annulla con coda IndexedDB per progetto/account; conferma locale dopo transazione, punti provvisori distinguibili, riconciliazione idempotente e invii rifiutati visibili/riprovabili/rimuovibili dopo conferma. Le operazioni ambigue restano in coda fino alla lettura di conferma dal server.
+- Refresh tramite TanStack Query all'apertura, al ritorno in primo piano/connessione, su richiesta e ogni 30 secondi mentre la vista è attiva. Web Locks quando disponibili e RPC idempotenti proteggono gli invii da più schede. Ogni RPC usa il token del proprietario verificato anche se la sessione cambia durante la richiesta.
+- Cache e code reali sono separate dalla demo. Un logout conserva la coda per lo stesso account senza mostrarla all'altro. Dati/versioni locali incompatibili vengono conservati e segnalati, non azzerati.
+- Manifest PWA, icone PNG/iPhone, service worker per le sole risorse statiche, indicazioni per la Home e aggiornamento su richiesta. Il pulsante di aggiornamento attende moduli chiusi e assenza di operazioni pendenti. Non si dipende dal Background Sync di Safari; Auth e risposte del database non entrano in Cache Storage.
+- Regole iniziali approvate dall'utente: eventi ripetibili al momento, premi settimanali o totali, revoca dei premi non consegnati dopo annullamento e conservazione con segnalazione di quelli consegnati. I dettagli operativi sono sotto.
+- Catalogo reale vuoto: gli esempi sono confinati alla demo; nessun import automatico nel diario reale. Nome/punti/versione degli episodi e condizioni dei premi assegnati conservano lo storico.
+- Test locali su dominio/calendario, IndexedDB simulato, riconciliazione e UI in jsdom; migrazione/RPC/RLS eseguite in PostgreSQL PGlite con identità Supabase simulate. Workflow GitHub per test e build. Questi controlli non certificano Supabase Auth/PostgREST ospitati né Safari.
+- **Nessun progetto Supabase, utente reale o hosting creato/collegato.** L'utente ha confermato che non esiste ancora un progetto e ha chiesto di preparare la configurazione. Nessuna pubblicazione web o prova su iPhone; backup/ripristino ospitato e misure LCP/INP da fare. Il relay di anteprima era risultato indisponibile durante lo sprint 1; verifica visuale ancora non eseguita.
+- Attivazione passo passo in [SETUP.md](SETUP.md), manutenzione in [OPERATIONS.md](OPERATIONS.md), criteri degli sprint in [ROADMAP.md](ROADMAP.md), avvio in [README.md](../README.md).
 
 Aggiornare questa sezione quando lo stato cambia. Non confondere il comportamento desiderato con quello effettivamente disponibile.
 
-Le sezioni architetturali seguenti descrivono il comportamento finale da raggiungere: lo stato qui sopra specifica quali parti esistono davvero. La demo locale non è un'autorizzazione a usare un selettore di ruolo nella versione con account.
+Le sezioni architetturali seguenti descrivono il comportamento del prodotto; lo stato qui sopra distingue il codice presente dal servizio effettivamente configurato e collaudato. La demo locale non è un'autorizzazione a usare un selettore di ruolo nella versione con account.
 
 ## 3. Idea di gioco e perimetro
 
@@ -169,7 +175,7 @@ Il frontend statico non richiede un server applicativo sempre acceso. Le operazi
 
 Il database deve impedire doppioni dello stesso identificativo per la stessa giocatrice, anche dopo timeout, riaperture o invii concorrenti. Un ritentativo con lo stesso identificativo restituisce l'esito già acquisito; un payload incompatibile non deve sovrascriverlo.
 
-Un errore di validazione rimane visibile e recuperabile. Se un evento viene modificato o archiviato mentre il telefono è offline, applicare una regola esplicita per la vecchia versione: non cancellare l'inserimento né applicare nuovi punti senza comunicarlo. La regola precisa va fissata prima di implementare questa parte.
+Un errore di validazione rimane visibile e recuperabile. Se un evento viene modificato o archiviato mentre il telefono è offline, applicare una regola esplicita per la vecchia versione: non cancellare l'inserimento né applicare nuovi punti senza comunicarlo. Nella versione implementata il server accetta entro sette giorni una versione che era valida all’istante dichiarato; una regola non valida resta da correggere. La UI inserisce al momento, con tolleranza server di cinque minuti nel futuro per l’orologio del dispositivo. È un diario personale basato sulla fiducia: il server non può provare quando un episodio sia davvero accaduto.
 
 Non fare affidamento sul Background Sync di Safari per inviare eventi mentre l'app è chiusa. Riprovare all'apertura, al ritorno in primo piano e al recupero effettivo della connessione mentre l'app è attiva. Il solo segnale `navigator.onLine` non prova che Supabase sia raggiungibile.
 
@@ -183,8 +189,17 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 - Calcolare premi e risultati definitivi sui dati confermati dal server, evitando doppi sblocchi.
 - Conservare le condizioni del premio assegnato: cambiarne la definizione non riscrive automaticamente quanto già conquistato.
 - Modellare annullamenti e rettifiche in modo tracciabile e idempotente, anche se l'evento originale è ancora in attesa di sincronizzazione.
-- Ricalcolare in modo coerente i risultati derivati quando viene annullato un evento. La revoca di un premio già raggiunto richiede una regola di prodotto esplicita.
+- Ricalcolare in modo coerente i risultati derivati quando viene annullato un evento. La regola approvata revoca i premi non consegnati quando il totale scende sotto la soglia storica; conserva quelli consegnati con una segnalazione. Raggiungere di nuovo la soglia riattiva la stessa assegnazione, senza duplicarla.
 - Salvare istante dell'evento e istante di ricezione. Usare `Europe/Rome` per giorni e settimane, gestendo ora legale e invii successivi alla mezzanotte.
+
+### Regole operative della prima versione
+
+- Eventi ripetibili senza limite giornaliero configurato, malus ammessi; registrazione al momento, nessun selettore per retrodatare.
+- Settimana italiana da lunedì. Un premio totale si conquista una volta per definizione, uno settimanale una volta per settimana: la chiave è proprietario + premio + periodo, non la versione del testo.
+- Modificare il premio può usare punti già confermati del periodo corrente, conservando le condizioni di quanto già assegnato. Un premio settimanale nuovo/modificato non crea nuove assegnazioni per settimane prima della modifica; può sbloccare dalla settimana corrente in poi.
+- Le assegnazioni esistenti mantengono le condizioni originali anche dopo modifica/archiviazione del catalogo. La consegna è confermata dall'admin, con traccia nell'audit; i punti successivamente insufficienti non cancellano un premio consegnato.
+- I record confrontano i punti effettivamente attribuiti secondo le regole del momento: non si normalizzano per i cambi del catalogo.
+- I punti dei dati in attesa sono provvisori; quelli rifiutati non aumentano i totali. Un annullamento rifiutato non toglie i punti già confermati. I premi definitivi si leggono dalle assegnazioni del server.
 
 ### Modello dati indicativo
 
@@ -197,7 +212,7 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 | Premi assegnati | Condizioni storiche, raggiungimento ed eventuale consegna |
 | Traccia amministrativa | Modifiche a catalogo, premi e rettifiche pertinenti |
 
-Sono responsabilità da coprire, non nomi di tabelle già stabiliti. Per una sola giocatrice bastano query semplici; introdurre aggiornamenti in tempo reale solo se portano un beneficio concreto. Il pannello admin può aggiornarsi all'apertura, al ritorno in primo piano e su richiesta.
+La tabella descrive le responsabilità concettuali; i nomi e i vincoli implementati si trovano nella migrazione SQL versionata. Per una sola giocatrice bastano query semplici; introdurre aggiornamenti in tempo reale solo se portano un beneficio concreto. Il pannello admin può aggiornarsi all'apertura, al ritorno in primo piano e su richiesta.
 
 ## 7. Account e autorizzazione
 
@@ -256,16 +271,15 @@ Scegliere controlli proporzionati alla feature, preservando questi comportamenti
 
 I test automatici su WebKit sono utili, ma non sostituiscono una verifica su iPhone reale, sia da Safari sia dalla Home. Dichiarare quali ambienti sono stati effettivamente verificati.
 
-## 10. Decisioni ancora da definire
+## 10. Decisioni ancora da definire o collaudare
 
 Risolverle quando servono alla feature, proseguendo con il lavoro indipendente possibile. Non riproporre domande già risolte dal contesto o dal codice.
 
-- Catalogo reale: nomi, punti, eventuali malus, limiti di ripetizione e possibilità di inserire eventi del giorno precedente.
-- Premi reali: soglie, periodi, ripetibilità, significato della consegna e comportamento dopo un annullamento.
-- Comparabilità dei record quando cambiano i punteggi degli eventi.
-- Accettazione delle vecchie versioni del catalogo per gli inserimenti offline.
-- Metodo operativo di recupero account e scelta dell'eventuale provider email.
-- Versione iOS minima supportata e verifica del telefono effettivo.
+- Catalogo e premi reali: nomi, punti, soglie e descrizioni da preparare con l'admin. Gli esempi non diventano automaticamente regole del regalo.
+- Eventuali estensioni a limiti di ripetizione, retrodatazione, periodi personalizzati e normalizzazione dei record: fuori dalla prima versione.
+- Attivazione Supabase, due utenti e quote Free al momento della creazione; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
+- Verifica del modello/iOS reale, Safari e Home, accessibilità, affidabilità offline e prestazioni sul telefono.
+- Pubblicazione Cloudflare Pages, prova di backup/ripristino e catalogo definitivo prima della consegna.
 
 ## 11. Registro delle decisioni
 
@@ -279,6 +293,9 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Contesto persistente nel repository, richiamato da AGENTS.md | Rilettura e manutenzione richieste per le modifiche future |
 | 2026-11-14 | Avvio dello sviluppo e roadmap richiesta dall'utente | Quattro sprint: Diario locale, dati condivisi/account, affidabilità offline/PWA, verifica e consegna |
 | 2026-11-14 | Sprint 1 implementato con TypeScript e persistenza IndexedDB demo | Esperienza provabile senza servizi esterni; nessun account, sincronizzazione o premio definitivo simulato come reale |
+| 2026-11-14 | Utente: continuare con gli sprint, progetto Supabase non ancora esistente | Preparare configurazione, migrazione e codice senza creare servizi esterni |
+| 2026-11-14 | Approvate le regole iniziali per eventi ripetibili, periodi premi e annullamenti | Prima versione implementata con condizioni storiche e consegna separata |
+| 2026-11-14 | Codice account/condivisione, coda offline e PWA implementato e testato localmente | Attivazione e collaudo ospitato/iPhone ancora necessari; produzione senza configurazione chiusa |
 
 ## 12. Fonti della ricerca
 
@@ -300,3 +317,5 @@ Le fonti aiutano a verificare le scelte tecniche; non sostituiscono i requisiti 
 - [MDN: Background Synchronization API](https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API).
 - [WebKit: persistenza e rimozione dello storage](https://webkit.org/blog/14403/updates-to-storage-policy/).
 - [Web.dev: Core Web Vitals](https://web.dev/articles/vitals).
+- [Supabase: backup/ripristino tramite CLI](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore).
+- [Supabase: recupero amministrativo updateUserById](https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid).

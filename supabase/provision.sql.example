@@ -1,0 +1,8 @@
+-- Eseguire dal SQL editor come proprietario DOPO aver creato i due utenti Auth.
+-- Sostituire i segnaposto con gli UUID degli utenti, mai con password o email.
+-- Una sola giocatrice e un solo admin: il vincolo UNIQUE impedisce duplicati di ruolo.
+begin;
+insert into public.profiles(id, role) values
+  ('REPLACE_WITH_PLAYER_UUID', 'player'),
+  ('REPLACE_WITH_ADMIN_UUID', 'admin');
+commit;

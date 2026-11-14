@@ -11,6 +11,7 @@ import {
   Trophy,
   WifiOff,
   X,
+  LogOut,
 } from 'lucide-react'
 import { useDiary } from './hooks/useDiary'
 import {
@@ -29,12 +30,73 @@ import {
 import { Timeline } from './components/Timeline'
 import { Records } from './components/Records'
 import { newId } from './domain/ids'
+import type { Command, Diary } from './domain/model'
+import { readConfig } from './remote/config'
+import { SyncStatus, type RemoteState } from './components/SyncStatus'
+import { Awards } from './components/Awards'
+import { PwaPrompt } from './components/PwaPrompt'
+import { InstallHint } from './components/InstallHint'
 
 const Admin = lazy(() => import('./components/Admin'))
+const RemoteApplication = lazy(() => import('./remote/RemoteApplication'))
 type Page = 'today' | 'records' | 'rewards'
 
 export function App() {
-  const { diary, busy, error, execute, refresh } = useDiary()
+  const mode =
+    import.meta.env.VITE_APP_MODE ?? (import.meta.env.DEV ? 'demo' : 'remote')
+  const config = readConfig()
+  return (
+    <>
+      <PwaPrompt />
+      {mode === 'demo' ? (
+        <DemoApplication />
+      ) : mode === 'remote' && config ? (
+        <Suspense
+          fallback={
+            <p className="loading-state" role="status">
+              Apro il diario…
+            </p>
+          }
+        >
+          <RemoteApplication config={config} />
+        </Suspense>
+      ) : (
+        <div className="app">
+          <section className="panel loading-state">
+            <h1>Il diario è quasi pronto</h1>
+            <p>
+              Il collegamento al servizio deve ancora essere configurato da chi
+              gestisce l’app.
+            </p>
+          </section>
+        </div>
+      )}
+    </>
+  )
+}
+
+function DemoApplication() {
+  const controller = useDiary()
+  return <DiaryView controller={controller} />
+}
+
+export type DiaryController = {
+  diary?: Diary
+  busy: boolean
+  error: string
+  execute: (command: Command) => Promise<boolean>
+  refresh: () => Promise<unknown>
+  remote?: RemoteState
+}
+
+export function DiaryView({
+  controller,
+  onLogout,
+}: {
+  controller: DiaryController
+  onLogout?: () => void
+}) {
+  const { diary, busy, error, execute, refresh, remote } = controller
   const [page, setPage] = useState<Page>('today')
   const [admin, setAdmin] = useState(false)
   const [picker, setPicker] = useState(false)
@@ -45,6 +107,9 @@ export function App() {
   const [recording, setRecording] = useState(false)
   const recordLock = useRef(false)
   const main = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (remote?.role === 'admin') setAdmin(true)
+  }, [remote?.role])
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 30000)
@@ -81,6 +146,8 @@ export function App() {
           id,
           eventId,
           at: new Date().toISOString(),
+          version: event.version,
+          snapshot: { name: event.name, points: event.points },
         })
       ) {
         setPicker(false)
@@ -111,15 +178,24 @@ export function App() {
   }).format(now)
 
   return (
-    <div className={`app ${admin ? 'admin-mode' : ''}`}>
+    <div
+      className={`app ${admin ? 'admin-mode' : ''}`}
+      data-update-blocked={
+        busy || picker || (remote?.queue.length ?? 0) > 0 || remote?.syncing
+          ? 'true'
+          : 'false'
+      }
+    >
       <a className="skip-link" href="#main">
         Vai al contenuto
       </a>
-      <div className="demo-banner">
-        <span className="demo-dot" />
-        Versione demo <span className="demo-divider">·</span> Dati solo su
-        questo browser
-      </div>
+      {!remote && (
+        <div className="demo-banner">
+          <span className="demo-dot" />
+          Versione demo <span className="demo-divider">·</span> Dati solo su
+          questo browser
+        </div>
+      )}
       <header className="app-header">
         <a
           className="brand"
@@ -139,29 +215,55 @@ export function App() {
             <small>Il diario delle piccole avventure</small>
           </span>
         </a>
-        <button
-          className={`icon-button admin-button ${admin ? 'active' : ''}`}
-          onClick={() => {
-            setAdmin((value) => !value)
-            setToast(undefined)
-            window.scrollTo({ top: 0 })
-          }}
-          aria-label={admin ? 'Torna al diario' : 'Prova area admin'}
-          aria-pressed={admin}
-        >
-          <Settings2 size={21} />
-        </button>
+        <div className="header-actions">
+          {(!remote || remote.role === 'admin') && (
+            <button
+              className={`icon-button admin-button ${admin ? 'active' : ''}`}
+              onClick={() => {
+                setAdmin((value) => !value)
+                setToast(undefined)
+                window.scrollTo({ top: 0 })
+              }}
+              aria-label={
+                admin
+                  ? 'Torna al diario'
+                  : remote
+                    ? 'Apri area admin'
+                    : 'Prova area admin'
+              }
+              aria-pressed={admin}
+            >
+              <Settings2 size={21} />
+            </button>
+          )}
+          {onLogout && (
+            <button
+              className="icon-button"
+              aria-label="Esci dal diario"
+              onClick={onLogout}
+            >
+              <LogOut size={20} />
+            </button>
+          )}
+        </div>
       </header>
       <main id="main" ref={main} tabIndex={-1}>
+        {remote && (
+          <SyncStatus remote={remote} diary={diary} refresh={refresh} />
+        )}
         {!diary ? (
           <section className="panel loading-state" aria-live="polite">
             <BookOpen size={32} aria-hidden="true" />
             <h1>
-              {error
+              {error || remote?.syncError
                 ? 'Il diario ha bisogno di una mano'
                 : 'Apro una nuova pagina…'}
             </h1>
-            <p>{error || 'Un attimo, preparo le tue piccole avventure.'}</p>
+            <p>
+              {error ||
+                remote?.syncError ||
+                'Un attimo, preparo le tue piccole avventure.'}
+            </p>
             {error && (
               <button className="primary-button" onClick={() => void refresh()}>
                 Riprova
@@ -182,7 +284,9 @@ export function App() {
             {!online && (
               <div className="offline-notice">
                 <WifiOff size={17} aria-hidden="true" />
-                Sei offline. Questa demo salva sul dispositivo.
+                {remote
+                  ? 'Sei offline. Gli episodi restano sul telefono fino al prossimo invio.'
+                  : 'Sei offline. Questa demo salva sul dispositivo.'}
               </div>
             )}
             {admin ? (
@@ -200,6 +304,8 @@ export function App() {
                   error={error}
                   execute={execute}
                   onExit={() => setAdmin(false)}
+                  shared={!!remote}
+                  refreshing={remote?.syncing}
                 />
               </Suspense>
             ) : (
@@ -242,22 +348,28 @@ export function App() {
                         </span>
                       </div>
                     </section>
-                    <button
-                      className="primary-button record-button"
-                      onClick={() => {
-                        setSearch('')
-                        setPicker(true)
-                      }}
-                    >
-                      <Plus size={21} strokeWidth={2} />
-                      Segna un evento
-                      <ArrowRight size={20} className="button-arrow" />
-                    </button>
+                    {(!remote || remote.role === 'player') && (
+                      <button
+                        className="primary-button record-button"
+                        onClick={() => {
+                          setSearch('')
+                          setPicker(true)
+                        }}
+                      >
+                        <Plus size={21} strokeWidth={2} />
+                        Segna un evento
+                        <ArrowRight size={20} className="button-arrow" />
+                      </button>
+                    )}
                     <div className="local-status">
                       <Check size={13} />
                       {busy
                         ? 'Salvataggio in corso…'
-                        : 'Diario salvato su questo dispositivo'}
+                        : remote
+                          ? remote.queue.length
+                            ? 'Salvato sul telefono · punti in attesa di conferma'
+                            : 'Punti confermati nel diario condiviso'
+                          : 'Diario salvato su questo dispositivo'}
                     </div>
                     <section className="panel">
                       <SectionHeading
@@ -271,7 +383,9 @@ export function App() {
                           .reverse()
                           .slice(0, 4)}
                         busy={busy}
-                        onUndo={undo}
+                        onUndo={
+                          !remote || remote.role === 'player' ? undo : undefined
+                        }
                       />
                     </section>
                     {featured && (
@@ -292,10 +406,18 @@ export function App() {
                     <p className="diary-quote">
                       Anche una giornata normale può avere una bella storia.
                     </p>
+                    {remote?.role === 'player' && <InstallHint />}
                   </>
                 )}
                 {page === 'records' && (
-                  <Records diary={diary} now={now} busy={busy} onUndo={undo} />
+                  <Records
+                    diary={diary}
+                    now={now}
+                    busy={busy}
+                    onUndo={
+                      !remote || remote.role === 'player' ? undo : undefined
+                    }
+                  />
                 )}
                 {page === 'rewards' && (
                   <>
@@ -328,10 +450,18 @@ export function App() {
                         </EmptyState>
                       </section>
                     )}
-                    <p className="demo-footnote">
-                      Premi di esempio. Il progresso è dimostrativo: non
-                      costituisce un’assegnazione definitiva.
-                    </p>
+                    {remote && (
+                      <section className="panel awards-panel">
+                        <SectionHeading title="I premi conquistati" />
+                        <Awards awards={diary.awards ?? []} />
+                      </section>
+                    )}
+                    {!remote && (
+                      <p className="demo-footnote">
+                        Premi di esempio. Il progresso è dimostrativo: non
+                        costituisce un’assegnazione definitiva.
+                      </p>
+                    )}
                   </>
                 )}
               </>
@@ -438,12 +568,15 @@ export function App() {
                 .includes(search.toLocaleLowerCase('it')),
           ) && (
             <EmptyState title="Nessun episodio trovato">
-              Prova con un’altra parola, oppure crea un evento dall’area admin
-              demo.
+              {remote
+                ? 'Prova con un’altra parola. Se il catalogo è vuoto, chi gestisce il regalo deve preparare i primi eventi.'
+                : 'Prova con un’altra parola, oppure crea un evento dall’area admin demo.'}
             </EmptyState>
           )}
           <p className="demo-footnote">
-            Catalogo dimostrativo. Nessun dato sui clienti è necessario.
+            {remote
+              ? 'Non servono nomi o dati dei clienti.'
+              : 'Catalogo dimostrativo. Nessun dato sui clienti è necessario.'}
           </p>
         </Modal>
       )}

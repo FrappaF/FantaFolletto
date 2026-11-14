@@ -1,3 +1,4 @@
+import { parseDiary } from '../domain/validation'
 import {
   applyCommand,
   initialDiary,
@@ -37,65 +38,7 @@ function openDatabase(): Promise<IDBDatabase> {
 // Never replace an unreadable diary with an empty one.
 function readState(value: unknown): Diary {
   if (value === undefined) return initialDiary()
-  const state = value as Diary
-  const text = (value: unknown, max: number, required = true): boolean =>
-    typeof value === 'string' &&
-    (!required || value.trim().length > 0) &&
-    value.length <= max
-  const number = (value: unknown, min: number, max: number): boolean =>
-    typeof value === 'number' &&
-    Number.isSafeInteger(value) &&
-    value >= min &&
-    value <= max
-  const date = (value: unknown): boolean =>
-    typeof value === 'string' && Number.isFinite(Date.parse(value))
-  const uniqueIds = (values: { id: string }[]) =>
-    new Set(values.map((item) => item.id)).size === values.length
-  const valid =
-    state?.schemaVersion === 1 &&
-    Array.isArray(state.events) &&
-    Array.isArray(state.entries) &&
-    Array.isArray(state.rewards) &&
-    state.events.every(
-      (item) =>
-        item &&
-        text(item.id, 100) &&
-        text(item.name, 60) &&
-        text(item.description, 180, false) &&
-        number(item.points, -1000, 1000) &&
-        number(item.version, 1, Number.MAX_SAFE_INTEGER) &&
-        typeof item.archived === 'boolean',
-    ) &&
-    state.rewards.every(
-      (item) =>
-        item &&
-        text(item.id, 100) &&
-        text(item.name, 60) &&
-        text(item.description, 180, false) &&
-        number(item.target, 1, 100000) &&
-        ['week', 'all'].includes(item.period) &&
-        typeof item.archived === 'boolean',
-    ) &&
-    state.entries.every(
-      (item) =>
-        item &&
-        text(item.id, 100) &&
-        text(item.eventId, 100) &&
-        text(item.name, 60) &&
-        number(item.points, -1000, 1000) &&
-        number(item.eventVersion, 1, Number.MAX_SAFE_INTEGER) &&
-        date(item.occurredAt) &&
-        (item.voidedAt === undefined || date(item.voidedAt)),
-    ) &&
-    uniqueIds(state.events) &&
-    uniqueIds(state.rewards) &&
-    uniqueIds(state.entries)
-  if (!valid) {
-    throw new Error(
-      'Il diario salvato non è compatibile. I dati sono stati conservati: non cancellare lo spazio del sito.',
-    )
-  }
-  return state
+  return parseDiary(value)
 }
 
 export async function readDiary(): Promise<Diary> {

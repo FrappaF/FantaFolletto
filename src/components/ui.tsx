@@ -131,7 +131,9 @@ export function RewardCard({
       <div className="progress-meta">
         <span>
           {progress.reached
-            ? 'Obiettivo raggiunto!'
+            ? diary.awards
+              ? 'Soglia raggiunta · verifica i premi conquistati'
+              : 'Obiettivo raggiunto!'
             : `${progress.remaining} punti al traguardo`}
         </span>
         <span>
@@ -146,7 +148,9 @@ export function RewardCard({
       {!compact && (
         <p className="reward-note">
           {progress.reached
-            ? 'Che bella conquista. Nella demo il progresso si ricalcola se annulli un episodio.'
+            ? diary.awards
+              ? 'I premi conquistati compaiono sotto dopo la conferma del diario condiviso.'
+              : 'Che bella conquista. Nella demo il progresso si ricalcola se annulli un episodio.'
             : 'Un episodio alla volta, ci sei sempre più vicina.'}
         </p>
       )}

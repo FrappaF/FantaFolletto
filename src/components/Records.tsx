@@ -14,7 +14,7 @@ export function Records({
   diary: Diary
   now: Date
   busy: boolean
-  onUndo: (id: string) => void
+  onUndo?: (id: string) => void
 }) {
   const [period, setPeriod] = useState<'day' | 'week'>('day')
   const [showVoided, setShowVoided] = useState(false)

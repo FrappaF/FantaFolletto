@@ -20,7 +20,9 @@ Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 s
 
 ## Sprint 2 — Due account, un diario condiviso
 
-**Stato: da iniziare.**
+**Stato: codice e configurazione preparati, test locali superati; attivazione e collaudo del servizio da eseguire.**
+
+Implementati migrazione, RLS/grant/RPC, catalogo versionato, premi storici e consegne, login/logout, recupero assistito, admin protetto dal ruolo reale e aggiornamento dati. L’utente ha confermato che non ha ancora un progetto Supabase: creazione, utenti e collegamento non sono stati eseguiti. Procedura in [SETUP.md](SETUP.md).
 
 1. Configurare un progetto Supabase europeo; verificare quote Free e recupero account. Predisporre due utenti e disabilitare la registrazione pubblica.
 2. Versionare schema e migrazioni: ruoli protetti, catalogo versionato, episodi, annullamenti, premi assegnati e audit admin.
@@ -29,7 +31,7 @@ Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 s
 5. Admin con dati della giocatrice e aggiornamento all'apertura, al ritorno in primo piano e su richiesta.
 6. Assegnazioni premi storiche, distinta eventuale consegna, regole di modifica e rettifica.
 
-**Decisioni necessarie in questo sprint:** catalogo reale e premi; regole per ripetizioni, malus, date precedenti, premi dopo annullamento, comparabilità dei record; metodo recupero account. La demo non viene importata automaticamente nei dati reali.
+**Regole iniziali definite:** eventi ripetibili al momento e malus ammessi; premi totali o settimanali; revoca dei non consegnati dopo annullamento, conservazione con segnalazione dei consegnati. Record sui punti effettivi, senza normalizzazione. Recupero assistito dall’operatore, senza dipendere da SMTP. Catalogo e premi reali restano da preparare; la demo non viene importata automaticamente.
 
 **Criterio di uscita:** giocatrice e admin da browser diversi vedono lo stesso diario; test anonimo/giocatrice/admin verificano accessi consentiti e negati; nessun punto viene deciso dal client; ritentativi e modifiche preservano lo storico.
 
@@ -37,7 +39,9 @@ Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 s
 
 ## Sprint 3 — Affidabile anche in giro
 
-**Stato: da iniziare; dipende dallo sprint 2.**
+**Stato: implementazione presente e testata localmente; prove su Supabase collegato e Safari/Home da eseguire.**
+
+Coda per progetto/account, riconciliazione, errori recuperabili, Web Locks quando disponibili, annullamenti pendenti, manifest/icone/service worker e aggiornamenti protetti sono nel codice. Il server accetta una vecchia versione valida all’istante dichiarato, entro sette giorni. Non sono dichiarate come superate le prove di riapertura offline su iPhone.
 
 - Repository locale per proprietario e coda persistente di operazioni, separati dalla demo.
 - Prima persistenza, poi risposta provvisoria; riconciliazione con dati confermati dal server.
@@ -45,13 +49,15 @@ Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 s
 - Gestione sessione scaduta, cambio account, errori recuperabili e annullamenti ancora pendenti.
 - Politica esplicita per gli eventi creati offline con regole vecchie o archiviate.
 - Manifest PWA, icone iPhone, risorse offline e aggiornamento con conferma che protegga coda e moduli aperti.
-- Migrazioni dello storage locale e visibilità di inserimenti in attesa / confermati / da correggere.
+- Storage con versione e controlli di compatibilità, senza azzerare dati sconosciuti; visibilità di inserimenti in attesa / confermati / da correggere. Migrazioni future da aggiungere quando cambia lo schema.
 
 **Criterio di uscita:** dopo il primo accesso online, un evento resiste a chiusura e riapertura offline e viene conteggiato una sola volta al ritorno online. Nessuna coda si perde o passa a un altro account.
 
 ## Sprint 4 — Pronto per il regalo
 
-**Stato: da iniziare; dipende dagli sprint precedenti.**
+**Stato: preparazione parziale; consegna finale non ancora completata.**
+
+Pronti build, impostazioni Pages, header CSP/cache, guida Home, export e procedure di manutenzione. Rimangono progetto reale, catalogo definitivo, pubblicazione, prove sul telefono, misure prestazioni e backup/ripristino effettivo. Vedere [OPERATIONS.md](OPERATIONS.md).
 
 - Verifica su iPhone reale: Safari e Home, tastiera, safe area, testo ingrandito, connessione instabile e accessibilità.
 - Misure prestazioni, dimensione bundle e verifica aggiornamenti di versione con operazioni pendenti.
@@ -72,3 +78,10 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 - `npm run build`: controllo TypeScript e produzione Vite superati; JavaScript iniziale circa **79,4 kB gzip**, più circa **3 kB gzip** per l'admin caricato su richiesta; CSS circa **4,5 kB gzip**. Queste dimensioni non sono misure di LCP o INP.
 - Test di dati incompatibili: lettura e scrittura rifiutate, contenuto precedente conservato.
 - Anteprima gestita: avvio fallito per timeout del relay (`could not open browser port 4173`); nessuna verifica visuale, Safari o iPhone dichiarata come eseguita. I dialoghi nativi e il focus richiedono una prova reale.
+
+## Verifiche degli sprint 2–3
+
+- Suite ampliata a **42 test**: calendario/dominio, IndexedDB, coda, timeout dopo acquisizione, lettura di conferma fallita, account/progetti separati, annullamenti pendenti, dati incompatibili, autenticazione simulata, aggiornamento PWA e risposta senza configurazione reale.
+- La migrazione viene eseguita in PostgreSQL PGlite: test su ruoli, RLS, grant, idempotenza, storico, vecchie versioni, premi unici/revocati/consegnati e assenza di sblocchi settimanali retroattivi.
+- Build TypeScript/Vite e generazione manifest/service worker riuscite. Icone PNG 180/192/512 e maskable presenti. Verificata anche la build demo separata nella consegna finale.
+- Nessun Supabase Auth/PostgREST ospitato o iPhone testato. La preparazione tecnica non equivale ai criteri finali di uscita degli sprint: le verifiche esterne restano esplicite.

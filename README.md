@@ -1,59 +1,79 @@
 # FantaFolletto
 
-Una piccola webapp da regalare: trasforma gli episodi del lavoro porta a porta in punti, record personali e premi.
-
-La giocatrice sfida se stessa; l'admin consulta i risultati e gestisce eventi e premi. L'esperienza scelta è **Diario**, pensata prima di tutto per iPhone.
-
-## Documentazione
-
-- [Contesto del progetto](docs/PROJECT_CONTEXT.md): requisiti, design, architettura proposta, criteri di qualità e decisioni da mantenere nel tempo.
-- [Roadmap per sprint](docs/ROADMAP.md): incrementi, criteri di completamento e prerequisiti per arrivare al regalo.
-- [Istruzioni per gli agenti](AGENTS.md): richiedono di leggere e aggiornare il contesto a ogni feature o cambiamento pertinente.
+Una webapp da regalare: gli episodi del lavoro porta a porta diventano punti, record personali e piccoli premi. Una giocatrice sfida se stessa; il partner accede come admin per preparare eventi e premi. Design **Diario**, pensato per iPhone.
 
 ## Stato
 
-**Sprint 1 implementato:** Diario con Oggi, Record e Premi, inserimento e annullamento episodi, ricerca nel catalogo, anteprima admin con gestione eventi/premi ed esportazione JSON.
+Sono implementati il Diario, il codice per **account Supabase e dati condivisi**, la **coda offline** e la **PWA**. Sono presenti migrazione SQL, policy, test e istruzioni di attivazione. Il progetto Supabase e l'hosting **non sono ancora creati o collegati**: non è una versione già pubblicata o collaudata sul telefono.
 
-È una **demo locale**, senza account: i dati rimangono in IndexedDB nel browser usato. Non c'è sincronizzazione tra dispositivi. Gli eventi e i premi iniziali sono esempi modificabili, non un regolamento definitivo. Il pulsante in alto a destra apre l'anteprima admin senza autenticazione.
+Stack: React, Vite, TypeScript, Supabase JS, TanStack Query, IndexedDB e vite-plugin-pwa. Nessun servizio a pagamento viene creato dagli script di sviluppo.
 
-Stack attuale: **React + Vite + TypeScript**, CSS e icone Lucide. Supabase, sincronizzazione offline, installazione PWA e hosting rientrano negli sprint successivi.
+## Avvio e prove locali
 
-## Avvio locale
-
-Serve Node.js 24 LTS e npm.
+Serve Node.js 24 LTS (almeno 24.15) e npm.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Aprire l'indirizzo mostrato da Vite. Per una prova da iPhone sulla stessa rete usare l'indirizzo di rete mostrato dal server; il browser richiede un contesto sicuro per alcune API, quindi per la verifica completa usare HTTPS. Le sessioni Safari/Home e le safe area vanno verificate sul telefono reale.
+Senza `.env.local`, lo sviluppo usa la demo. Include Oggi, Record, Premi, registrazione/annullamento e anteprima admin senza autenticazione; dati persistenti solo in quel browser, con catalogo e premi fittizi modificabili. Il pulsante in alto a destra apre l'anteprima admin.
 
 ```sh
 npm test
-npm run build
+npm run build:demo
 npm run preview
 ```
 
-La build statica è in `dist/`. Non servono variabili d'ambiente per la demo. Il server di sviluppo e `vite preview` servono alle prove, non sono l'hosting definitivo.
+`build:demo` produce una PWA demo esplicita. Usare un indirizzo distinto da quello del regalo reale. Il service worker è attivo nelle build, non in `npm run dev`; `vite preview` serve alle prove e non è l'hosting definitivo.
 
-## Dati e limiti della demo
+## Modalità condivisa
 
-- La conferma di inserimento arriva dopo la transazione IndexedDB. Le operazioni concorrenti non sovrascrivono il diario; un identificativo ripetuto non crea doppioni.
-- Ogni episodio conserva nome, punti e versione originali; annullarlo lascia una traccia e aggiorna record e progressi.
-- Giorni e settimane seguono `Europe/Rome`, con settimana da lunedì.
-- I premi mostrano il progresso attuale, non assegnazioni definitive: modifiche e annullamenti possono cambiare il risultato.
-- L'esportazione admin produce un JSON demo; importazione e ripristino non sono implementati.
-- Rimuovere i dati del sito elimina il diario locale. Non inserire dati personali o dei clienti nella demo; non verrà importata automaticamente nel database reale.
-- Non c'è ancora un service worker: una pagina già aperta può salvare senza rete, ma l'avvio o la riapertura offline non sono garantiti.
+Seguire [SETUP.md](docs/SETUP.md): creare il progetto Supabase Free europeo, applicare la migrazione e predisporre due account con signup pubblico disabilitato. Il catalogo reale parte vuoto; l'admin lo prepara dall'app.
 
-## Struttura
+Copiare `.env.example` in `.env.local` e impostare URL HTTPS e chiave **publishable** pubblica:
 
-```text
-src/components/   Componenti Diario, record, premi, modali e admin
-src/domain/       Regole, snapshot eventi e statistiche del calendario italiano
-src/data/         Repository IndexedDB transazionale, isolato per la demo
-src/hooks/        Stato dell'app e aggiornamento tra schede dello stesso browser
+```dotenv
+VITE_APP_MODE=remote
+VITE_SUPABASE_URL=https://PROJECT_REF.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_REPLACE_WITH_PUBLIC_KEY
 ```
 
-I test coprono regole e calendario, persistenza/concorrenza e un percorso dell'interfaccia con registrazione, annullamento, riapertura e gestione admin. I test UI usano jsdom e non verificano rendering, focus nativo o comportamento Safari: non sostituiscono la prova su iPhone.
+```sh
+npm run dev
+npm run build
+```
+
+Le build di produzione sono `remote` per impostazione predefinita: senza configurazione valida mostrano una schermata di preparazione, senza falso accesso admin. Chiavi segrete, `service_role` e password non vanno mai in variabili `VITE_*`. Il file `.env.local` è ignorato da Git; il frontend usa il dominio standard `*.supabase.co` previsto dalla CSP.
+
+## Comportamenti
+
+- Il database controlla ruoli e punti. La giocatrice può registrare/annullare; l'admin può consultare, gestire eventi/premi e confermare consegne.
+- Ogni episodio conserva versione, nome e punti originali. Le modifiche del catalogo non riscrivono lo storico.
+- Prima si salva l'operazione sul telefono, poi si invia. La UI distingue punti provvisori, conferme ed errori; un invio ambiguo resta in coda e usa lo stesso identificativo nei ritentativi.
+- Cache e code sono separate per progetto/account; il logout conserva gli inserimenti per il ritorno dello stesso utente. La demo usa un database distinto e non viene importata nel diario reale.
+- Giorni e settimane seguono `Europe/Rome`, da lunedì. Gli episodi offline arrivano entro sette giorni, con la versione valida al loro istante dichiarato.
+- Premi totali una volta per definizione o settimanali una volta per settimana. Le condizioni già assegnate restano nello storico; annullamenti revocano i premi non consegnati e segnalano eventuali incongruenze di quelli già consegnati.
+- Il service worker conserva le risorse statiche, mai risposte Auth/database. Gli aggiornamenti attendono moduli chiusi e coda risolta.
+- Su iPhone: Safari → Condividi → Aggiungi alla schermata Home. Aprire dalla Home e accedere online prima dell'uso offline; attendere la conferma delle risorse disponibili. Il primo login e il recupero di una sessione non valida richiedono rete.
+
+Lo storage iPhone può essere rimosso: non è un backup. L'export JSON admin è consultabile, ma non è un ripristino del database. Nessun dato personale dei clienti è necessario.
+
+## Documentazione e codice
+
+- [Contesto obbligatorio](docs/PROJECT_CONTEXT.md) e [AGENTS.md](AGENTS.md): requisiti e manutenzione del contesto per ogni modifica.
+- [Roadmap](docs/ROADMAP.md): cosa è implementato e cosa resta da collaudare.
+- [Attivazione](docs/SETUP.md): progetto, schema, account, variabili, hosting e recupero assistito.
+- [Manutenzione](docs/OPERATIONS.md): backup/ripristino, aggiornamenti, limiti e verifiche reali ancora da fare.
+
+```text
+src/components/    Diario, admin, premi, stato sincronizzazione e PWA
+src/domain/        Regole, validazione, snapshot e calendario italiano
+src/data/          Persistenza della demo isolata
+src/remote/        Auth, RPC, cache per account e sincronizzazione
+src/server/        Test PostgreSQL della migrazione e delle policy
+supabase/          Migrazione e modello di provisioning dei ruoli
+scripts/           Utilità per l'operatore, mai importate nel frontend
+```
+
+I test usano PostgreSQL PGlite, IndexedDB simulato, trasporto controllato e jsdom con Auth simulata. Non certificano Supabase ospitato, rendering Safari, riapertura offline reale, LCP/INP o backup/ripristino del servizio. Il collaudo sul telefono e sui due account reali rimane necessario prima del regalo.
