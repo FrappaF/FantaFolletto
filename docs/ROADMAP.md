@@ -98,7 +98,7 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 
 ## Incremento — Catalogo, categorie e combo
 
-**Stato: implementato, verificato e applicato a Supabase; frontend incluso nella build di produzione. Il rilascio su Pages si conferma dall’esito del deployment, come indicato nelle procedure operative.**
+**Stato: implementato, verificato, applicato a Supabase e pubblicato su Pages. Deployment del commit `bfaf811` confermato riuscito dall’API il 14 novembre 2026; dettagli in [ACTIVATION.md](ACTIVATION.md).**
 
 - Catalogo approvato di 37 eventi, sei categorie separate, rarità e sfide una volta al giorno; eventi precedenti di prova archiviati.
 - Filtri nella selezione e nell’admin; modifica categoria/rarità/ripetizione; prossimo punteggio e bonus nel diario.
