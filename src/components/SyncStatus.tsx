@@ -53,7 +53,8 @@ export function SyncStatus({
       </div>
       {remote.queue.length > 0 && (
         <p className="sync-copy">
-          I punti in attesa sono provvisori
+          Gli inserimenti restano sul telefono fino alla conferma. I punti in
+          attesa sono provvisori
           {provisional !== 0
             ? ` (${provisional > 0 ? '+' : ''}${provisional} sul totale)`
             : ''}
@@ -67,13 +68,26 @@ export function SyncStatus({
       )}
       {blocked.length > 0 && (
         <div className="sync-errors">
-          <h2>Questi episodi hanno bisogno di te</h2>
+          <h2>Questi inserimenti hanno bisogno di te</h2>
           {blocked.map((operation) => (
             <article key={operation.operationId}>
               <strong>
                 {operation.type === 'record'
                   ? operation.entry.name
-                  : 'Annullamento episodio'}
+                  : operation.type === 'add-combo'
+                    ? [
+                        operation.combo.firstSurname,
+                        operation.combo.secondSurname,
+                      ]
+                        .filter(Boolean)
+                        .join(' + ')
+                    : operation.type === 'remove-combo'
+                      ? 'Rimozione combo'
+                      : operation.type === 'add-note'
+                        ? `Nota del ${operation.note.day.split('-').reverse().join('/')}`
+                        : operation.type === 'remove-note'
+                          ? 'Rimozione nota'
+                          : 'Annullamento episodio'}
               </strong>
               <p>{operation.error}</p>
               <button
@@ -99,9 +113,9 @@ export function SyncStatus({
           onClose={() => setDiscard(undefined)}
         >
           <p className="modal-description">
-            Verrà rimossa solo l’operazione rifiutata. Un episodio già ricevuto
-            dal server resterà nel diario. Se necessario, potrai annullarlo da
-            lì.
+            Verrà rimossa solo l’operazione rifiutata. I dati già ricevuti dal
+            server resteranno nel diario e potranno essere rimossi dalla loro
+            sezione.
           </p>
           <div className="form-actions">
             <button

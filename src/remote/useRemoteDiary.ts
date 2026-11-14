@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { AdminCommand, Command } from '../domain/model'
+import { applyCommand } from '../domain/model'
 import { newId } from '../domain/ids'
 import {
   accountKey,
@@ -110,9 +111,65 @@ export function useRemoteDiary(
       const current = await readAccount(key)
       if (!current.snapshot)
         throw new Error(
-          'Apri il diario online almeno una volta prima di segnare episodi.',
+          'Apri il diario online almeno una volta prima di aggiungere inserimenti.',
         )
-      if (command.type === 'record' || command.type === 'void') {
+      if (command.type === 'add-note' || command.type === 'remove-note') {
+        if (!['player', 'admin'].includes(current.snapshot.role))
+          throw new Error('Accesso non autorizzato.')
+        const updated = applyCommand(projectDiary(current)!, command)
+        const saved = await enqueue(
+          key,
+          command.type === 'add-note'
+            ? {
+                type: 'add-note',
+                operationId: command.value.id,
+                status: 'pending',
+                note: updated.notes!.find(
+                  (item) => item.id === command.value.id,
+                )!,
+              }
+            : {
+                type: 'remove-note',
+                operationId: newId(),
+                status: 'pending',
+                noteId: command.id,
+                at: command.at,
+              },
+        )
+        if (active.current) setCache(saved)
+        channel.current?.postMessage('changed')
+        void query.refetch()
+      } else if (
+        command.type === 'add-combo' ||
+        command.type === 'remove-combo'
+      ) {
+        if (!['player', 'admin'].includes(current.snapshot.role))
+          throw new Error('Accesso non autorizzato.')
+        const projected = projectDiary(current)!
+        const updated = applyCommand(projected, command)
+        const saved = await enqueue(
+          key,
+          command.type === 'add-combo'
+            ? {
+                type: 'add-combo',
+                operationId: command.value.id,
+                status: 'pending',
+                combo: updated.combos!.find(
+                  (item) => item.id === command.value.id,
+                )!,
+              }
+            : {
+                type: 'remove-combo',
+                operationId: newId(),
+                status: 'pending',
+                comboId: command.id,
+                at: command.at,
+              },
+        )
+        if (active.current) setCache(saved)
+        channel.current?.postMessage('changed')
+        void query.refetch()
+      } else if (command.type === 'record' || command.type === 'void') {
         if (current.snapshot.role !== 'player')
           throw new Error('Solo la giocatrice può segnare o annullare episodi.')
         let saved: AccountCache
@@ -224,6 +281,16 @@ export function useRemoteDiary(
                 rejected.type === 'record' &&
                 item.type === 'void' &&
                 item.entryId === rejected.entry.id
+              ) &&
+              !(
+                rejected.type === 'add-combo' &&
+                item.type === 'remove-combo' &&
+                item.comboId === rejected.combo.id
+              ) &&
+              !(
+                rejected.type === 'add-note' &&
+                item.type === 'remove-note' &&
+                item.noteId === rejected.note.id
               ),
           ),
         }

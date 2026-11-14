@@ -45,6 +45,229 @@ async function seed(key: string) {
 }
 
 describe('coda offline e riconciliazione', () => {
+  it('persiste le note per account e le riconcilia dopo timeout senza doppioni', async () => {
+    const key = 'note-timeout'
+    await seed(key)
+    const note = {
+      id: 'daily',
+      day: '2026-11-14',
+      text: 'Una giornata da ricordare',
+      createdAt: new Date().toISOString(),
+    }
+    await enqueue(key, {
+      type: 'add-note',
+      operationId: note.id,
+      status: 'pending',
+      note,
+    })
+    expect(projectDiary(await readAccount(key))?.notes?.[0]).toMatchObject({
+      ...note,
+      sync: 'pending',
+    })
+    expect((await readAccount('other-note-account')).queue).toHaveLength(0)
+    expect(
+      statistics(projectDiary(await readAccount(key))!, new Date()).total,
+    ).toBe(0)
+    const remote = snapshot()
+    let fail = true
+    const transport: SyncTransport = {
+      snapshot: async () => structuredClone(remote),
+      send: async (op) => {
+        if (op.type === 'add-note') {
+          remote.notes ??= []
+          if (!remote.notes.some((item) => item.id === op.note.id))
+            remote.notes.push(op.note)
+        }
+        if (fail) throw new Error('Timeout')
+      },
+    }
+    await expect(synchronize(key, transport)).rejects.toThrow(/Timeout/)
+    expect((await readAccount(key)).queue).toHaveLength(1)
+    fail = false
+    await synchronize(key, transport)
+    expect((await readAccount(key)).queue).toHaveLength(0)
+    expect((await readAccount(key)).snapshot?.notes).toHaveLength(1)
+  })
+
+  it('non invia la rimozione di una nota rifiutata e non nasconde rimozioni respinte', async () => {
+    const key = 'note-rejected'
+    await seed(key)
+    const note = {
+      id: 'rejected-note',
+      day: '2026-11-14',
+      text: 'Una nota',
+      createdAt: new Date().toISOString(),
+    }
+    await enqueue(key, {
+      type: 'add-note',
+      operationId: note.id,
+      status: 'pending',
+      note,
+    })
+    await enqueue(key, {
+      type: 'remove-note',
+      operationId: 'remove-note',
+      status: 'pending',
+      noteId: note.id,
+      at: note.createdAt,
+    })
+    const sent: string[] = []
+    await synchronize(key, {
+      snapshot: async () => snapshot(),
+      send: async (op) => {
+        sent.push(op.type)
+        throw new RemoteError('Nota rifiutata', '22023')
+      },
+    })
+    expect(sent).toEqual(['add-note'])
+    expect((await readAccount(key)).queue.map((op) => op.status)).toEqual([
+      'blocked',
+      'pending',
+    ])
+    const remote = snapshot()
+    await updateAccount(key, (cache) => ({
+      ...cache,
+      queue: cache.queue.map((op) => ({ ...op, status: 'pending' })),
+    }))
+    await synchronize(key, {
+      snapshot: async () => structuredClone(remote),
+      send: async (op) => {
+        if (op.type === 'add-note') remote.notes = [op.note]
+        if (op.type === 'remove-note') remote.notes![0].removedAt = op.at
+      },
+    })
+    expect((await readAccount(key)).queue).toHaveLength(0)
+    expect((await readAccount(key)).snapshot?.notes?.[0].removedAt).toBe(
+      note.createdAt,
+    )
+    const projected = projectDiary({
+      schemaVersion: 1,
+      snapshot: { ...snapshot(), notes: [note] },
+      queue: [
+        {
+          type: 'remove-note',
+          operationId: 'bad-remove',
+          status: 'blocked',
+          noteId: note.id,
+          at: note.createdAt,
+        },
+      ],
+    })
+    expect(projected?.notes?.[0].removedAt).toBeUndefined()
+  })
+
+  it('conserva e riconcilia una combo singola dopo timeout senza duplicarla', async () => {
+    const key = 'combo-timeout'
+    await seed(key)
+    const combo = {
+      id: 'single',
+      firstSurname: 'Allegri',
+      secondSurname: '',
+      note: '',
+      createdAt: new Date().toISOString(),
+    }
+    await enqueue(key, {
+      type: 'add-combo',
+      operationId: combo.id,
+      status: 'pending',
+      combo,
+    })
+    const local = await readAccount(key)
+    expect(projectDiary(local)?.combos?.[0]).toMatchObject({
+      firstSurname: 'Allegri',
+      sync: 'pending',
+    })
+    expect(statistics(projectDiary(local)!, new Date()).total).toBe(0)
+    expect((await readAccount('other-combo-account')).queue).toHaveLength(0)
+    const remote = snapshot()
+    let fail = true
+    const transport: SyncTransport = {
+      snapshot: async () => structuredClone(remote),
+      send: async (op) => {
+        if (op.type === 'add-combo') {
+          remote.combos ??= []
+          if (!remote.combos.some((item) => item.id === op.combo.id))
+            remote.combos.push(op.combo)
+        }
+        if (fail) throw new Error('Timeout')
+      },
+    }
+    await expect(synchronize(key, transport)).rejects.toThrow(/Timeout/)
+    expect((await readAccount(key)).queue).toHaveLength(1)
+    fail = false
+    await synchronize(key, transport)
+    expect((await readAccount(key)).queue).toHaveLength(0)
+    expect((await readAccount(key)).snapshot?.combos).toHaveLength(1)
+  })
+
+  it('attende la creazione prima di rimuovere una combo e conserva gli errori', async () => {
+    const key = 'combo-remove-pending'
+    await seed(key)
+    const combo = {
+      id: 'remove-me',
+      firstSurname: 'Belli',
+      secondSurname: 'Allegri',
+      note: '',
+      createdAt: new Date().toISOString(),
+    }
+    await enqueue(key, {
+      type: 'add-combo',
+      operationId: combo.id,
+      status: 'pending',
+      combo,
+    })
+    await enqueue(key, {
+      type: 'remove-combo',
+      operationId: 'remove',
+      status: 'pending',
+      comboId: combo.id,
+      at: combo.createdAt,
+    })
+    const remote = snapshot()
+    const sent: string[] = []
+    await synchronize(key, {
+      snapshot: async () => structuredClone(remote),
+      send: async (op) => {
+        sent.push(op.type)
+        if (op.type === 'add-combo') throw new RemoteError('Rifiutata', '22023')
+      },
+    })
+    expect(sent).toEqual(['add-combo'])
+    expect((await readAccount(key)).queue.map((op) => op.status)).toEqual([
+      'blocked',
+      'pending',
+    ])
+    await updateAccount(key, (value) => ({
+      ...value,
+      queue: value.queue.map((op) => ({ ...op, status: 'pending' })),
+    }))
+    await synchronize(key, {
+      snapshot: async () => structuredClone(remote),
+      send: async (op) => {
+        if (op.type === 'add-combo') remote.combos = [op.combo]
+        if (op.type === 'remove-combo') remote.combos![0].removedAt = op.at
+      },
+    })
+    expect((await readAccount(key)).queue).toHaveLength(0)
+    expect((await readAccount(key)).snapshot?.combos?.[0].removedAt).toBe(
+      combo.createdAt,
+    )
+    const rejectedRemoval = projectDiary({
+      schemaVersion: 1,
+      snapshot: { ...snapshot(), combos: [combo] },
+      queue: [
+        {
+          type: 'remove-combo',
+          operationId: 'rejected',
+          status: 'blocked',
+          comboId: combo.id,
+          at: combo.createdAt,
+        },
+      ],
+    })
+    expect(rejectedRemoval?.combos?.[0].removedAt).toBeUndefined()
+  })
+
   it('mantiene operazioni e snapshot tra riaperture e separa account/progetti', async () => {
     const key = accountKey('https://one.supabase.co', 'alice')
     await seed(key)
@@ -163,7 +386,7 @@ describe('coda offline e riconciliazione', () => {
       send: async (op) => {
         sent.push(op.type)
         if (op.type === 'record') remote.entries.push(op.entry)
-        else
+        else if (op.type === 'void')
           remote.entries = remote.entries.map((entry) => ({
             ...entry,
             voidedAt: op.at,

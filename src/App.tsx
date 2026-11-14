@@ -12,6 +12,8 @@ import {
   WifiOff,
   X,
   LogOut,
+  Smile,
+  NotebookPen,
 } from 'lucide-react'
 import { useDiary } from './hooks/useDiary'
 import {
@@ -36,10 +38,12 @@ import { SyncStatus, type RemoteState } from './components/SyncStatus'
 import { Awards } from './components/Awards'
 import { PwaPrompt } from './components/PwaPrompt'
 import { InstallHint } from './components/InstallHint'
+import { Combos } from './components/Combos'
+import { DailyNotes } from './components/DailyNotes'
 
 const Admin = lazy(() => import('./components/Admin'))
 const RemoteApplication = lazy(() => import('./remote/RemoteApplication'))
-type Page = 'today' | 'records' | 'rewards'
+type Page = 'today' | 'records' | 'rewards' | 'combos' | 'notes'
 
 export function App() {
   const mode =
@@ -285,7 +289,7 @@ export function DiaryView({
               <div className="offline-notice">
                 <WifiOff size={17} aria-hidden="true" />
                 {remote
-                  ? 'Sei offline. Gli episodi restano sul telefono fino al prossimo invio.'
+                  ? 'Sei offline. Gli inserimenti restano sul telefono fino al prossimo invio.'
                   : 'Sei offline. Questa demo salva sul dispositivo.'}
               </div>
             )}
@@ -419,6 +423,25 @@ export function DiaryView({
                     }
                   />
                 )}
+                {page === 'notes' && (
+                  <DailyNotes
+                    diary={diary}
+                    now={now}
+                    busy={busy}
+                    error={error}
+                    execute={execute}
+                    shared={!!remote}
+                  />
+                )}
+                {page === 'combos' && (
+                  <Combos
+                    diary={diary}
+                    busy={busy}
+                    error={error}
+                    execute={execute}
+                    shared={!!remote}
+                  />
+                )}
                 {page === 'rewards' && (
                   <>
                     <div className="page-title">
@@ -476,6 +499,8 @@ export function DiaryView({
               { id: 'today', label: 'Oggi', icon: BookOpen },
               { id: 'records', label: 'Record', icon: Trophy },
               { id: 'rewards', label: 'Premi', icon: Gift },
+              { id: 'combos', label: 'Combo', icon: Smile },
+              { id: 'notes', label: 'Note', icon: NotebookPen },
             ] as const
           ).map((item) => (
             <button

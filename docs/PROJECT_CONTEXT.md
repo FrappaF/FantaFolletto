@@ -29,6 +29,8 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 | Interfaccia | React + Vite |
 | Design | Diario |
 | Priorità | Esperienza iPhone veloce e stabile; hosting economico |
+| Cognomi divertenti | Sezione Combo: primo cognome obbligatorio, secondo cognome e nota facoltativi |
+| Note giornaliere | Sezione per annotare le cose successe durante la giornata |
 
 ### Baseline proposta dalla ricerca
 
@@ -44,7 +46,9 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 
 ### Stato reale dopo la pubblicazione
 
-- React + Vite + TypeScript, design Diario Oggi/Record/Premi, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
+- React + Vite + TypeScript, design Diario Oggi/Record/Premi/Combo/Note, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
+- **Note giornaliere implementate nel codice, da attivare online:** testo libero obbligatorio fino a 2000 caratteri, data preimpostata sulla giornata corrente in `Europe/Rome` e modificabile, più note per giorno e storico raggruppato per data, dalla più recente. Accessibili dal diario e dall’area admin; condivise tra i due account, che possono inserire e rimuovere dopo conferma. Nessun effetto sui punti o sui premi. Le note vengono salvate in IndexedDB prima della conferma, poi inviate con identificativo stabile; rimozioni pendenti, errori e invii ambigui restano protetti dalla coda esistente. La migrazione locale `20261114173600_daily_notes.sql` aggiunge tabella con RLS, RPC autorizzate, rimozioni tracciate e campo `notes` nello snapshot/export. Legge i diari precedenti senza `notes`; conserva data, testo e autore nel database. Verificata localmente con test su calendario, UI, persistenza, account, riconciliazione e PostgreSQL PGlite; migrazione non applicata al servizio ospitato e frontend non pubblicato. Nessuna verifica su iPhone reale eseguita per questa modifica.
+- **Combo implementata nel codice, da attivare online:** raccolta di cognomi divertenti, con primo cognome obbligatorio (massimo 60 caratteri), secondo cognome facoltativo (60) e nota facoltativa (180). Accessibile dalla navigazione del diario e dall’area admin; entrambi i ruoli possono inserire e rimuovere dopo conferma. Nessun effetto su punti, episodi o premi. Demo persistente in IndexedDB; modalità condivisa con la stessa coda per account, deduplicazione e riconciliazione degli episodi. La migrazione `20261114165140_surname_combos.sql`, generata con la CLI, aggiunge tabella protetta da RLS, RPC con controllo del ruolo e rimozioni tracciate, e il campo `combos` allo snapshot e quindi all’export. Migrazione verificata localmente in PGlite, non ancora applicata al progetto ospitato; frontend aggiornato non ancora pubblicato. I diari precedenti senza `combos` restano leggibili. Test su dominio, UI, IndexedDB, invii con timeout e permessi; nessun collaudo iPhone reale dichiarato.
 - Due modalità distinte: demo locale esplicita, oppure `remote` con login email/password e ruolo letto dal database. La produzione senza configurazione non apre una demo né un falso admin. `.env.example` descrive le sole variabili pubbliche; `.env.demo` abilita una build demo separata.
 - Schema Supabase applicato al progetto reale, con migrazioni `20261114130522_diary.sql` e `20261114131302_tighten_diary_permissions.sql`: profili e ruoli protetti, eventi/versioni, episodi, premi, assegnazioni storiche, consegne e audit admin. RLS e grant negano le scritture dirette dal browser; le RPC controllano ruolo, versione e deduplicazione.
 - Login/logout e recupero assistito dall'operatore implementati nel codice; nessuna registrazione pubblica o email di recupero promessa senza configurazione. `scripts/reset-password.mjs` usa una chiave segreta solo fuori dal frontend e una password da stdin nascosto.
@@ -125,6 +129,8 @@ Indicazioni tratte dal concept selezionato:
 | Oggi | Punti del giorno, progresso settimanale, pulsante «Segna un evento», ultimi episodi |
 | Record | Migliori giornate, migliori settimane, storico personale |
 | Premi | Traguardo attuale, premio associato e premi già raggiunti |
+| Combo | Raccolta dei cognomi divertenti; inserimento di un solo cognome o di una coppia, nota facoltativa e rimozione con conferma |
+| Note | Appunti della giornata, più note per data, testo libero e storico raggruppato per giorno |
 
 La navigazione principale rimane in basso. L'azione di inserimento è evidente e comoda da raggiungere con il pollice. Il catalogo presenta nome dell'evento e punti prima della selezione.
 
@@ -215,6 +221,8 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 | Definizioni premi | Descrizione, condizioni, periodo e stato di disponibilità |
 | Premi assegnati | Condizioni storiche, raggiungimento ed eventuale consegna |
 | Traccia amministrativa | Modifiche a catalogo, premi e rettifiche pertinenti |
+| Combo di cognomi | Raccolta condivisa tra i due ruoli, indipendente dai punteggi; autore, data e rimozioni conservati |
+| Note giornaliere | Appunti condivisi associati a una data di calendario, con autore, istante di creazione e rimozioni tracciate |
 
 La tabella descrive le responsabilità concettuali; i nomi e i vincoli implementati si trovano nella migrazione SQL versionata. Per una sola giocatrice bastano query semplici; introdurre aggiornamenti in tempo reale solo se portano un beneficio concreto. Il pannello admin può aggiornarsi all'apertura, al ritorno in primo piano e su richiesta.
 
@@ -226,6 +234,8 @@ Supabase Row Level Security e i permessi delle funzioni devono applicare i due r
 
 - La giocatrice accede ai propri dati e alle definizioni disponibili per il gioco.
 - L'admin consulta i risultati e gestisce catalogo e premi tramite operazioni autorizzate.
+- Entrambi i ruoli possono consultare, aggiungere e rimuovere combo dalla raccolta condivisa. Questa facoltà non estende i permessi dell’admin sugli episodi della giocatrice.
+- Le note giornaliere seguono la stessa condivisione delle combo: entrambi i ruoli possono scrivere, leggere e rimuovere note. Non sono appunti privati dell’account né eventi che assegnano punti; l’interfaccia esplicita la condivisione.
 - Il ruolo non proviene da un campo che l'utente può modificare liberamente.
 - Il browser usa la chiave pubblica di Supabase; chiavi segrete e privilegi amministrativi non vanno nel bundle o in variabili `VITE_*`.
 - Verificare anche le viste e le funzioni che espongono aggregati, per evitare di aggirare le policy.
@@ -304,6 +314,8 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Verifica sul database ospitato con rollback e revisione advisor | Core dati verificato senza lasciare dati demo; Auth/PostgREST dal browser e consegna iPhone restano da collaudare |
 | 2026-11-14 | Utente conferma “Allow new users to sign up” già disattivato | Signup pubblico chiuso secondo conferma della dashboard; non richiedere nuovamente questa conferma |
 | 2026-11-14 | Utente autorizza l’agente a pubblicare tramite Cloudflare | Pages collegato a GitHub `main`, produzione remota su `fantafolletto.pages.dev`, anteprime automatiche disabilitate; deploy confermato da Cloudflare, verifica browser/iPhone ancora da completare |
+| 2026-11-14 | Richiesta di una sezione per le migliori combo di cognomi divertenti; l’utente precisa che il secondo cognome deve essere opzionale | Sezione Combo con un solo cognome o una coppia e nota facoltativa; raccolta condivisa senza punti, con coda offline e rimozione tracciata. Implementata e verificata localmente; attivazione della migrazione e pubblicazione successive |
+| 2026-11-14 | Richiesta di una sezione Note giornaliere per annotare le cose successe durante la giornata | Aggiunti testo libero, giornata selezionabile e storico per data. Salvataggio offline, condivisione tra i due ruoli e rimozione con conferma; nessun effetto sul gioco. Implementazione e migrazione verificate localmente, attivazione ospitata e pubblicazione ancora da eseguire |
 
 ## 12. Fonti della ricerca
 

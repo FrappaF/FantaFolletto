@@ -1,3 +1,5 @@
+import { validDay } from './validation'
+
 export type EventDefinition = {
   id: string
   name: string
@@ -43,15 +45,46 @@ export type Award = {
   needsReview: boolean
 }
 
+export type SurnameCombo = {
+  id: string
+  firstSurname: string
+  secondSurname: string
+  note: string
+  createdAt: string
+  removedAt?: string
+  sync?: 'pending' | 'error'
+}
+
+export type ComboCommand =
+  | { type: 'add-combo'; value: SurnameCombo }
+  | { type: 'remove-combo'; id: string; at: string }
+
+export type DailyNote = {
+  id: string
+  day: string
+  text: string
+  createdAt: string
+  removedAt?: string
+  sync?: 'pending' | 'error'
+}
+
+export type NoteCommand =
+  | { type: 'add-note'; value: DailyNote }
+  | { type: 'remove-note'; id: string; at: string }
+
 export type Diary = {
   schemaVersion: 1
   events: EventDefinition[]
   rewards: Reward[]
   entries: Entry[]
   awards?: Award[]
+  combos?: SurnameCombo[]
+  notes?: DailyNote[]
 }
 
 export type Command = (
+  | ComboCommand
+  | NoteCommand
   | {
       type: 'record'
       id: string
@@ -74,7 +107,10 @@ export type Command = (
   | { type: 'deliver-award'; id: string }
 ) & { operationId?: string; expectedVersion?: number }
 
-export type AdminCommand = Exclude<Command, { type: 'record' | 'void' }> & {
+export type AdminCommand = Exclude<
+  Command,
+  { type: 'record' | 'void' } | ComboCommand | NoteCommand
+> & {
   operationId?: string
   expectedVersion?: number
 }
@@ -166,6 +202,81 @@ function checkInteger(value: number, min: number, max: number) {
 
 export function applyCommand(state: Diary, command: Command): Diary {
   switch (command.type) {
+    case 'add-note': {
+      const { id, day, text, createdAt } = command.value
+      checkText(id, 100)
+      checkText(text, 2000)
+      if (!validDay(day) || !Number.isFinite(Date.parse(createdAt)))
+        throw new Error('La data della nota non è valida.')
+      const note: DailyNote = { id, day, text: text.trim(), createdAt }
+      const existing = state.notes?.find((item) => item.id === id)
+      if (existing) {
+        if (
+          existing.day !== day ||
+          existing.text !== note.text ||
+          existing.createdAt !== createdAt
+        )
+          throw new Error('Identificativo già usato con dati diversi.')
+        return state
+      }
+      return { ...state, notes: [...(state.notes ?? []), note] }
+    }
+    case 'remove-note': {
+      if (!state.notes?.some((item) => item.id === command.id))
+        throw new Error('Nota non trovata.')
+      if (!Number.isFinite(Date.parse(command.at)))
+        throw new Error('La data non è valida.')
+      return {
+        ...state,
+        notes: state.notes.map((item) =>
+          item.id === command.id && !item.removedAt
+            ? { ...item, removedAt: command.at }
+            : item,
+        ),
+      }
+    }
+    case 'add-combo': {
+      const { id, firstSurname, secondSurname, note, createdAt } = command.value
+      checkText(id, 100)
+      checkText(firstSurname, 60)
+      checkText(secondSurname, 60, false)
+      checkText(note, 180, false)
+      if (!Number.isFinite(Date.parse(createdAt)))
+        throw new Error('La data non è valida.')
+      const combo: SurnameCombo = {
+        id,
+        firstSurname: firstSurname.trim(),
+        secondSurname: secondSurname.trim(),
+        note: note.trim(),
+        createdAt,
+      }
+      const existing = state.combos?.find((item) => item.id === id)
+      if (existing) {
+        if (
+          existing.firstSurname !== combo.firstSurname ||
+          existing.secondSurname !== combo.secondSurname ||
+          existing.note !== combo.note ||
+          existing.createdAt !== createdAt
+        )
+          throw new Error('Identificativo già usato con dati diversi.')
+        return state
+      }
+      return { ...state, combos: [...(state.combos ?? []), combo] }
+    }
+    case 'remove-combo': {
+      if (!state.combos?.some((item) => item.id === command.id))
+        throw new Error('Combo non trovata.')
+      if (!Number.isFinite(Date.parse(command.at)))
+        throw new Error('La data non è valida.')
+      return {
+        ...state,
+        combos: state.combos.map((item) =>
+          item.id === command.id && !item.removedAt
+            ? { ...item, removedAt: command.at }
+            : item,
+        ),
+      }
+    }
     case 'record': {
       const existing = state.entries.find((entry) => entry.id === command.id)
       if (existing) {

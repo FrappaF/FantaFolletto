@@ -13,6 +13,8 @@ import { EmptyState, EventIcon, Modal, SectionHeading } from './ui'
 import { Timeline } from './Timeline'
 import { newId } from '../domain/ids'
 import { Awards } from './Awards'
+import { Combos } from './Combos'
+import { DailyNotes } from './DailyNotes'
 
 type Editor =
   | { kind: 'event'; value?: EventDefinition }
@@ -44,7 +46,9 @@ export default function Admin({
   shared?: boolean
   refreshing?: boolean
 }) {
-  const [tab, setTab] = useState<'summary' | 'events' | 'rewards'>('summary')
+  const [tab, setTab] = useState<
+    'summary' | 'events' | 'rewards' | 'combos' | 'notes'
+  >('summary')
   const [editor, setEditor] = useState<Editor>()
   const [archive, setArchive] = useState<ArchiveTarget>()
   const [showArchived, setShowArchived] = useState(false)
@@ -116,6 +120,8 @@ export default function Admin({
             ['summary', 'Riepilogo'],
             ['events', 'Eventi'],
             ['rewards', 'Premi'],
+            ['combos', 'Combo'],
+            ['notes', 'Note'],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -127,6 +133,25 @@ export default function Admin({
           </button>
         ))}
       </div>
+      {tab === 'notes' && (
+        <DailyNotes
+          diary={diary}
+          now={now}
+          busy={busy}
+          error={error}
+          execute={execute}
+          shared={shared}
+        />
+      )}
+      {tab === 'combos' && (
+        <Combos
+          diary={diary}
+          busy={busy}
+          error={error}
+          execute={execute}
+          shared={shared}
+        />
+      )}
       {tab === 'summary' && (
         <>
           <div className="stat-grid">

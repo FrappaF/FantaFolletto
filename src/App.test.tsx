@@ -58,6 +58,9 @@ it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisc
   expect(document.querySelector('.score-number')?.textContent).toBe('10punti')
   await user.click(screen.getByRole('button', { name: 'Record' }))
   await screen.findByRole('heading', { name: 'I tuoi record' })
+  await user.click(screen.getByRole('button', { name: 'Note' }))
+  await screen.findByRole('heading', { name: /Note giornaliere/ })
+  await user.click(screen.getByRole('button', { name: 'Record' }))
   expect(screen.getAllByText('Un caffè offerto')).toHaveLength(1)
   await user.click(
     screen.getByRole('checkbox', {
@@ -68,6 +71,8 @@ it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisc
 
   await user.click(screen.getByRole('button', { name: 'Prova area admin' }))
   await screen.findByRole('heading', { name: 'Il tuo spazio admin' })
+  await user.click(screen.getByRole('button', { name: 'Note' }))
+  await screen.findByRole('heading', { name: /Note giornaliere/ })
   await user.click(screen.getByRole('button', { name: 'Eventi' }))
   await user.click(screen.getAllByRole('button', { name: 'Modifica' })[0])
   const eventDialog = screen.getByRole('dialog', { name: 'Modifica evento' })

@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-Senza `.env.local`, lo sviluppo usa la demo. Include Oggi, Record, Premi, registrazione/annullamento e anteprima admin senza autenticazione; dati persistenti solo in quel browser, con catalogo e premi fittizi modificabili. Il pulsante in alto a destra apre l'anteprima admin.
+Senza `.env.local`, lo sviluppo usa la demo. Include Oggi, Record, Premi, Combo, Note giornaliere, registrazione/annullamento e anteprima admin senza autenticazione; dati persistenti solo in quel browser, con catalogo e premi fittizi modificabili. Il pulsante in alto a destra apre l'anteprima admin.
 
 ```sh
 npm test
@@ -50,6 +50,8 @@ Le build di produzione sono `remote` per impostazione predefinita: senza configu
 
 ## Comportamenti
 
+- Le **Note giornaliere** raccolgono appunti di testo (massimo 2000 caratteri), con data già impostata su oggi in Italia e modificabile. Si possono aggiungere più note per giornata, leggerle nello storico per data e rimuoverle con conferma. Sono condivise tra giocatrice e admin, funzionano con la coda offline e non assegnano punti. Per attivarle online applicare, dopo il backup previsto da [OPERATIONS.md](docs/OPERATIONS.md), le migrazioni pendenti in ordine, inclusa `supabase/migrations/20261114173600_daily_notes.sql`, poi pubblicare il frontend. Migrazione e pubblicazione non eseguite automaticamente dai test locali; verifica su iPhone reale ancora da fare.
+- La sezione **Combo** raccoglie i cognomi divertenti: primo cognome obbligatorio, secondo cognome e nota facoltativi. Giocatrice e admin possono salvare e rimuovere dalla raccolta condivisa; la coda offline protegge gli inserimenti senza assegnare punti. **Attivazione online ancora da eseguire:** applicare `supabase/migrations/20261114165140_surname_combos.sql` dopo il backup previsto da [OPERATIONS.md](docs/OPERATIONS.md), poi pubblicare il frontend. I test locali non applicano migrazioni al progetto ospitato.
 - Il database controlla ruoli e punti. La giocatrice può registrare/annullare; l'admin può consultare, gestire eventi/premi e confermare consegne.
 - Ogni episodio conserva versione, nome e punti originali. Le modifiche del catalogo non riscrivono lo storico.
 - Prima si salva l'operazione sul telefono, poi si invia. La UI distingue punti provvisori, conferme ed errori; un invio ambiguo resta in coda e usa lo stesso identificativo nei ritentativi.

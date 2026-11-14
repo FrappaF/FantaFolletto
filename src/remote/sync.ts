@@ -33,6 +33,22 @@ export async function synchronize(
         )
       )
         continue
+      if (
+        operation.type === 'remove-combo' &&
+        latest.queue.some(
+          (item) =>
+            item.type === 'add-combo' && item.combo.id === operation.comboId,
+        )
+      )
+        continue
+      if (
+        operation.type === 'remove-note' &&
+        latest.queue.some(
+          (item) =>
+            item.type === 'add-note' && item.note.id === operation.noteId,
+        )
+      )
+        continue
       try {
         await transport.send(operation)
         const snapshot = await transport.snapshot()

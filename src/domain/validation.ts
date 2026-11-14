@@ -11,6 +11,12 @@ const number = (value: unknown, min: number, max: number): boolean =>
   value <= max
 export const validDate = (value: unknown): boolean =>
   typeof value === 'string' && Number.isFinite(Date.parse(value))
+export const validDay = (value: unknown): boolean =>
+  typeof value === 'string' &&
+  /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+  value >= '0001-01-01' &&
+  validDate(value) &&
+  new Date(value).toISOString().slice(0, 10) === value
 const uniqueIds = (values: { id: string }[]) =>
   new Set(values.map((item) => item.id)).size === values.length
 
@@ -70,6 +76,35 @@ export function parseDiary(value: unknown): Diary {
             (item.deliveredAt === undefined || validDate(item.deliveredAt)) &&
             typeof item.needsReview === 'boolean',
         ))) &&
+    (state.combos === undefined ||
+      (Array.isArray(state.combos) &&
+        state.combos.every(
+          (item) =>
+            item &&
+            text(item.id, 100) &&
+            text(item.firstSurname, 60) &&
+            text(item.secondSurname, 60, false) &&
+            text(item.note, 180, false) &&
+            validDate(item.createdAt) &&
+            (item.removedAt === undefined || validDate(item.removedAt)) &&
+            (item.sync === undefined ||
+              ['pending', 'error'].includes(item.sync)),
+        ) &&
+        uniqueIds(state.combos))) &&
+    (state.notes === undefined ||
+      (Array.isArray(state.notes) &&
+        state.notes.every(
+          (item) =>
+            item &&
+            text(item.id, 100) &&
+            validDay(item.day) &&
+            text(item.text, 2000) &&
+            validDate(item.createdAt) &&
+            (item.removedAt === undefined || validDate(item.removedAt)) &&
+            (item.sync === undefined ||
+              ['pending', 'error'].includes(item.sync)),
+        ) &&
+        uniqueIds(state.notes))) &&
     uniqueIds(state.events) &&
     uniqueIds(state.rewards) &&
     uniqueIds(state.entries)

@@ -71,6 +71,268 @@ afterAll(async () => {
 })
 
 describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () => {
+  it('protegge le note da anonimi, profili estranei e scritture dirette', async () => {
+    for (const user of [null, stranger]) {
+      await expect(
+        asUser(user, 'select public.add_daily_note($1,$2,$3,$4)', [
+          opId(),
+          '2026-11-14',
+          'Una giornata',
+          '2026-11-14T10:00:00Z',
+        ]),
+      ).rejects.toThrow(/permission denied|non autorizzato/)
+      await expect(
+        asUser(user, 'select public.remove_daily_note($1)', [opId()]),
+      ).rejects.toThrow(/permission denied|non autorizzato/)
+    }
+    expect(await asUser(stranger, 'select id from public.daily_notes')).toEqual(
+      [],
+    )
+    for (const user of [player, admin]) {
+      await expect(
+        asUser(
+          user,
+          "insert into public.daily_notes(id,day,text,created_at,created_by) values ($1,'2026-11-14','Una giornata',now(),auth.uid())",
+          [opId()],
+        ),
+      ).rejects.toThrow(/permission denied/)
+      await expect(
+        asUser(user, "update public.daily_notes set text = 'altro'"),
+      ).rejects.toThrow(/permission denied/)
+      await expect(
+        asUser(user, 'delete from public.daily_notes'),
+      ).rejects.toThrow(/permission denied/)
+    }
+  })
+
+  it('salva più note per giornata, deduplica e traccia le rimozioni per entrambi i ruoli', async () => {
+    const before = (await db.query('select * from public.entries')).rows
+    for (const user of [player, admin]) {
+      const id = opId()
+      const args = [
+        id,
+        '2026-11-14',
+        ' Una risata\nUna sorpresa ',
+        '2026-11-14T10:00:00Z',
+      ]
+      await asUser(user, 'select public.add_daily_note($1,$2,$3,$4)', args)
+      await asUser(user, 'select public.add_daily_note($1,$2,$3,$4)', args)
+      expect(
+        (
+          await db.query(
+            'select text,day::text from public.daily_notes where id = $1',
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ text: 'Una risata\nUna sorpresa', day: '2026-11-14' }])
+      await expect(
+        asUser(user, 'select public.add_daily_note($1,$2,$3,$4)', [
+          id,
+          '2026-11-13',
+          'Altro',
+          args[3],
+        ]),
+      ).rejects.toThrow(/dati diversi/)
+      const other = user === player ? admin : player
+      const snapshot = (
+        await asUser<{
+          diary_snapshot: {
+            notes: { id: string; day: string; text: string }[]
+            combos: unknown[]
+          }
+        }>(other, 'select public.diary_snapshot()')
+      )[0].diary_snapshot
+      expect(snapshot.notes.find((note) => note.id === id)).toMatchObject({
+        day: '2026-11-14',
+        text: 'Una risata\nUna sorpresa',
+      })
+      expect(snapshot.combos).toEqual([])
+      await asUser(other, 'select public.remove_daily_note($1)', [id])
+      await asUser(user, 'select public.remove_daily_note($1)', [id])
+      await asUser(user, 'select public.add_daily_note($1,$2,$3,$4)', args)
+      expect(
+        (
+          await db.query(
+            'select removed_at is not null as removed,removed_by from public.daily_notes where id = $1',
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ removed: true, removed_by: other }])
+    }
+    expect(
+      (
+        await db.query(
+          'select count(*)::integer as count from public.daily_notes',
+        )
+      ).rows,
+    ).toEqual([{ count: 2 }])
+    expect((await db.query('select * from public.entries')).rows).toEqual(
+      before,
+    )
+    expect((await db.query('select * from public.awards')).rows).toEqual([])
+  })
+
+  it('valida data reale, testo e limiti delle note lato server', async () => {
+    for (const text of ['', ' \t\n ', 'a'.repeat(2001)])
+      await expect(
+        asUser(player, 'select public.add_daily_note($1,$2,$3,$4)', [
+          opId(),
+          '2026-11-14',
+          text,
+          '2026-11-14T10:00:00Z',
+        ]),
+      ).rejects.toThrow(/Controlla/)
+    await expect(
+      asUser(player, 'select public.add_daily_note($1,$2,$3,$4)', [
+        opId(),
+        '2026-02-30',
+        'Una giornata',
+        '2026-11-14T10:00:00Z',
+      ]),
+    ).rejects.toThrow()
+    await asUser(player, 'select public.add_daily_note($1,$2,$3,$4)', [
+      opId(),
+      '2028-02-29',
+      'a'.repeat(2000),
+      '2026-11-14T10:00:00Z',
+    ])
+    await expect(
+      asUser(player, 'select public.remove_daily_note($1)', [opId()]),
+    ).rejects.toThrow(/non trovata/)
+  })
+
+  it('protegge le combo da anonimi, profili estranei e scritture dirette', async () => {
+    const id = opId()
+    for (const user of [null, stranger]) {
+      await expect(
+        asUser(user, 'select public.add_surname_combo($1, $2)', [
+          id,
+          'Allegri',
+        ]),
+      ).rejects.toThrow(/permission denied|non autorizzato/)
+      await expect(
+        asUser(user, 'select public.remove_surname_combo($1)', [id]),
+      ).rejects.toThrow(/permission denied|non autorizzato/)
+    }
+    expect(
+      await asUser(stranger, 'select id from public.surname_combos'),
+    ).toEqual([])
+    for (const user of [player, admin]) {
+      await expect(
+        asUser(
+          user,
+          "insert into public.surname_combos(id,first_surname,created_at,created_by) values ($1,'Allegri',now(),auth.uid())",
+          [id],
+        ),
+      ).rejects.toThrow(/permission denied/)
+      await expect(
+        asUser(user, "update public.surname_combos set note = 'cambiata'"),
+      ).rejects.toThrow(/permission denied/)
+      await expect(
+        asUser(user, 'delete from public.surname_combos'),
+      ).rejects.toThrow(/permission denied/)
+    }
+  })
+
+  it('entrambi i ruoli salvano cognomi singoli e coppie, con deduplicazione e rimozione tracciata', async () => {
+    const before = (await db.query('select * from public.entries')).rows
+    const at = '2026-11-14T10:00:00Z'
+    for (const user of [player, admin]) {
+      const id = opId()
+      const args = [id, ' Belli ', '', '', at]
+      await asUser(
+        user,
+        'select public.add_surname_combo($1,$2,$3,$4,$5)',
+        args,
+      )
+      await asUser(
+        user,
+        'select public.add_surname_combo($1,$2,$3,$4,$5)',
+        args,
+      )
+      expect(
+        (
+          await db.query(
+            'select first_surname,second_surname from public.surname_combos where id = $1',
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ first_surname: 'Belli', second_surname: '' }])
+      await expect(
+        asUser(user, 'select public.add_surname_combo($1,$2,$3,$4,$5)', [
+          id,
+          'Altro',
+          '',
+          '',
+          at,
+        ]),
+      ).rejects.toThrow(/dati diversi/)
+      const other = user === player ? admin : player
+      const snapshot = (
+        await asUser<{
+          diary_snapshot: { combos: { id: string; secondSurname: string }[] }
+        }>(other, 'select public.diary_snapshot()')
+      )[0].diary_snapshot
+      expect(
+        snapshot.combos.find((combo) => combo.id === id)?.secondSurname,
+      ).toBe('')
+      await asUser(other, 'select public.remove_surname_combo($1)', [id])
+      await asUser(user, 'select public.remove_surname_combo($1)', [id])
+      await asUser(
+        user,
+        'select public.add_surname_combo($1,$2,$3,$4,$5)',
+        args,
+      )
+      expect(
+        (
+          await db.query(
+            'select removed_at is not null as removed, removed_by from public.surname_combos where id = $1',
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ removed: true, removed_by: other }])
+    }
+    const pair = opId()
+    await asUser(admin, 'select public.add_surname_combo($1,$2,$3,$4)', [
+      pair,
+      'Belli',
+      'Allegri',
+      'Una combo',
+    ])
+    const single = opId()
+    await asUser(player, 'select public.add_surname_combo($1,$2)', [
+      single,
+      'Allegri',
+    ])
+    expect(
+      (
+        await db.query(
+          'select second_surname from public.surname_combos where id = $1',
+          [single],
+        )
+      ).rows,
+    ).toEqual([{ second_surname: '' }])
+    expect((await db.query('select * from public.entries')).rows).toEqual(
+      before,
+    )
+    expect((await db.query('select * from public.awards')).rows).toEqual([])
+  })
+
+  it('valida i cognomi e le note lato server', async () => {
+    for (const args of [
+      [opId(), '   ', '', ''],
+      [opId(), 'a'.repeat(61), '', ''],
+      [opId(), 'Allegri', 'a'.repeat(61), ''],
+      [opId(), 'Allegri', '', 'a'.repeat(181)],
+    ])
+      await expect(
+        asUser(player, 'select public.add_surname_combo($1,$2,$3,$4)', args),
+      ).rejects.toThrow(/Controlla/)
+    await expect(
+      asUser(player, 'select public.remove_surname_combo($1)', [opId()]),
+    ).rejects.toThrow(/non trovata/)
+  })
+
   it('il trigger automatico RLS non è eseguibile dai client e le operazioni admin sono uniche', async () => {
     expect(
       (

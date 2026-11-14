@@ -86,7 +86,39 @@ export async function updateAccount(
               rewards: [],
               entries: [operation.entry],
             })
-          else if (
+          else if (operation.type === 'add-combo')
+            parseDiary({
+              schemaVersion: 1,
+              events: [],
+              rewards: [],
+              entries: [],
+              combos: [operation.combo],
+            })
+          else if (operation.type === 'add-note')
+            parseDiary({
+              schemaVersion: 1,
+              events: [],
+              rewards: [],
+              entries: [],
+              notes: [operation.note],
+            })
+          else if (operation.type === 'remove-note') {
+            if (
+              typeof operation.noteId !== 'string' ||
+              !validDate(operation.at)
+            )
+              throw new Error(
+                'Operazione locale non compatibile. I dati sono conservati.',
+              )
+          } else if (operation.type === 'remove-combo') {
+            if (
+              typeof operation.comboId !== 'string' ||
+              !validDate(operation.at)
+            )
+              throw new Error(
+                'Operazione locale non compatibile. I dati sono conservati.',
+              )
+          } else if (
             operation.type !== 'void' ||
             typeof operation.entryId !== 'string' ||
             !validDate(operation.at)
