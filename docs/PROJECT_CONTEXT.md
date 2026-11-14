@@ -45,6 +45,7 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 ### Stato reale dopo la pubblicazione
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
+- Spaziatura superiore: 24 px aggiuntivi oltre la safe area su tutte le pagine, 48 px per il login, anche nella versione aggiunta alla Home. La regola per schermi larghi conserva questo spazio. Modifica richiesta dopo il riscontro dell’utente sul login troppo in alto e sulle pagine vicine alla Dynamic Island; verifica finale sul dispositivo ancora necessaria.
 - Due modalità distinte: demo locale esplicita, oppure `remote` con login email/password e ruolo letto dal database. La produzione senza configurazione non apre una demo né un falso admin. `.env.example` descrive le sole variabili pubbliche; `.env.demo` abilita una build demo separata.
 - Schema Supabase applicato al progetto reale, con migrazioni `20261114130522_diary.sql` e `20261114131302_tighten_diary_permissions.sql`: profili e ruoli protetti, eventi/versioni, episodi, premi, assegnazioni storiche, consegne e audit admin. RLS e grant negano le scritture dirette dal browser; le RPC controllano ruolo, versione e deduplicazione.
 - Login/logout e recupero assistito dall'operatore implementati nel codice; nessuna registrazione pubblica o email di recupero promessa senza configurazione. `scripts/reset-password.mjs` usa una chiave segreta solo fuori dal frontend e una password da stdin nascosto.
@@ -139,6 +140,8 @@ Usare lo stesso linguaggio visivo, con viste per riepilogo, catalogo eventi e pr
 Il modello dichiarato è iPhone 14 Pro; l'utente ha anche riferito la presenza di un notch. La versione iOS e il modello esatto non sono verificati. Le specifiche Apple riportano Dynamic Island sul 14 Pro: non trasformare questa incertezza in un blocco né costruire un layout dipendente da un ritaglio preciso.
 
 Usare le safe area fornite dal browser, prevedere notch o Dynamic Island e proteggere la navigazione dall'indicatore Home. Supportare sia Safari sia l'apertura dalla schermata Home. Per l'onboarding preferire installazione e primo accesso direttamente nella webapp aggiunta alla Home; verificare il comportamento delle sessioni tra i due contesti, senza supporne la condivisione.
+
+Lasciare spazio anche sotto la safe area superiore: il margine di pagina si somma a `env(safe-area-inset-top)`, anziché usare il maggiore fra i due valori. Baseline attuale: 24 px per le pagine e 48 px per il login. Conservare lo scorrimento naturale per l’uso con tastiera aperta e su schermi bassi.
 
 Criteri pratici:
 
@@ -304,6 +307,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 | 2026-11-14 | Verifica sul database ospitato con rollback e revisione advisor | Core dati verificato senza lasciare dati demo; Auth/PostgREST dal browser e consegna iPhone restano da collaudare |
 | 2026-11-14 | Utente conferma “Allow new users to sign up” già disattivato | Signup pubblico chiuso secondo conferma della dashboard; non richiedere nuovamente questa conferma |
 | 2026-11-14 | Utente autorizza l’agente a pubblicare tramite Cloudflare | Pages collegato a GitHub `main`, produzione remota su `fantafolletto.pages.dev`, anteprime automatiche disabilitate; deploy confermato da Cloudflare, verifica browser/iPhone ancora da completare |
+| 2026-11-14 | Utente segnala login Home troppo in alto e pagine vicine alla Dynamic Island | Spazio superiore aggiuntivo rispetto alla safe area: 48 px sul login e 24 px nelle altre pagine, preservato anche sugli schermi larghi |
 
 ## 12. Fonti della ricerca
 

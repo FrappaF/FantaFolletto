@@ -18,6 +18,7 @@
   --gold: #856b32;
   --danger: #a43d36;
   --shadow: 0 8px 32px #243b2510;
+  --page-top-space: 24px;
 }
 
 .header-actions {
@@ -26,7 +27,7 @@
   gap: 5px;
 }
 .login-page {
-  padding-top: max(45px, env(safe-area-inset-top));
+  --page-top-space: 48px;
 }
 .login-page h1 {
   margin-bottom: 18px;
@@ -209,7 +210,7 @@ small {
   max-width: 640px;
   margin: 0 auto;
   padding: 0 24px;
-  padding-top: env(safe-area-inset-top);
+  padding-top: calc(var(--page-top-space) + env(safe-area-inset-top, 0px));
 }
 .demo-banner {
   display: flex;
@@ -1145,7 +1146,8 @@ fieldset {
 
 @media (min-width: 750px) {
   .app {
-    padding: 0 35px;
+    padding-left: 35px;
+    padding-right: 35px;
   }
   .app-header {
     padding-top: 22px;
