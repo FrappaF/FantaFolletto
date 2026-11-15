@@ -50,7 +50,7 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 
 ### Stato reale dopo la pubblicazione
 
-- **Riscatto manuale e saldo punti, attivazione del 15 novembre 2026:** la giocatrice sceglie il premio, vede costo e saldo residuo e conferma «Riscatta». Il raggiungimento della soglia non crea più assegnazioni. «Punti attuali» è il totale degli episodi attivi meno i costi dei riscatti confermati; «Massimale punti» è il massimo storico del totale accumulato prima delle spese e non diminuisce con riscatti, malus o annullamenti. Entrambi sono persistenti in IndexedDB nella demo e nella tabella Supabase `point_balances` per il diario condiviso; snapshot/cache/export includono i due valori. La migrazione `20261115092927_manual_reward_redemptions.sql` è applicata al servizio ospitato e verificata con prove RPC annullate tramite rollback; frontend aggiornato ancora in attesa di pubblicazione. Dettagli delle verifiche nel nuovo incremento di `ROADMAP.md`. Nessuna prova su iPhone reale.
+- **Riscatto manuale e saldo punti, attivazione del 15 novembre 2026:** la giocatrice sceglie il premio, vede costo e saldo residuo e conferma «Riscatta». Il raggiungimento della soglia non crea più assegnazioni. «Punti attuali» è il totale degli episodi attivi meno i costi dei riscatti confermati; «Massimale punti» è il massimo storico del totale accumulato prima delle spese e non diminuisce con riscatti, malus o annullamenti. Entrambi sono persistenti in IndexedDB nella demo e nella tabella Supabase `point_balances` per il diario condiviso; snapshot/cache/export includono i due valori. La migrazione `20261115092927_manual_reward_redemptions.sql` è applicata al servizio ospitato e verificata con prove RPC annullate tramite rollback; frontend pubblicato su Cloudflare Pages dal commit `b8acc81`, deploy `9e674afe-e856-4dd2-ac82-f3e1259e57a7` concluso con successo il 15 novembre 2026 alle 09:32:32 UTC. Dettagli delle verifiche nel nuovo incremento di `ROADMAP.md`. Nessuna prova su iPhone reale.
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi/Combo/Note, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
 - Il comando per annullare un episodio nelle viste Oggi e Record usa un cestino Lucide (`Trash2`), al posto della freccia circolare risultata ambigua. Conserva etichetta accessibile, area di tocco e comportamento di annullamento con storico. Superati 82 test automatici, build TypeScript/Vite e verifica PWA; modifica non verificata su iPhone reale.
@@ -340,7 +340,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 
 | Data | Decisione | Effetto |
 | --- | --- | --- |
-| 2026-11-15 | Utente richiede scelta manuale dei premi, addebito dei punti e salvataggio di massimale e saldo attuale | Sostituita l’assegnazione automatica con riscatto confermato; saldo unico spendibile e massimo storico separati dai record; migrazione applicata e verificata sul servizio; frontend in corso di pubblicazione |
+| 2026-11-15 | Utente richiede scelta manuale dei premi, addebito dei punti e salvataggio di massimale e saldo attuale | Sostituita l’assegnazione automatica con riscatto confermato; saldo unico spendibile e massimo storico separati dai record; migrazione applicata e verificata sul servizio; frontend pubblicato su Cloudflare Pages (`b8acc81`) |
 | 2026-11-14 | Webapp con account e dati condivisi; React + Vite | Base applicativa scelta dall'utente |
 | 2026-11-14 | Una sola giocatrice in sfida con se stessa | Classifica intesa come record personali |
 | 2026-11-14 | Ricerca su architettura e design prima dello sviluppo | Baseline tecnica documentata, ancora da implementare |
@@ -408,3 +408,12 @@ Le fonti aiutano a verificare le scelte tecniche; non sostituiscono i requisiti 
 - [Web.dev: Core Web Vitals](https://web.dev/articles/vitals).
 - [Supabase: backup/ripristino tramite CLI](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore).
 - [Supabase: recupero amministrativo updateUserById](https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid).
+
+
+### Riscatto manuale e saldo — rilascio del 15 novembre 2026
+
+- Utente: «Vai prosegui», riferito all'attivazione online della modifica già pronta e verificata. Applicata sul servizio la migrazione `20261115092927_manual_reward_redemptions.sql`; il nome locale è allineato alla cronologia remota.
+- Prova RPC ospitata superata con rollback dei dati temporanei: autorizzazione player/admin, nessuna assegnazione automatica, saldo e massimale, spesa unica, rifiuto di saldo insufficiente/versione cambiata/periodo scaduto/UUID incompatibile, unicità settimanale, storico, consegna e annullamento. Dati di gioco precedenti conservati senza addebiti retroattivi.
+- Ripetuti con esito positivo 97 test, build di produzione e verifica PWA. Push su `main` del commit `b8acc81fb1c816b577f3e2b23a0e2bc267599aa6`; deploy manuale Pages `9e674afe-e856-4dd2-ac82-f3e1259e57a7`, build/deploy `success` alle 09:32:32 UTC. Nessun nuovo deploy automatico osservato prima dell'avvio manuale; configurazione Git invariata.
+- Advisor: nove RPC privilegiate intenzionali, senza EXECUTE anonimo e con ruolo verificato internamente; avviso password preesistente e soli indici inutilizzati informativi. Registro e link ai rimedi in `ACTIVATION.md`.
+- Controllo HTTP pubblico impedito dal proxy (`CONNECT tunnel failed`, 403): pubblicazione confermata dall'API, login Auth/PostgREST e rendering su iPhone/Safari/Home non dichiarati verificati. Nell'app già aperta completare gli invii e usare «Aggiorna app» quando compare.

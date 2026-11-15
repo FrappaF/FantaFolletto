@@ -109,7 +109,7 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 
 ## Incremento — Riscatto manuale e due saldi (15 novembre 2026)
 
-**Stato: implementato e verificato localmente; migrazione Supabase applicata e RPC ospitate verificate con rollback. Frontend aggiornato in corso di pubblicazione.**
+**Stato: implementato e verificato localmente; migrazione Supabase applicata e RPC ospitate verificate con rollback. Frontend pubblicato su Pages: commit `b8acc81`, deploy `9e674afe-e856-4dd2-ac82-f3e1259e57a7`, successo il 15 novembre 2026 alle 09:32:32 UTC.**
 
 - Scelta del premio e conferma esplicita del costo/saldo residuo; nessuna nuova assegnazione al raggiungimento della soglia.
 - Punti attuali spendibili e massimale storico persistenti in demo, database, cache ed export; punteggi di episodi e record indipendenti dai riscatti.
