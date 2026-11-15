@@ -100,3 +100,14 @@ Su richiesta esplicita dell’utente, eseguito pull con rebase da `main` fino a 
 Cloudflare Pages: pubblicazione avviata manualmente da `main`, deploy `2b73c932-8970-44a0-aaa6-3fac5a57445e`, build e deploy `success`, completato alle **23:43:41 UTC**. URL di produzione [fantafolletto.pages.dev](https://fantafolletto.pages.dev). Nessun nuovo deploy automatico osservato al controllo immediatamente successivo al push; configurazione Git invariata. Nessuna modifica al database o ai dati di gioco.
 
 La richiesta HTTP pubblica è stata bloccata dal proxy dell’ambiente (`CONNECT tunnel failed`, 403); il rilascio è confermato dall’API Cloudflare, senza dichiarare superati rendering pubblico o login reale. Nell’app già aperta usare «Aggiorna app» quando compare.
+
+
+## Riscatto manuale e saldo punti — 15 novembre 2026
+
+L'utente ha autorizzato a proseguire con l'attivazione online. Migrazione `20261115092927_manual_reward_redemptions.sql` applicata al progetto Supabase esistente e file locale allineato alla cronologia remota: nessuna cancellazione di episodi, premi o assegnazioni precedenti. I vecchi premi non sono addebitati retroattivamente; il saldo iniziale deriva dagli episodi confermati disponibili.
+
+Prova transazionale ospitata superata con `ROLLBACK`: nessuna nuova assegnazione automatica, scelta della giocatrice, costo scalato una sola volta, saldo insufficiente, versione cambiata, UUID riutilizzato, unicità per periodo, settimana italiana, consegna admin senza altro addebito, condizioni storiche dopo modifica/archiviazione, ricalcolo dopo annullamento e massimale conservato. Permessi di scrittura diretta, accesso anonimo e invocazione dei wrapper privati negati. I conteggi applicativi prima e dopo le prove coincidono; nessun dato dimostrativo rimasto. Le prove impostano claim/ruoli SQL e non certificano un login Auth reale dal browser.
+
+Prima del rilascio sono passati **97 test automatici**, build TypeScript/Vite e verifica PWA. L'advisor segnala nove RPC `SECURITY DEFINER` intenzionalmente esposte agli account autenticati (ora comprende `redeem_reward`, che ammette solo la giocatrice e verifica saldo, versione e periodo), oltre all'avviso Auth preesistente. Nessuna scrittura diretta concessa. [Motivazione dell'advisor RPC](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [protezione password](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+Frontend aggiornato ancora in corso di pubblicazione su Cloudflare Pages. Nessun collaudo Safari/iPhone reale dichiarato.

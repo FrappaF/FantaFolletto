@@ -114,7 +114,31 @@ export function useRemoteDiary(
         throw new Error(
           'Apri il diario online almeno una volta prima di aggiungere inserimenti.',
         )
-      if (command.type === 'add-note' || command.type === 'remove-note') {
+      if (command.type === 'redeem-reward') {
+        if (current.snapshot.role !== 'player')
+          throw new Error('Solo la giocatrice può riscattare i premi.')
+        if (current.queue.length)
+          throw new Error(
+            'Attendi la conferma delle operazioni prima di riscattare un premio.',
+          )
+        if (!current.snapshot.pointBalance)
+          throw new Error('Aggiorna il diario prima di riscattare un premio.')
+        applyCommand(current.snapshot, command)
+        const saved = await enqueue(key, {
+          type: 'redeem-reward',
+          operationId: command.id,
+          status: 'pending',
+          rewardId: command.rewardId,
+          expectedVersion: command.expectedVersion!,
+          periodKey: command.periodKey,
+        })
+        if (active.current) setCache(saved)
+        channel.current?.postMessage('changed')
+        void query.refetch()
+      } else if (
+        command.type === 'add-note' ||
+        command.type === 'remove-note'
+      ) {
         if (!['player', 'admin'].includes(current.snapshot.role))
           throw new Error('Accesso non autorizzato.')
         const updated = applyCommand(projectDiary(current)!, command)

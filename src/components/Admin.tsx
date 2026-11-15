@@ -1,3 +1,4 @@
+import { PointBalance } from './Rewards'
 import { CategoryFilters, EventMeta } from './EventCatalog'
 import {
   categoriesFor,
@@ -165,6 +166,7 @@ export default function Admin({
       )}
       {tab === 'summary' && (
         <>
+          <PointBalance diary={diary} confirmed={shared} />
           <div className="stat-grid">
             <article>
               <span>Punti oggi</span>
@@ -202,7 +204,7 @@ export default function Admin({
           </section>
           {shared && (
             <section className="panel">
-              <SectionHeading title="Premi conquistati e consegne" />
+              <SectionHeading title="Premi riscattati e consegne" />
               <Awards
                 awards={diary.awards ?? []}
                 busy={busy}
@@ -238,8 +240,8 @@ export default function Admin({
             {tab === 'events'
               ? 'Le modifiche valgono per i prossimi episodi. I punti già registrati restano nel diario.'
               : shared
-                ? 'I premi già conquistati conservano le loro condizioni originali. Le nuove condizioni possono sbloccare premi sui punti già confermati.'
-                : 'Nella demo il progresso segue le condizioni attuali. Non vengono ancora assegnati premi definitivi.'}
+                ? 'La giocatrice sceglie quali premi riscattare e ne spende i punti. I riscatti conservano costo e condizioni originali.'
+                : 'Nella demo la giocatrice può provare i riscatti, salvati solo in questo browser.'}
           </p>
           <button
             className="primary-button full-width"
@@ -444,9 +446,9 @@ export default function Admin({
           onClose={() => setDelivery(undefined)}
         >
           <p className="modal-description">
-            Segnerai questo premio come consegnato. Dopo un annullamento resterà
-            nello storico, con una segnalazione se i punti scendono sotto la
-            soglia.
+            Segnerai questo premio come consegnato, senza scalare altri punti.
+            Dopo un annullamento resterà nello storico, con una segnalazione se
+            i punti non coprono i riscatti.
           </p>
           {error && (
             <p className="form-error" role="alert">
@@ -628,7 +630,7 @@ function EditorForm({
           ) : (
             <>
               <label>
-                Obiettivo in punti
+                Costo in punti
                 <input
                   name="target"
                   type="number"

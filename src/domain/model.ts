@@ -1,4 +1,5 @@
 import { validDay } from './validation'
+import { pointBalance, redemptionProgress, withPointBalance } from './rewards'
 
 import {
   previewEvent,
@@ -68,6 +69,9 @@ export type Award = {
   revokedAt?: string
   deliveredAt?: string
   needsReview: boolean
+  redeemedAt?: string
+  pointsSpent?: number
+  rewardVersion?: number
 }
 
 export type SurnameCombo = {
@@ -99,6 +103,7 @@ export type NoteCommand =
 
 export type Diary = {
   schemaVersion: 1
+  pointBalance?: { current: number; maximum: number }
   categories?: EventCategory[]
   scoringRules?: ScoringRule[]
   events: EventDefinition[]
@@ -121,6 +126,13 @@ export type Command = (
       snapshot?: { name: string; points: number }
     }
   | { type: 'void'; id: string; at: string }
+  | {
+      type: 'redeem-reward'
+      id: string
+      rewardId: string
+      periodKey: string
+      at: string
+    }
   | {
       type: 'save-event'
       value: Pick<
@@ -149,7 +161,7 @@ export type Command = (
 
 export type AdminCommand = Exclude<
   Command,
-  { type: 'record' | 'void' } | ComboCommand | NoteCommand
+  { type: 'record' | 'void' | 'redeem-reward' } | ComboCommand | NoteCommand
 > & {
   operationId?: string
   expectedVersion?: number
@@ -254,6 +266,8 @@ export function initialDiary(): Diary {
       },
     ],
     entries: [],
+    awards: [],
+    pointBalance: { current: 0, maximum: 0 },
   }
 }
 
@@ -268,7 +282,60 @@ function checkInteger(value: number, min: number, max: number) {
 }
 
 export function applyCommand(state: Diary, command: Command): Diary {
+  return withPointBalance(apply(withPointBalance(state), command))
+}
+
+function apply(state: Diary, command: Command): Diary {
   switch (command.type) {
+    case 'redeem-reward': {
+      const previous = state.awards?.find((award) => award.id === command.id)
+      if (previous) {
+        if (
+          !previous.redeemedAt ||
+          previous.rewardId !== command.rewardId ||
+          previous.periodKey !== command.periodKey ||
+          previous.rewardVersion !== command.expectedVersion
+        )
+          throw new Error('Identificativo già usato con dati diversi.')
+        return state
+      }
+      const reward = state.rewards.find(
+        (item) => item.id === command.rewardId && !item.archived,
+      )
+      if (!reward) throw new Error('Premio non più disponibile.')
+      if (command.expectedVersion !== (reward.version ?? 1))
+        throw new Error('Il premio è cambiato. Ricarica prima di riscattare.')
+      if (!Number.isFinite(Date.parse(command.at)))
+        throw new Error('La data non è valida.')
+      const progress = redemptionProgress(state, reward, new Date(command.at))
+      if (progress.periodKey !== command.periodKey)
+        throw new Error('Il periodo è cambiato. Ricarica il diario.')
+      if (progress.claimed)
+        throw new Error('Premio già riscattato per questo periodo.')
+      if (!progress.available)
+        throw new Error('Punti insufficienti per riscattare questo premio.')
+      return {
+        ...state,
+        pointBalance: pointBalance(state),
+        awards: [
+          ...(state.awards ?? []),
+          {
+            id: command.id,
+            rewardId: reward.id,
+            rewardVersion: reward.version ?? 1,
+            name: reward.name,
+            description: reward.description,
+            target: reward.target,
+            period: reward.period,
+            periodKey: command.periodKey,
+            achievedAt: command.at,
+            redeemedAt: command.at,
+            pointsSpent: reward.target,
+            needsReview: false,
+          },
+        ],
+      }
+    }
     case 'add-note': {
       const { id, day, text, createdAt } = command.value
       checkText(id, 100)
@@ -419,7 +486,11 @@ export function applyCommand(state: Diary, command: Command): Diary {
         ...state,
         scoringRules: [
           ...(state.scoringRules ?? []),
-          { ...command.value, version, effectiveDay: nextRomeDay(new Date()) },
+          {
+            ...command.value,
+            version,
+            effectiveDay: nextRomeDay(new Date()),
+          },
         ],
       }
     }
@@ -485,6 +556,7 @@ export function applyCommand(state: Diary, command: Command): Diary {
         name: value.name.trim(),
         description: value.description.trim(),
         archived: false,
+        version: (previous?.version ?? 0) + 1,
       }
       return {
         ...state,

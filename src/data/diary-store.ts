@@ -1,3 +1,4 @@
+import { withPointBalance } from '../domain/rewards'
 import { parseDiary } from '../domain/validation'
 import {
   applyCommand,
@@ -38,7 +39,7 @@ function openDatabase(): Promise<IDBDatabase> {
 // Never replace an unreadable diary with an empty one.
 function readState(value: unknown): Diary {
   if (value === undefined) return initialDiary()
-  return parseDiary(value)
+  return withPointBalance(parseDiary(value))
 }
 
 export async function readDiary(): Promise<Diary> {
@@ -52,7 +53,12 @@ export async function readDiary(): Promise<Diary> {
     request.onsuccess = () => {
       try {
         result = readState(request.result)
-        if (request.result === undefined) store.put(result, KEY)
+        if (
+          request.result?.pointBalance?.current !==
+            result.pointBalance?.current ||
+          request.result?.pointBalance?.maximum !== result.pointBalance?.maximum
+        )
+          store.put(result, KEY)
       } catch (error) {
         failure = error
         tx.abort()

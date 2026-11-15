@@ -32,7 +32,7 @@ import { newId } from './domain/ids'
 import type { Command, Diary } from './domain/model'
 import { readConfig } from './remote/config'
 import { SyncStatus, type RemoteState } from './components/SyncStatus'
-import { Awards } from './components/Awards'
+import { Rewards } from './components/Rewards'
 import { PwaPrompt } from './components/PwaPrompt'
 import { InstallHint } from './components/InstallHint'
 import { Combos } from './components/Combos'
@@ -445,52 +445,16 @@ export function DiaryView({
                   />
                 )}
                 {page === 'rewards' && (
-                  <>
-                    <div className="page-title">
-                      <span className="eyebrow">Un pensiero, tutto per te</span>
-                      <h1>
-                        Le cose belle
-                        <br />
-                        che ti aspettano<span className="green-dot">.</span>
-                      </h1>
-                      <p>Piccoli traguardi, sorprese da condividere.</p>
-                    </div>
-                    <div className="rewards-content">
-                      {rewards.length > 0 ? (
-                        <div className="reward-list">
-                          {rewards.map((reward) => (
-                            <RewardCard
-                              key={reward.id}
-                              diary={diary}
-                              reward={reward}
-                              now={now}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <section className="panel">
-                          <EmptyState
-                            title="Le sorprese sono in preparazione"
-                            icon="gift"
-                          >
-                            Qui troverai i premi scelti per te.
-                          </EmptyState>
-                        </section>
-                      )}
-                      {remote && (
-                        <section className="panel awards-panel">
-                          <SectionHeading title="I premi conquistati" />
-                          <Awards awards={diary.awards ?? []} />
-                        </section>
-                      )}
-                      {!remote && (
-                        <p className="demo-footnote">
-                          Premi di esempio. Il progresso è dimostrativo: non
-                          costituisce un’assegnazione definitiva.
-                        </p>
-                      )}
-                    </div>
-                  </>
+                  <Rewards
+                    diary={diary}
+                    now={now}
+                    busy={busy}
+                    error={error}
+                    execute={execute}
+                    canRedeem={!remote || remote.role === 'player'}
+                    shared={!!remote}
+                    waiting={!!remote?.queue.length}
+                  />
                 )}
               </>
             )}

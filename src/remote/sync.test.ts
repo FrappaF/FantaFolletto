@@ -485,3 +485,63 @@ describe('coda offline e riconciliazione', () => {
     )
   })
 })
+
+it('riconcilia un riscatto dopo timeout senza doppio addebito e conserva i due saldi', async () => {
+  const { applyCommand } = await import('../domain/model')
+  const { pointBalance } = await import('../domain/rewards')
+  const key = 'redemption-timeout'
+  let server = snapshot()
+  server.events[0].points = 200
+  server = {
+    ...server,
+    ...applyCommand(server, {
+      type: 'record',
+      id: 'episode',
+      eventId: 'coffee',
+      at: new Date().toISOString(),
+    }),
+  }
+  await updateAccount(key, () => ({
+    schemaVersion: 1,
+    snapshot: structuredClone(server),
+    queue: [],
+  }))
+  const { weekKey } = await import('../domain/stats')
+  const redemption: QueuedOperation = {
+    type: 'redeem-reward',
+    operationId: 'redeem-1',
+    status: 'pending',
+    rewardId: 'breakfast',
+    expectedVersion: 1,
+    periodKey: weekKey(new Date()),
+  }
+  await enqueue(key, redemption)
+  expect(pointBalance(projectDiary(await readAccount(key))!).current).toBe(200)
+  let ambiguous = true
+  const transport: SyncTransport = {
+    snapshot: async () => structuredClone(server),
+    send: async (operation) => {
+      if (operation.type !== 'redeem-reward')
+        throw new Error('Operazione inattesa')
+      server = {
+        ...server,
+        ...applyCommand(server, {
+          ...operation,
+          id: operation.operationId,
+          at: new Date().toISOString(),
+        }),
+      }
+      if (ambiguous) {
+        ambiguous = false
+        throw new Error('Timeout dopo il salvataggio')
+      }
+    },
+  }
+  await expect(synchronize(key, transport)).rejects.toThrow(/Timeout/)
+  expect((await readAccount(key)).queue).toHaveLength(1)
+  await synchronize(key, transport)
+  const saved = await readAccount(key)
+  expect(saved.queue).toHaveLength(0)
+  expect(saved.snapshot?.pointBalance).toEqual({ current: 100, maximum: 200 })
+  expect(saved.snapshot?.awards).toHaveLength(1)
+})

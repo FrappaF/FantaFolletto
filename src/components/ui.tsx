@@ -119,11 +119,15 @@ export function RewardCard({
   reward,
   now,
   compact = false,
+  busy = false,
+  onRedeem,
 }: {
   diary: Diary
   reward: Reward
   now: Date
   compact?: boolean
+  busy?: boolean
+  onRedeem?: () => void
 }) {
   const progress = rewardProgress(diary, reward, now)
   return (
@@ -142,11 +146,11 @@ export function RewardCard({
       {reward.description && <p>{reward.description}</p>}
       <div className="progress-meta">
         <span>
-          {progress.reached
-            ? diary.awards
-              ? 'Soglia raggiunta · verifica i premi conquistati'
-              : 'Obiettivo raggiunto!'
-            : `${progress.remaining} punti al traguardo`}
+          {progress.claimed
+            ? 'Già riscattato'
+            : progress.available
+              ? 'Disponibile da riscattare'
+              : `${progress.remaining} punti al traguardo`}
         </span>
         <span>
           {progress.points} / {reward.target}
@@ -157,13 +161,24 @@ export function RewardCard({
         max={100}
         aria-label={`Progresso per ${reward.name}`}
       />
+      {!compact && onRedeem && (
+        <button
+          className="primary-button"
+          disabled={busy || !progress.available}
+          onClick={onRedeem}
+        >
+          {progress.claimed
+            ? 'Già riscattato'
+            : `Riscatta · ${reward.target} punti`}
+        </button>
+      )}
       {!compact && (
         <p className="reward-note">
-          {progress.reached
-            ? diary.awards
-              ? 'I premi conquistati compaiono sotto dopo la conferma del diario condiviso.'
-              : 'Che bella conquista. Nella demo il progresso si ricalcola se annulli un episodio.'
-            : 'Un episodio alla volta, ci sei sempre più vicina.'}
+          {progress.claimed
+            ? 'Trovi il premio nel tuo storico.'
+            : reward.period === 'week'
+              ? 'Usa i punti disponibili: devi averne maturati abbastanza anche questa settimana.'
+              : 'Scegli tu quando riscattarlo: il costo verrà scalato dai punti attuali.'}
         </p>
       )}
     </article>

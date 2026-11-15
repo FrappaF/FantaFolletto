@@ -452,7 +452,7 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
     expect(snapshots[0].diary_snapshot.entries).toHaveLength(2)
   })
 
-  it('sblocca premi unici, revoca quelli non consegnati e conserva le condizioni storiche', async () => {
+  it('riscatta solo su scelta, scala i punti e conserva le condizioni storiche', async () => {
     await manage({
       type: 'save-reward',
       expectedVersion: 0,
@@ -464,26 +464,29 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
         period: 'all',
       },
     })
-    const award = (
-      await db.query<{ id: string; target: number }>(
-        'select id,target from public.awards',
-      )
-    ).rows[0]
-    expect(award.target).toBe(50)
-    const last = (
-      await db.query<{ id: string }>(
-        'select id from public.entries order by received_at desc limit 1',
-      )
-    ).rows[0].id
-    await asUser(player, 'select public.void_episode($1)', [last])
-    await asUser(player, 'select public.void_episode($1)', [last])
+    expect((await db.query('select * from public.awards')).rows).toEqual([])
+    const id = opId()
+    await asUser(player, "select public.redeem_reward($1,$2,1,'all')", [
+      id,
+      rewardId,
+    ])
+    await asUser(player, "select public.redeem_reward($1,$2,1,'all')", [
+      id,
+      rewardId,
+    ])
     expect(
       (
         await db.query(
-          'select revoked_at is not null as revoked from public.awards',
+          'select current_points,maximum_points from public.point_balances',
         )
       ).rows,
-    ).toEqual([{ revoked: true }])
+    ).toEqual([{ current_points: 0, maximum_points: 50 }])
+    await expect(
+      asUser(player, "select public.redeem_reward($1,$2,1,'all')", [
+        opId(),
+        rewardId,
+      ]),
+    ).rejects.toThrow(/già riscattato/)
     await manage({
       type: 'save-reward',
       expectedVersion: 1,
@@ -495,12 +498,11 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
         period: 'all',
       },
     })
-    await record(opId(), 2)
     expect(
-      (await db.query('select name,target,revoked_at from public.awards')).rows,
-    ).toEqual([{ name: 'Cena', target: 50, revoked_at: null }])
-    await record(opId(), 2)
-    await manage({ type: 'deliver-award', id: award.id })
+      (await db.query('select name,target,points_spent from public.awards'))
+        .rows,
+    ).toEqual([{ name: 'Cena', target: 50, points_spent: 50 }])
+    await manage({ type: 'deliver-award', id })
     const entries = (
       await db.query<{ id: string }>(
         'select id from public.entries where voided_at is null',
@@ -511,10 +513,17 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
     expect(
       (
         await db.query(
-          'select needs_review, delivered_at is not null as delivered, revoked_at from public.awards',
+          'select needs_review,delivered_at is not null as delivered,revoked_at from public.awards',
         )
       ).rows,
     ).toEqual([{ needs_review: true, delivered: true, revoked_at: null }])
+    expect(
+      (
+        await db.query(
+          'select current_points,maximum_points from public.point_balances',
+        )
+      ).rows,
+    ).toEqual([{ current_points: -50, maximum_points: 50 }])
   })
 
   it('accetta una vecchia regola solo nel periodo in cui era valida, entro sette giorni', async () => {
@@ -550,20 +559,23 @@ describe('PostgreSQL: autorizzazione e transazioni reali (auth simulata)', () =>
         period: 'week',
       },
     })
-    const awards = (
-      await db.query<{ period_key: string; target: number }>(
-        'select period_key,target from public.awards where reward_id = $1',
-        [weeklyId],
-      )
-    ).rows
-    expect(awards).toHaveLength(1)
-    expect(awards[0].target).toBe(5)
+    expect(
+      (
+        await db.query('select * from public.awards where reward_id=$1', [
+          weeklyId,
+        ])
+      ).rows,
+    ).toEqual([])
     const currentKey = (
       await db.query<{ key: string }>(
         'select private.week_key(clock_timestamp()) as key',
       )
     ).rows[0].key
-    expect(awards[0].period_key).toBe(currentKey)
+    await asUser(player, 'select public.redeem_reward($1,$2,1,$3)', [
+      opId(),
+      weeklyId,
+      currentKey,
+    ])
     await manage({
       type: 'save-reward',
       expectedVersion: 1,

@@ -67,6 +67,55 @@ describe('persistenza IndexedDB della demo', () => {
     ).toHaveLength(1)
   })
 
+  it('salva saldo corrente e massimo dopo riscatto e riapertura', async () => {
+    const at = new Date().toISOString()
+    await saveCommand({
+      type: 'save-event',
+      value: {
+        id: 'wallet-event',
+        name: 'Evento punti',
+        description: '',
+        points: 200,
+      },
+    })
+    await saveCommand({
+      type: 'save-reward',
+      value: {
+        id: 'wallet-reward',
+        name: 'Premio',
+        description: '',
+        target: 100,
+        period: 'all',
+      },
+    })
+    await saveCommand({
+      type: 'record',
+      id: 'wallet-entry',
+      eventId: 'wallet-event',
+      at,
+    })
+    const before = (await readDiary()).pointBalance!
+    const command = {
+      type: 'redeem-reward',
+      id: 'wallet-redemption',
+      rewardId: 'wallet-reward',
+      expectedVersion: 1,
+      periodKey: 'all',
+      at,
+    } as const
+    await Promise.all([saveCommand(command), saveCommand(command)])
+    const reopened = await readDiary()
+    expect(reopened.pointBalance).toEqual({
+      current: before.current - 100,
+      maximum: before.maximum,
+    })
+    expect(
+      reopened.awards?.filter((award) => award.id === command.id),
+    ).toHaveLength(1)
+    await saveCommand({ type: 'void', id: 'wallet-entry', at })
+    expect((await readDiary()).pointBalance?.maximum).toBe(before.maximum)
+  })
+
   it('dati incompatibili non vengono azzerati né sovrascritti', async () => {
     const corrupted = {
       schemaVersion: 1,

@@ -11,6 +11,12 @@ export type QueuedOperation = {
   status: 'pending' | 'blocked'
   error?: string
 } & (
+  | {
+      type: 'redeem-reward'
+      rewardId: string
+      expectedVersion: number
+      periodKey: string
+    }
   | { type: 'record'; entry: Entry }
   | { type: 'void'; entryId: string; at: string }
   | { type: 'add-combo'; combo: SurnameCombo }

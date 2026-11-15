@@ -87,7 +87,9 @@ export function SyncStatus({
                         ? `Nota del ${operation.note.day.split('-').reverse().join('/')}`
                         : operation.type === 'remove-note'
                           ? 'Rimozione nota'
-                          : 'Annullamento episodio'}
+                          : operation.type === 'redeem-reward'
+                            ? 'Riscatto premio'
+                            : 'Annullamento episodio'}
               </strong>
               <p>{operation.error}</p>
               <button

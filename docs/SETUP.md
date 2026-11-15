@@ -23,6 +23,10 @@ Il catalogo reale parte **vuoto**. Accedere come admin per creare eventi e premi
 
 Per cambiamenti successivi aggiungere nuove migrazioni versionate; non modificare una migrazione già applicata né usare SQL improvvisato sui dati reali. La serie completa di migrazioni può essere verificata senza servizi esterni con `npm test`: PGlite esegue PostgreSQL con un sostituto locale delle identità Supabase. Non sostituisce il collaudo di Auth e PostgREST reali.
 
+### Aggiornamento riscatto manuale del 15 novembre 2026
+
+La migrazione [20261115092927_manual_reward_redemptions.sql](../supabase/migrations/20261115092927_manual_reward_redemptions.sql) è applicata al servizio e verificata con prove RPC annullate tramite rollback. Per un nuovo ambiente applicarla dopo tutte le migrazioni precedenti e prima di pubblicare il nuovo frontend. Aggiunge saldo persistente con RLS, costo/istante del riscatto e RPC `redeem_reward`; elimina le nuove assegnazioni automatiche, preservando integralmente quelle precedenti. Inizializza il massimale dal totale confermato disponibile, senza inventare vecchi picchi. Il nuovo frontend può leggere cache precedenti, ma richiede lo snapshot con saldo per iniziare nuovi riscatti. Per un eventuale ripristino coordinare frontend e database: tornare al vecchio frontend non riattiva il riscatto automatico.
+
 ## 3. Collegare il frontend
 
 Copiare `.env.example` in `.env.local`, che è ignorato da Git. Impostare:
@@ -49,10 +53,10 @@ Per tornare alle prove locali usare `VITE_APP_MODE=demo` in un ambiente di svilu
 - Eventi ripetibili, inseriti al momento; malus ammessi. Nessuna UI per retrodatare o caricare nomi/dati dei clienti.
 - Il server accetta l'istante dell'episodio entro sette giorni dall'invio e al massimo cinque minuti nel futuro (tolleranza per l'orologio). Non può provare quando un evento è davvero accaduto: è un diario personale basato sulla fiducia.
 - Una vecchia versione dell'evento viene accettata solo se l'istante dichiarato era nel suo intervallo di validità. Archiviare o modificare non cambia i punti passati. Un errore resta in coda, visibile e rimuovibile dopo conferma; non viene silenziosamente convertito ai nuovi punti.
-- Un premio totale si conquista una volta per definizione; uno settimanale una volta per settimana italiana (da lunedì). Un premio settimanale nuovo o modificato può iniziare a sbloccare premi dalla settimana della modifica, senza generare nuove assegnazioni per settimane precedenti.
-- Le nuove condizioni possono usare i punti già confermati del periodo corrente. I premi già assegnati conservano nome, soglia e periodo originali; modificare il catalogo non riscrive le loro condizioni.
-- Un annullamento ricalcola i risultati. Revoca un premio non consegnato se il punteggio scende sotto la sua soglia storica; se la soglia torna raggiunta, riattiva la stessa assegnazione, senza duplicarla. Un premio consegnato resta nello storico con una segnalazione finché i punti sono sotto soglia.
-- L'admin conferma le consegne, senza poter registrare o annullare episodi al posto della giocatrice.
+- Il raggiungimento della soglia non assegna automaticamente un premio. La giocatrice sceglie il premio e conferma il costo, scalato dal saldo attuale in una transazione idempotente. Un premio totale si riscatta una volta per definizione, uno settimanale una volta per settimana italiana; per quest'ultimo servono anche i punti maturati in quella settimana. Il saldo è unico e non scade settimanalmente.
+- Salvare punti attuali e massimale storico separatamente. Il massimale è il massimo totale accumulato prima delle spese, mantenuto anche dopo malus e annullamenti. Le vecchie assegnazioni non comportano addebiti retroattivi; quelle già consegnate non si riscattano di nuovo nello stesso periodo.
+- Le condizioni dei riscatti rimangono storiche. Gli annullamenti ricalcolano il saldo, anche sotto zero, senza cancellare riscatti o costi; i nuovi punti recuperano il debito. Le vecchie assegnazioni automatiche conservano le precedenti regole di rettifica.
+- L'admin conferma solo la consegna di un premio già scelto dalla giocatrice, senza un secondo addebito e senza poter registrare/annullare episodi o riscattare al suo posto.
 - I record confrontano i punti effettivamente assegnati, con le regole del momento; non sono normalizzati se i punteggi cambiano.
 
 ## 5. Pubblicazione su Cloudflare Pages

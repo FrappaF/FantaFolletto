@@ -105,3 +105,14 @@ Aggiornare contesto e roadmap con ciò che esiste davvero, i controlli eseguiti 
 - Scheda admin Combo con incremento e tetto modificabili, anteprima e decorrenza da domani in Europe/Rome.
 - Calcolo autorevole lato server, regole versionate, ordine cronologico degli episodi, annullamenti, premi e stime offline coerenti.
 - Verifica locale ampliata a 58 test e prova ospitata con rollback; controllo visuale Chromium a 390 CSS px, senza equivalenza con iPhone reale.
+
+
+## Incremento — Riscatto manuale e due saldi (15 novembre 2026)
+
+**Stato: implementato e verificato localmente; migrazione Supabase applicata e RPC ospitate verificate con rollback. Frontend aggiornato in corso di pubblicazione.**
+
+- Scelta del premio e conferma esplicita del costo/saldo residuo; nessuna nuova assegnazione al raggiungimento della soglia.
+- Punti attuali spendibili e massimale storico persistenti in demo, database, cache ed export; punteggi di episodi e record indipendenti dai riscatti.
+- Riscatto riservato alla giocatrice, transazione con lock condiviso, controllo di saldo/versione/periodo e unicità. Richieste persistenti nella coda per account, conferma server prima dell'addebito visibile, ritentativi senza doppia spesa.
+- Premi totali una volta e settimanali una volta per settimana italiana. Vecchie assegnazioni conservate senza addebiti retroattivi; consegna admin solo dopo riscatto. Annullamenti preservano riscatti e massimo, con debito visibile e recuperabile.
+- Verifiche locali: dominio, UI in jsdom, persistenza IndexedDB, coda/timeout, ruoli/RLS/RPC e migrazione di dati precedenti in PostgreSQL PGlite. **97 test automatici superati**, build demo e produzione e verifica PWA (manifest, icone, header e risorse offline) superate. Prove RPC sul database Supabase ospitato superate con rollback e conteggi dei dati di gioco conservati; nessuna verifica Safari o iPhone reale.

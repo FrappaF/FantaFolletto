@@ -24,6 +24,14 @@ export function parseDiary(value: unknown): Diary {
   const state = value as Diary
   const valid =
     state?.schemaVersion === 1 &&
+    (state.pointBalance === undefined ||
+      (state.pointBalance &&
+        number(
+          state.pointBalance.current,
+          -Number.MAX_SAFE_INTEGER,
+          Number.MAX_SAFE_INTEGER,
+        ) &&
+        number(state.pointBalance.maximum, 0, Number.MAX_SAFE_INTEGER))) &&
     Array.isArray(state.events) &&
     Array.isArray(state.entries) &&
     Array.isArray(state.rewards) &&
@@ -85,6 +93,14 @@ export function parseDiary(value: unknown): Diary {
             ['all', 'week'].includes(item.period) &&
             text(item.periodKey, 10) &&
             validDate(item.achievedAt) &&
+            (item.redeemedAt === undefined ||
+              (validDate(item.redeemedAt) &&
+                item.pointsSpent === item.target)) &&
+            (item.pointsSpent === undefined ||
+              (number(item.pointsSpent, 1, 100000) &&
+                validDate(item.redeemedAt))) &&
+            (item.rewardVersion === undefined ||
+              number(item.rewardVersion, 1, Number.MAX_SAFE_INTEGER)) &&
             (item.revokedAt === undefined || validDate(item.revokedAt)) &&
             (item.deliveredAt === undefined || validDate(item.deliveredAt)) &&
             typeof item.needsReview === 'boolean',

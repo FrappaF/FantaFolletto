@@ -1,4 +1,5 @@
 import type { Diary, Entry, Reward } from './model'
+import { redemptionProgress } from './rewards'
 
 const dayFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Europe/Rome',
@@ -55,14 +56,8 @@ export function rankings(state: Diary, period: 'day' | 'week') {
 }
 
 export function rewardProgress(state: Diary, reward: Reward, now: Date) {
-  const stats = statistics(state, now)
-  const points = reward.period === 'week' ? stats.week : stats.total
-  return {
-    points,
-    percent: Math.min(100, Math.max(0, (points / reward.target) * 100)),
-    remaining: Math.max(0, reward.target - points),
-    reached: points >= reward.target,
-  }
+  const progress = redemptionProgress(state, reward, now)
+  return { ...progress, reached: progress.available || progress.claimed }
 }
 
 export function formatDay(date: string, long = false) {

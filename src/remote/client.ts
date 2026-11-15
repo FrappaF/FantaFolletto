@@ -62,6 +62,13 @@ export function transportFor(client: Client, userId: string) {
       const token = await checkOwner()
       const request = (() => {
         switch (operation.type) {
+          case 'redeem-reward':
+            return client.rpc('redeem_reward', {
+              client_id: operation.operationId,
+              reward_id: operation.rewardId,
+              expected_version: operation.expectedVersion,
+              period_key: operation.periodKey,
+            })
           case 'record':
             return client.rpc('record_episode', {
               client_id: operation.entry.id,
@@ -70,7 +77,9 @@ export function transportFor(client: Client, userId: string) {
               occurred_at: operation.entry.occurredAt,
             })
           case 'void':
-            return client.rpc('void_episode', { client_id: operation.entryId })
+            return client.rpc('void_episode', {
+              client_id: operation.entryId,
+            })
           case 'add-combo':
             return client.rpc('add_surname_combo', {
               client_id: operation.combo.id,

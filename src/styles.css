@@ -1644,3 +1644,27 @@ fieldset {
 .admin-tabs button {
   min-width: 0;
 }
+
+.points-balance {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.points-balance > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.points-balance strong {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  overflow-wrap: anywhere;
+}
+.points-balance small {
+  color: var(--muted);
+}
+.reward-card > .primary-button {
+  margin-top: 16px;
+  width: 100%;
+}

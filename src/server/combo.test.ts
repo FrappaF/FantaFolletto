@@ -83,7 +83,7 @@ beforeAll(async () => {
 }, 30000)
 beforeEach(async () => {
   await db.exec(
-    'truncate public.entries,public.awards,public.admin_audit; delete from public.scoring_rules where version > 2; update public.scoring_rules set increment_percent=20,max_multiplier=3 where version=2;',
+    'truncate public.entries,public.awards,public.admin_audit,public.point_balances; delete from public.scoring_rules where version > 2; update public.scoring_rules set increment_percent=20,max_multiplier=3 where version=2;',
   )
 })
 afterAll(() => db.close())
@@ -120,22 +120,28 @@ it('assegna 10/12/14, deduplica e ricalcola annullamenti e premi', async () => {
     type: 'save-reward',
     expectedVersion: 0,
     value: {
-      id: randomUUID(),
+      id: '30000000-0000-4000-8000-000000000099',
       name: 'Traguardo test',
       description: '',
       target: 30,
       period: 'all',
     },
   })
+  expect((await db.query('select * from public.awards')).rows).toEqual([])
+  await asUser(
+    player,
+    "select public.redeem_reward($1,'30000000-0000-4000-8000-000000000099',1,'all')",
+    [randomUUID()],
+  )
   await asUser(player, 'select public.void_episode($1)', [first])
   expect((await entries()).map((entry) => entry.points)).toEqual([10, 12])
   expect(
     (
       await db.query(
-        'select revoked_at is not null as revoked from public.awards',
+        'select needs_review,current_points,maximum_points from public.awards cross join public.point_balances',
       )
     ).rows,
-  ).toEqual([{ revoked: true }])
+  ).toEqual([{ needs_review: true, current_points: -8, maximum_points: 36 }])
 })
 it('inserimenti offline fuori ordine usano la sequenza cronologica e mantengono le regole del giorno', async () => {
   const times = (

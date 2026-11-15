@@ -1,6 +1,6 @@
 # FantaFolletto — contesto del progetto
 
-Ultimo aggiornamento: **14 novembre 2026**.
+Ultimo aggiornamento: **15 novembre 2026**.
 
 Questo documento consente di riprendere il progetto in una nuova chat senza ricostruire le decisioni precedenti. Va letto prima di ogni feature o cambiamento e mantenuto insieme al codice, come indicato in [AGENTS.md](../AGENTS.md).
 
@@ -32,6 +32,8 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 | Cognomi divertenti | Sezione Combo: primo cognome obbligatorio, secondo cognome e nota facoltativi |
 | Note giornaliere | Sezione per annotare le cose successe durante la giornata |
 | Catalogo | 37 eventi approvati, sei categorie e rarità separata; escluso «Il civico fantasma» |
+| Riscatto premi | Scelta esplicita della giocatrice con addebito del costo; nessun riscatto automatico |
+| Saldo punti | Salvare punti attuali spendibili e massimale storico dei punti accumulati |
 | Combo giornaliera | Stesso evento ripetuto nello stesso giorno italiano: incremento percentuale lineare e tetto entrambi modificabili dall’admin; modifiche dal giorno seguente |
 
 ### Baseline proposta dalla ricerca
@@ -47,6 +49,8 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - CSS leggero, carattere di sistema per i testi operativi e Fraunces locale per l'identità e i titoli; icone SVG essenziali per il design.
 
 ### Stato reale dopo la pubblicazione
+
+- **Riscatto manuale e saldo punti, attivazione del 15 novembre 2026:** la giocatrice sceglie il premio, vede costo e saldo residuo e conferma «Riscatta». Il raggiungimento della soglia non crea più assegnazioni. «Punti attuali» è il totale degli episodi attivi meno i costi dei riscatti confermati; «Massimale punti» è il massimo storico del totale accumulato prima delle spese e non diminuisce con riscatti, malus o annullamenti. Entrambi sono persistenti in IndexedDB nella demo e nella tabella Supabase `point_balances` per il diario condiviso; snapshot/cache/export includono i due valori. La migrazione `20261115092927_manual_reward_redemptions.sql` è applicata al servizio ospitato e verificata con prove RPC annullate tramite rollback; frontend aggiornato ancora in attesa di pubblicazione. Dettagli delle verifiche nel nuovo incremento di `ROADMAP.md`. Nessuna prova su iPhone reale.
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi/Combo/Note, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
 - Il comando per annullare un episodio nelle viste Oggi e Record usa un cestino Lucide (`Trash2`), al posto della freccia circolare risultata ambigua. Conserva etichetta accessibile, area di tocco e comportamento di annullamento con storico. Superati 82 test automatici, build TypeScript/Vite e verifica PWA; modifica non verificata su iPhone reale.
@@ -68,7 +72,7 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - Cache e code reali sono separate dalla demo. Un logout conserva la coda per lo stesso account senza mostrarla all'altro. Dati/versioni locali incompatibili vengono conservati e segnalati, non azzerati.
 - Manifest PWA, icone PNG/iPhone, service worker per le sole risorse statiche, indicazioni per la Home e aggiornamento su richiesta. Il pulsante di aggiornamento attende moduli chiusi e assenza di operazioni pendenti. Non si dipende dal Background Sync di Safari; Auth e risposte del database non entrano in Cache Storage.
 - Dopo la segnalazione della grafica precedente in Safari, il controllo delle nuove versioni viene richiesto alla registrazione del service worker, al ritorno in primo piano, alla riconnessione e ogni cinque minuti mentre la pagina è visibile e online. Controlli simultanei deduplicati; errori temporanei non invalidano le risorse offline. La scoperta della versione nuova non ne forza l'attivazione: restano la conferma «Aggiorna app» e i blocchi per moduli/code. Prova locale Chromium con passaggio dalla versione con foglia a quella con F/Fraunces: nuovo stile caricato dopo ricarica e conferma, episodio demo e 10 punti preservati. Non è una verifica del telefono dell'utente; l'apertura del sito pubblico dal browser remoto è rimasta impedita dall'ambiente.
-- Regole iniziali approvate dall'utente: eventi ripetibili al momento, premi settimanali o totali, revoca dei premi non consegnati dopo annullamento e conservazione con segnalazione di quelli consegnati. I dettagli operativi sono sotto.
+- Regole iniziali del 14 novembre: premi settimanali o totali e revoca automatica dei non consegnati. **Superate per i nuovi premi dalla richiesta del 15 novembre:** riscatto manuale con spesa di punti, senza revoca automatica dei riscatti. I traguardi automatici precedenti mantengono storico e vecchie regole di rettifica.
 - La demo resta separata. Su richiesta esplicita dell’utente sono stati attivati 37 eventi scelti nella ricerca, con sei categorie, rarità e otto sfide giornaliere. I quattro eventi di prova precedenti sono archiviati, esclusi dalla selezione della giocatrice e consultabili dall’admin attivando gli archiviati; il connettore non ha completato la conferma per la cancellazione definitiva, quindi è stata adottata la sostituzione reversibile. Premi ed episodi esistenti conservati. Il catalogo iniziale è in `src/domain/catalog.json` e nella migrazione corrispondente: modificarne i file non aggiorna automaticamente i dati già attivi. Dopo l’attivazione l’utente ha mostrato la vista Premi con un premio configurato. Non assumere più che il catalogo reale sia vuoto; nessun contenuto personale dello screenshot è copiato nel repository. Nome/punti/versione degli episodi e condizioni dei premi assegnati conservano lo storico.
 - Test locali su dominio/calendario, IndexedDB simulato, riconciliazione e UI in jsdom; migrazione/RPC/RLS eseguite in PostgreSQL PGlite con identità Supabase simulate. Workflow GitHub per test e build. I controlli locali non certificano Auth/PostgREST o Safari; la successiva verifica database ospitata è distinta e descritta sotto.
 - **Supabase predisposto:** progetto FantaFolletto `eynngtnxtomcwblmughq` creato dall’utente, attivo in `eu-west-1`; schema e correzioni advisor applicati tramite MCP. Due utenti Auth confermati dall’utente e ruoli admin/player assegnati. `.env.local` configurato, ignorato da Git; nessun dato personale o segreto nel repository.
@@ -87,7 +91,7 @@ Le sezioni architetturali seguenti descrivono il comportamento del prodotto; lo 
 
 L'ispirazione è FantaSanremo: eventi riconoscibili danno punti secondo un regolamento. Qui il meccanismo viene adattato a una persona che registra episodi della propria giornata lavorativa.
 
-Il ciclo principale è: **succede un episodio → lo registra → ottiene punti → vede progressi e record → raggiunge un premio**.
+Il ciclo principale è: **succede un episodio → lo registra → accumula punti → sceglie un premio → conferma il riscatto e ne spende i punti**.
 
 La classifica personale confronta giornate e settimane della stessa giocatrice. Non servono squadre, mercato, capitani o leghe per riprodurre integralmente FantaSanremo.
 
@@ -148,7 +152,7 @@ Il 14 novembre 2026 l'utente ha richiesto un logo più curato. La proposta imple
 | --- | --- |
 | Oggi | Punti del giorno, progresso settimanale, pulsante «Segna un evento», ultimi episodi |
 | Record | Migliori giornate, migliori settimane, storico personale |
-| Premi | Traguardo attuale, premio associato e premi già raggiunti |
+| Premi | Punti attuali, massimale storico, catalogo con costo e riscatto esplicito, storico dei riscatti e traguardi precedenti |
 | Combo | Raccolta dei cognomi divertenti; inserimento di un solo cognome o di una coppia, nota facoltativa e rimozione con conferma |
 | Note | Appunti della giornata, più note per data, testo libero e storico raggruppato per giorno |
 
@@ -222,10 +226,10 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 - Conservare la versione della regola e i punti attribuiti al momento dell'assegnazione.
 - Separare modifica del catalogo e rettifica di una registrazione storica.
 - Archiviare gli eventi già usati invece di eliminare le informazioni necessarie allo storico.
-- Calcolare premi e risultati definitivi sui dati confermati dal server, evitando doppi sblocchi.
+- Riscattare premi solo dopo scelta e conferma della giocatrice, su saldo verificato dal server, evitando doppi addebiti.
 - Conservare le condizioni del premio assegnato: cambiarne la definizione non riscrive automaticamente quanto già conquistato.
 - Modellare annullamenti e rettifiche in modo tracciabile e idempotente, anche se l'evento originale è ancora in attesa di sincronizzazione.
-- Ricalcolare in modo coerente i risultati derivati quando viene annullato un evento. La regola approvata revoca i premi non consegnati quando il totale scende sotto la soglia storica; conserva quelli consegnati con una segnalazione. Raggiungere di nuovo la soglia riattiva la stessa assegnazione, senza duplicarla.
+- Un annullamento ricalcola il saldo senza cancellare il riscatto né restituirne automaticamente il costo. Se il saldo diventa negativo, la UI lo mostra e segnala i riscatti da verificare; i nuovi punti recuperano il debito prima di poter essere spesi. I precedenti traguardi automatici senza riscatto conservano le vecchie regole di revoca/segnalazione.
 - Salvare istante dell'evento e istante di ricezione. Usare `Europe/Rome` per giorni e settimane, gestendo ora legale e invii successivi alla mezzanotte.
 
 ### Regole operative della prima versione
@@ -234,9 +238,12 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 - Combo dello stesso evento nello stesso giorno: `arrotonda(punti_base × min(tetto, 1 + (occorrenza − 1) × incremento / 100))`, arrotondamento al più vicino con mezzo punto verso l’alto. Esempio 10 punti, +20%, tetto ×3 → 10/12/14/16/18…30. Solo punti base positivi ed eventi ripetibili. Il calcolo client usa centesimi interi per corrispondere a `numeric` PostgreSQL.
 - Impostazioni globali con versioni e data italiana di decorrenza: salvataggio admin dal giorno successivo, ultima versione salvata per quel giorno prevalente. La prima attivazione usa +20%, ×3; per giorni precedenti vale la regola senza bonus. Il tetto è modificabile, non fissato nel codice a ×3.
 - Annullamento o invio tardivo possono cambiare i progressivi/bonus degli altri episodi dello stesso evento/giorno e i premi derivati. Restano fissi punti base e versione delle impostazioni di ciascun episodio. Gli annullati conservano i valori al momento dell’annullamento. Il catalogo admin non modifica retroattivamente quei dati.
-- Settimana italiana da lunedì. Un premio totale si conquista una volta per definizione, uno settimanale una volta per settimana: la chiave è proprietario + premio + periodo, non la versione del testo.
-- Modificare il premio può usare punti già confermati del periodo corrente, conservando le condizioni di quanto già assegnato. Un premio settimanale nuovo/modificato non crea nuove assegnazioni per settimane prima della modifica; può sbloccare dalla settimana corrente in poi.
-- Le assegnazioni esistenti mantengono le condizioni originali anche dopo modifica/archiviazione del catalogo. La consegna è confermata dall'admin, con traccia nell'audit; i punti successivamente insufficienti non cancellano un premio consegnato.
+- Settimana italiana da lunedì. Un premio totale si riscatta una volta per definizione, uno settimanale una volta per settimana. Per un settimanale servono sia un saldo spendibile sufficiente sia almeno il costo in punti maturati nella settimana corrente; tutti i premi consumano lo stesso saldo globale. Il saldo non scade a fine settimana.
+- Modificare o archiviare un premio non crea assegnazioni né modifica costo, nome e periodo dei riscatti precedenti. Un riscatto creato su una versione ormai cambiata viene rifiutato, senza applicare un prezzo inatteso. Il periodo settimanale è quello mostrato alla scelta: una richiesta ancora non acquisita dopo il cambio settimana va rifatta, senza riscatto retroattivo.
+- Riscatto e aggiornamento del saldo avvengono nella stessa transazione, con lock sul profilo della giocatrice condiviso con episodi, annullamenti e catalogo. L'UUID del riscatto rende sicuri i ritentativi, anche se il premio è poi modificato/archiviato o cambia la settimana.
+- La coda per account salva la richiesta prima di comunicarne l'acquisizione locale. Non mostra un premio come riscattato e non anticipa l'addebito: attende la conferma server. Altre operazioni pendenti bloccano nuove scelte finché non sono risolte; errori e invii ambigui restano recuperabili nella coda esistente.
+- I traguardi assegnati automaticamente prima della migrazione restano consultabili, con nome e condizioni originali e senza addebiti retroattivi. Quelli non consegnati non valgono come riscatti: la giocatrice deve scegliere nel catalogo. Quelli già consegnati restano acquisiti e non consentono un secondo riscatto nello stesso periodo. L'admin può consegnare solo i nuovi premi esplicitamente riscattati; la consegna non scala altri punti.
+- All'attivazione, saldo e massimale iniziali si ricavano dal totale degli episodi confermati disponibili. Il vecchio sistema non salvava un massimale storico: non si inventano picchi precedenti non ricostruibili. Da quel momento il massimo è persistente e monotono; per la demo i dati precedenti vengono aggiornati alla lettura senza cancellarli.
 - I record confrontano i punti effettivamente attribuiti secondo le regole del momento: non si normalizzano per i cambi del catalogo.
 - I punti dei dati in attesa sono provvisori; quelli rifiutati non aumentano i totali. Un annullamento rifiutato non toglie i punti già confermati. I premi definitivi si leggono dalle assegnazioni del server.
 
@@ -250,7 +257,8 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 | Regole combo versionate | Percentuale, tetto globale e giorno italiano di decorrenza; modifica solo admin |
 | Registrazioni eventi | Proprietario, identificativo client, data, versione evento, punti base/finali, progressivo e bonus combo, versione regole ed eventuale annullamento |
 | Definizioni premi | Descrizione, condizioni, periodo e stato di disponibilità |
-| Premi assegnati | Condizioni storiche, raggiungimento ed eventuale consegna |
+| Premi assegnati/riscattati | Condizioni storiche, UUID del riscatto, istante, costo addebitato ed eventuale consegna; vecchie assegnazioni preservate |
+| Saldo punti | Proprietario, punti attuali e massimale storico persistente; scrittura solo tramite RPC autorizzate |
 | Traccia amministrativa | Modifiche a catalogo, premi e rettifiche pertinenti |
 | Combo di cognomi | Raccolta condivisa tra i due ruoli, indipendente dai punteggi; autore, data e rimozioni conservati |
 | Note giornaliere | Appunti condivisi associati a una data di calendario, con autore, istante di creazione e rimozioni tracciate |
@@ -332,6 +340,7 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 
 | Data | Decisione | Effetto |
 | --- | --- | --- |
+| 2026-11-15 | Utente richiede scelta manuale dei premi, addebito dei punti e salvataggio di massimale e saldo attuale | Sostituita l’assegnazione automatica con riscatto confermato; saldo unico spendibile e massimo storico separati dai record; migrazione applicata e verificata sul servizio; frontend in corso di pubblicazione |
 | 2026-11-14 | Webapp con account e dati condivisi; React + Vite | Base applicativa scelta dall'utente |
 | 2026-11-14 | Una sola giocatrice in sfida con se stessa | Classifica intesa come record personali |
 | 2026-11-14 | Ricerca su architettura e design prima dello sviluppo | Baseline tecnica documentata, ancora da implementare |

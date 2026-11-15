@@ -79,7 +79,20 @@ export async function updateAccount(
             throw new Error(
               'Coda locale non compatibile. I dati sono conservati.',
             )
-          if (operation.type === 'record')
+          if (operation.type === 'redeem-reward') {
+            if (
+              typeof operation.rewardId !== 'string' ||
+              !Number.isSafeInteger(operation.expectedVersion) ||
+              operation.expectedVersion < 1 ||
+              !(
+                operation.periodKey === 'all' ||
+                /^\d{4}-\d{2}-\d{2}$/.test(operation.periodKey)
+              )
+            )
+              throw new Error(
+                'Riscatto locale non compatibile. I dati sono conservati.',
+              )
+          } else if (operation.type === 'record')
             parseDiary({
               schemaVersion: 1,
               events: [],

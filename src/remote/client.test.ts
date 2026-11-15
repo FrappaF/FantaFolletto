@@ -122,6 +122,7 @@ it('non accetta una risposta di diario priva delle condizioni previste', async (
   const setHeader = vi.fn(async () => ({
     data: {
       ...initialDiary(),
+      awards: undefined,
       role: 'player',
       ownerId: 'alice',
       fetchedAt: new Date().toISOString(),

@@ -112,3 +112,80 @@ it.each(['player', 'admin'] as const)(
     queryClient.clear()
   },
 )
+
+it.each(['player', 'admin'] as const)(
+  'salva il riscatto senza anticipare l’addebito, solo per player (%s)',
+  async (role) => {
+    const { weekKey } = await import('../domain/stats')
+    const url = 'https://rewards.supabase.co'
+    const key = accountKey(url, role)
+    const at = new Date().toISOString()
+    await updateAccount(key, () => ({
+      schemaVersion: 1,
+      queue: [],
+      snapshot: {
+        ...initialDiary(),
+        role,
+        ownerId: 'player',
+        fetchedAt: at,
+        entries: [
+          {
+            id: 'episode',
+            eventId: 'coffee',
+            eventVersion: 1,
+            name: 'Evento',
+            points: 200,
+            occurredAt: at,
+          },
+        ],
+        pointBalance: { current: 200, maximum: 200 },
+      },
+    }))
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+    const { result, unmount } = renderHook(
+      () => useRemoteDiary({} as Client, url, role),
+      { wrapper },
+    )
+    await waitFor(() => expect(result.current.diary).toBeTruthy())
+    const command = {
+      type: 'redeem-reward',
+      id: 'redemption',
+      rewardId: 'breakfast',
+      expectedVersion: 1,
+      periodKey: weekKey(at),
+      at,
+    } as const
+    await act(async () => {
+      expect(await result.current.execute(command)).toBe(role === 'player')
+    })
+    expect(result.current.diary?.pointBalance).toEqual({
+      current: 200,
+      maximum: 200,
+    })
+    if (role === 'player') {
+      expect((await readAccount(key)).queue).toMatchObject([
+        {
+          type: 'redeem-reward',
+          operationId: 'redemption',
+          status: 'pending',
+        },
+      ])
+      await act(async () => {
+        expect(await result.current.execute({ ...command, id: 'second' })).toBe(
+          false,
+        )
+      })
+      expect(result.current.error).toMatch(/Attendi/)
+    } else {
+      expect((await readAccount(key)).queue).toHaveLength(0)
+      expect(result.current.error).toMatch(/giocatrice/)
+    }
+    unmount()
+    queryClient.clear()
+  },
+)

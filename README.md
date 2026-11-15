@@ -50,6 +50,8 @@ Le build di produzione sono `remote` per impostazione predefinita: senza configu
 
 ## Comportamenti
 
+- **Riscatto manuale (database attivato, frontend in pubblicazione):** dalla sezione Premi la giocatrice sceglie cosa riscattare e conferma costo e saldo residuo. I punti vengono scalati una sola volta dal saldo attuale; il massimale storico dei punti accumulati rimane salvato. Demo e diario condiviso conservano entrambi i valori. La migrazione `20261115092927_manual_reward_redemptions.sql` è applicata al servizio e le RPC sono verificate con rollback dei dati di prova. Le assegnazioni automatiche precedenti restano nello storico senza spese retroattive.
+
 - Le **Note giornaliere** raccolgono appunti di testo (massimo 2000 caratteri), con data già impostata su oggi in Italia e modificabile. Si possono aggiungere più note per giornata, leggerle nello storico per data e rimuoverle con conferma. Sono condivise tra giocatrice e admin, funzionano con la coda offline e non assegnano punti. Migrazione `supabase/migrations/20261114224726_daily_notes.sql` applicata al servizio il 14 novembre 2026; prova delle RPC ospitate con rollback superata. Frontend pubblicato su [fantafolletto.pages.dev](https://fantafolletto.pages.dev); verifica su iPhone reale ancora da fare.
 - La sezione **Combo** raccoglie i cognomi divertenti: primo cognome obbligatorio, secondo cognome e nota facoltativi. Giocatrice e admin possono salvare e rimuovere dalla raccolta condivisa; la coda offline protegge gli inserimenti senza assegnare punti. Migrazione `supabase/migrations/20261114224718_surname_combos.sql` applicata al servizio il 14 novembre 2026 e verificata con rollback delle prove; frontend pubblicato su [fantafolletto.pages.dev](https://fantafolletto.pages.dev). I test locali non modificano il servizio ospitato.
 - Il database controlla ruoli e punti. La giocatrice può registrare/annullare; l'admin può consultare, gestire eventi/premi e confermare consegne.
@@ -57,7 +59,7 @@ Le build di produzione sono `remote` per impostazione predefinita: senza configu
 - Prima si salva l'operazione sul telefono, poi si invia. La UI distingue punti provvisori, conferme ed errori; un invio ambiguo resta in coda e usa lo stesso identificativo nei ritentativi.
 - Cache e code sono separate per progetto/account; il logout conserva gli inserimenti per il ritorno dello stesso utente. La demo usa un database distinto e non viene importata nel diario reale.
 - Giorni e settimane seguono `Europe/Rome`, da lunedì. Gli episodi offline arrivano entro sette giorni, con la versione valida al loro istante dichiarato.
-- Premi totali una volta per definizione o settimanali una volta per settimana. Le condizioni già assegnate restano nello storico; annullamenti revocano i premi non consegnati e segnalano eventuali incongruenze di quelli già consegnati.
+- Premi totali riscattabili una volta per definizione o settimanali una volta per settimana italiana, con saldo sufficiente. Gli annullamenti ricalcolano i punti attuali; i riscatti e il massimale rimangono salvati, anche con saldo negativo. Record giornalieri/settimanali indipendenti dalle spese.
 - Il service worker conserva le risorse statiche, mai risposte Auth/database. Gli aggiornamenti attendono moduli chiusi e coda risolta.
 - Su iPhone: Safari → Condividi → Aggiungi alla schermata Home. Aprire dalla Home e accedere online prima dell'uso offline; attendere la conferma delle risorse disponibili. Il primo login e il recupero di una sessione non valida richiedono rete.
 
