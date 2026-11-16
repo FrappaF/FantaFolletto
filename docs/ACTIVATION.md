@@ -129,3 +129,10 @@ Il controllo HTTP pubblico è stato impedito dal proxy (`CONNECT tunnel failed`,
 ## Pubblicazione automatica — 16 novembre 2026
 
 L’utente conferma di aver dato accesso al repository e di vedere Cloudflare tra le GitHub Apps. Prova end-to-end mediante aggiornamento della documentazione su `main`: commit `59676d671b551667ee1ebfec48a9422e55524045`, deploy `4a282a8c-41a0-4250-a55b-96a816708058`, trigger `github:push`. Build e pubblicazione completate con successo alle **23:19:47 Europe/Rome** (22:19:47 UTC), senza chiamate di creazione deploy manuale. Il flusso automatico è ora verificato; nessuna modifica al codice applicativo o al database. Registrazione dell’esito con `[skip ci]` per evitare una nuova build della sola documentazione.
+
+
+## Ancoraggio chiusura modale — 16 novembre 2026
+
+Corretto il pulsante che non restava al fondo: catalogo scorrevole separato dalla barra di chiusura, layout flex e safe area inferiore; rimossa la dipendenza da sticky nel contenuto. Commit `d1f8e7acab3867ebf139ac0d1bc3f60081d54d58` inviato su `main`. Prima del push: 100 test, build/PWA e verifiche Chromium nei temi chiaro/scuro a 320/393/768 px, incluso schermo alto 400 px, quattro posizioni di scorrimento e registrazioni ripetute; nessuna sovrapposizione tra contenuto e barra. Nessuna verifica su Safari/iPhone reale.
+
+Deploy automatico `e3fc5283-3f35-4612-94db-02e066472ed1`, trigger `github:push`, build e deploy `success` alle **23:25:49 Europe/Rome** (22:25:49 UTC). Nessun avvio manuale, modifica ai dati o al database.
