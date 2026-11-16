@@ -40,6 +40,9 @@ it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisc
   await user.click(screen.getByRole('button', { name: /Un caffè offerto/ }))
   await screen.findByText(/Un caffè offerto · \+10 punti/)
   expect(document.querySelector('.score-number')?.textContent).toBe('10punti')
+  await user.click(
+    within(screen.getByRole('dialog')).getAllByRole('button', { name: 'Chiudi' })[0],
+  )
 
   await user.click(screen.getByRole('button', { name: 'Annulla' }))
   await screen.findByText('Episodio annullato. Il diario è aggiornato.')
@@ -47,6 +50,9 @@ it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisc
   await user.click(screen.getByRole('button', { name: /Segna un evento/ }))
   await user.click(screen.getByRole('button', { name: /Un caffè offerto/ }))
   await screen.findByText(/Un caffè offerto · \+10 punti/)
+  await user.click(
+    within(screen.getByRole('dialog')).getAllByRole('button', { name: 'Chiudi' })[0],
+  )
   view.unmount()
 
   render(
@@ -122,6 +128,9 @@ it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisc
   await user.type(screen.getByRole('searchbox'), 'speciale')
   await user.click(screen.getByRole('button', { name: /Un caffè speciale/ }))
   await screen.findByText(/Un caffè speciale · \+48 punti/)
+  await user.click(
+    within(screen.getByRole('dialog')).getAllByRole('button', { name: 'Chiudi' })[0],
+  )
   expect(document.querySelector('.score-number')?.textContent).toBe('58punti')
   expect(screen.getByRole('heading', { name: 'Un caffè offerto' })).toBeTruthy()
   expect(

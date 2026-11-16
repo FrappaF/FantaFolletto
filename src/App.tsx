@@ -110,7 +110,11 @@ export function DiaryView({
   const [picker, setPicker] = useState(false)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
-  const [toast, setToast] = useState<{ text: string; entryId?: string }>()
+  const [toast, setToast] = useState<{
+    text: string
+    entryId?: string
+    eventId?: string
+  }>()
   const [now, setNow] = useState(new Date())
   const [online, setOnline] = useState(navigator.onLine)
   const [recording, setRecording] = useState(false)
@@ -160,12 +164,11 @@ export function DiaryView({
           snapshot: { name: event.name, points: event.points },
         })
       ) {
-        setPicker(false)
-        setSearch('')
         setNow(new Date())
         setToast({
           text: `${event.name} · ${pointsLabel(estimate.entry.points)} punti${remote ? ' stimati' : ''}`,
           entryId: id,
+          eventId,
         })
       }
     } finally {
@@ -356,6 +359,7 @@ export function DiaryView({
                       <button
                         className="primary-button record-button"
                         onClick={() => {
+                          setToast(undefined)
                           setSearch('')
                           setCategory('')
                           setNow(new Date())
@@ -483,7 +487,7 @@ export function DiaryView({
           ))}
         </nav>
       )}
-      {toast && !admin && (
+      {toast && !admin && !picker && (
         <div className="toast">
           <span role="status">
             <Check size={18} aria-hidden="true" />
@@ -506,12 +510,16 @@ export function DiaryView({
       {picker && diary && (
         <Modal
           title="Cosa è successo di bello?"
+          scrollCloseButton
           busy={busy || recording}
           onClose={() => setPicker(false)}
         >
           <p className="modal-description">
             Scegli un episodio. I punti sono indicati qui sotto.
           </p>
+          <span className="sr-only" role="status">
+            {toast?.text}
+          </span>
           <label className="search-label">
             Cerca nel catalogo
             <input
@@ -550,7 +558,13 @@ export function DiaryView({
                     disabled={busy || recording || !score.available}
                     onClick={() => void record(event.id)}
                   >
-                    <EventIcon id={event.id} categoryId={event.categoryId} />
+                    {toast?.eventId === event.id ? (
+                      <span className="event-icon" aria-hidden="true">
+                        <Check size={21} />
+                      </span>
+                    ) : (
+                      <EventIcon id={event.id} categoryId={event.categoryId} />
+                    )}
                     <span>
                       <strong>{event.name}</strong>
                       <small>{event.description}</small>

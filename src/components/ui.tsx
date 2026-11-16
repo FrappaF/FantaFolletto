@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ArrowUpRight, X } from 'lucide-react'
 import {
   CoffeeIcon,
@@ -68,13 +68,17 @@ export function Modal({
   children,
   onClose,
   busy = false,
+  scrollCloseButton = false,
 }: {
   title: string
   children: ReactNode
   onClose: () => void
   busy?: boolean
+  scrollCloseButton?: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
+  const [showBottomClose, setShowBottomClose] = useState(false)
   const headingId = useId()
   useEffect(() => {
     const element = dialog.current!
@@ -86,6 +90,19 @@ export function Modal({
       document.body.style.overflow = previous
     }
   }, [])
+  useEffect(() => {
+    if (!scrollCloseButton) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setShowBottomClose(true)
+      return
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowBottomClose(entry.intersectionRatio < 1),
+      { root: dialog.current, threshold: 1 },
+    )
+    observer.observe(closeButton.current!)
+    return () => observer.disconnect()
+  }, [scrollCloseButton])
   return (
     <dialog
       ref={dialog}
@@ -101,6 +118,8 @@ export function Modal({
           <h2 id={headingId}>{title}</h2>
         </div>
         <button
+          ref={closeButton}
+          type="button"
           className="icon-button"
           aria-label="Chiudi"
           onClick={onClose}
@@ -110,6 +129,18 @@ export function Modal({
         </button>
       </div>
       {children}
+      {scrollCloseButton && showBottomClose && (
+        <div className="modal-close-footer">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onClose}
+            disabled={busy}
+          >
+            Chiudi
+          </button>
+        </div>
+      )}
     </dialog>
   )
 }

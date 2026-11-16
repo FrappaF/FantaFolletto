@@ -1131,6 +1131,28 @@ dialog::backdrop {
   font-size: 13px;
   margin-bottom: 20px;
 }
+.modal-close-footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.modal-close-footer button {
+  width: 100%;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 .search-label,
 fieldset > label {
   display: block;
