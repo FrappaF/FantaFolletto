@@ -113,3 +113,14 @@ Prima del rilascio sono passati **97 test automatici**, build TypeScript/Vite e 
 Push su GitHub `main`: `b8acc81fb1c816b577f3e2b23a0e2bc267599aa6`. Pubblicazione manuale Pages `9e674afe-e856-4dd2-ac82-f3e1259e57a7`, build e deploy `success`, completata il 15 novembre 2026 alle **09:32:32 UTC**. URL stabile [fantafolletto.pages.dev](https://fantafolletto.pages.dev). Dopo il push non risultava un nuovo deploy automatico; configurazione Git invariata.
 
 Nessun nuovo rilievo di performance oltre a sette indici inutilizzati informativi ([significato](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index)). Il controllo HTTP pubblico è stato impedito dal proxy dell'ambiente (`CONNECT tunnel failed`, 403): la risposta non proviene dal sito. Il rilascio è confermato dall'API Cloudflare, senza dichiarare verificati login Auth/PostgREST, rendering pubblico o Safari/iPhone reale. Nell'app già aperta usare «Aggiorna app» quando compare, dopo aver risolto gli invii pendenti.
+
+
+## Modale eventi — 16 novembre 2026
+
+Su richiesta esplicita dell’utente, modifiche integrate su `main` con fast-forward e push del commit `a87dfa55a53daff40d4ba31df7d3f542f552417f`. La registrazione mantiene aperto il catalogo conservando posizione, scorrimento, ricerca e categoria; «Chiudi» compare nel fondo durante lo scorrimento quando la X non è interamente visibile.
+
+Prima dell’integrazione: 100 test automatici, build TypeScript/Vite e verifica PWA superati; prove Chromium locali a 320/393/768 CSS px nei due temi. Base remota allineata, nessun conflitto o modifica successiva al codice verificato. Nessuna modifica al database o ai dati di gioco.
+
+Deploy Pages avviato manualmente da `main` dopo il controllo dei deploy: `3aa4fb5d-991e-477c-9d76-6a89ef0e0562`, build e deploy `success`, completato il 16 novembre 2026 alle **23:10:42 Europe/Rome** (22:10:42 UTC). Commit sorgente verificato tramite API Cloudflare. URL stabile: https://fantafolletto.pages.dev. Nessun nuovo deploy automatico osservato prima dell’avvio manuale; configurazione Git invariata.
+
+Il controllo HTTP pubblico è stato impedito dal proxy (`CONNECT tunnel failed`, 403). Pubblicazione confermata dall’API; rendering pubblico, login e Safari/iPhone reale non verificati. Nell’app già aperta usare «Aggiorna app» quando compare, completando prima eventuali invii.
