@@ -51,6 +51,8 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 
 ### Stato reale dopo la pubblicazione
 
+- **Collegamento GitHub/Cloudflare, 16 novembre 2026:** dopo la mancata attivazione dei deploy automatici, l’utente conferma di aver autorizzato Cloudflare al repository e di vedere ora l’app tra le GitHub Apps. I deploy automatici da `main` erano già abilitati su Pages. Verifica del trigger in corso mediante push di questa documentazione, senza avvio manuale del deploy.
+
 - **Riscatto manuale e saldo punti, attivazione del 15 novembre 2026:** la giocatrice sceglie il premio, vede costo e saldo residuo e conferma «Riscatta». Il raggiungimento della soglia non crea più assegnazioni. «Punti attuali» è il totale degli episodi attivi meno i costi dei riscatti confermati; «Massimale punti» è il massimo storico del totale accumulato prima delle spese e non diminuisce con riscatti, malus o annullamenti. Entrambi sono persistenti in IndexedDB nella demo e nella tabella Supabase `point_balances` per il diario condiviso; snapshot/cache/export includono i due valori. La migrazione `20261115092927_manual_reward_redemptions.sql` è applicata al servizio ospitato e verificata con prove RPC annullate tramite rollback; frontend pubblicato su Cloudflare Pages dal commit `b8acc81`, deploy `9e674afe-e856-4dd2-ac82-f3e1259e57a7` concluso con successo il 15 novembre 2026 alle 09:32:32 UTC. Dettagli delle verifiche nel nuovo incremento di `ROADMAP.md`. Nessuna prova su iPhone reale.
 
 - React + Vite + TypeScript, design Diario Oggi/Record/Premi/Combo/Note, safe area e modalità scura; viste admin e servizio remoto caricati separatamente.
