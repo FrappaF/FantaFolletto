@@ -124,3 +124,8 @@ Prima dell’integrazione: 100 test automatici, build TypeScript/Vite e verifica
 Deploy Pages avviato manualmente da `main` dopo il controllo dei deploy: `3aa4fb5d-991e-477c-9d76-6a89ef0e0562`, build e deploy `success`, completato il 16 novembre 2026 alle **23:10:42 Europe/Rome** (22:10:42 UTC). Commit sorgente verificato tramite API Cloudflare. URL stabile: https://fantafolletto.pages.dev. Nessun nuovo deploy automatico osservato prima dell’avvio manuale; configurazione Git invariata.
 
 Il controllo HTTP pubblico è stato impedito dal proxy (`CONNECT tunnel failed`, 403). Pubblicazione confermata dall’API; rendering pubblico, login e Safari/iPhone reale non verificati. Nell’app già aperta usare «Aggiorna app» quando compare, completando prima eventuali invii.
+
+
+## Pubblicazione automatica — 16 novembre 2026
+
+L’utente conferma di aver dato accesso al repository e di vedere Cloudflare tra le GitHub Apps. Prova end-to-end mediante aggiornamento della documentazione su `main`: commit `59676d671b551667ee1ebfec48a9422e55524045`, deploy `4a282a8c-41a0-4250-a55b-96a816708058`, trigger `github:push`. Build e pubblicazione completate con successo alle **23:19:47 Europe/Rome** (22:19:47 UTC), senza chiamate di creazione deploy manuale. Il flusso automatico è ora verificato; nessuna modifica al codice applicativo o al database. Registrazione dell’esito con `[skip ci]` per evitare una nuova build della sola documentazione.
