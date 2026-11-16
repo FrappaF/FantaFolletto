@@ -77,6 +77,7 @@ export function Modal({
   scrollCloseButton?: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
+  const scrollContent = useRef<HTMLDivElement>(null)
   const closeButton = useRef<HTMLButtonElement>(null)
   const [showBottomClose, setShowBottomClose] = useState(false)
   const headingId = useId()
@@ -98,7 +99,7 @@ export function Modal({
     }
     const observer = new IntersectionObserver(
       ([entry]) => setShowBottomClose(entry.intersectionRatio < 1),
-      { root: dialog.current, threshold: 1 },
+      { root: scrollContent.current, threshold: 1 },
     )
     observer.observe(closeButton.current!)
     return () => observer.disconnect()
@@ -106,29 +107,35 @@ export function Modal({
   return (
     <dialog
       ref={dialog}
+      className={scrollCloseButton ? 'scroll-close-modal' : undefined}
       aria-labelledby={headingId}
       onCancel={(event) => {
         event.preventDefault()
         if (!busy) onClose()
       }}
     >
-      <div className="modal-heading">
-        <div>
-          <span className="eyebrow">FantaFolletto</span>
-          <h2 id={headingId}>{title}</h2>
+      <div
+        ref={scrollContent}
+        className={scrollCloseButton ? 'modal-scroll-content' : undefined}
+      >
+        <div className="modal-heading">
+          <div>
+            <span className="eyebrow">FantaFolletto</span>
+            <h2 id={headingId}>{title}</h2>
+          </div>
+          <button
+            ref={closeButton}
+            type="button"
+            className="icon-button"
+            aria-label="Chiudi"
+            onClick={onClose}
+            disabled={busy}
+          >
+            <X size={22} />
+          </button>
         </div>
-        <button
-          ref={closeButton}
-          type="button"
-          className="icon-button"
-          aria-label="Chiudi"
-          onClick={onClose}
-          disabled={busy}
-        >
-          <X size={22} />
-        </button>
+        {children}
       </div>
-      {children}
       {scrollCloseButton && showBottomClose && (
         <div className="modal-close-footer">
           <button

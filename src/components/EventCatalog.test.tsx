@@ -150,7 +150,7 @@ it('registra più eventi mantenendo modale, ricerca, categoria e scorrimento', a
   await user.click(within(dialog).getByRole('button', { name: '🐾 Animali' }))
   const search = within(dialog).getByRole('searchbox') as HTMLInputElement
   await user.type(search, 'quattro')
-  dialog.scrollTop = 247
+  dialog.querySelector('.modal-scroll-content')!.scrollTop = 247
   const choice = within(dialog).getByRole('button', { name: /Assistente a quattro zampe/ })
   await user.click(choice)
   expect(choice.hasAttribute('disabled')).toBe(true)
@@ -164,7 +164,7 @@ it('registra più eventi mantenendo modale, ricerca, categoria e scorrimento', a
     diary: applyCommand(controller.diary, execute.mock.calls[0][0]),
   }} />)
   expect(screen.getByRole('dialog')).toBe(dialog)
-  expect(dialog.scrollTop).toBe(247)
+  expect(dialog.querySelector('.modal-scroll-content')!.scrollTop).toBe(247)
   expect(search.value).toBe('quattro')
   expect(within(dialog).getByRole('button', { name: '🐾 Animali' }).getAttribute('aria-pressed')).toBe('true')
   expect(within(dialog).getByRole('status').textContent).toContain('Assistente a quattro zampe · +15 punti')
@@ -185,11 +185,11 @@ it('un salvataggio fallito conserva il catalogo e permette di riprovare o chiude
   const { rerender } = render(<DiaryView controller={controller} />)
   await user.click(screen.getByRole('button', { name: /Segna un evento/ }))
   const dialog = screen.getByRole('dialog')
-  dialog.scrollTop = 180
+  dialog.querySelector('.modal-scroll-content')!.scrollTop = 180
   await user.click(within(dialog).getByRole('button', { name: /Un caffè offerto/ }))
   rerender(<DiaryView controller={{ ...controller, error: 'Salvataggio non riuscito.' }} />)
   expect(screen.getByRole('dialog')).toBe(dialog)
-  expect(dialog.scrollTop).toBe(180)
+  expect(dialog.querySelector('.modal-scroll-content')!.scrollTop).toBe(180)
   expect(within(dialog).getByRole('alert').textContent).toBe('Salvataggio non riuscito.')
   expect(within(dialog).getByRole('button', { name: /Un caffè offerto/ }).hasAttribute('disabled')).toBe(false)
   expect(within(dialog).getByRole('status').textContent).toBe('')
@@ -212,7 +212,7 @@ it('mostra la chiusura in fondo solo quando la X non è interamente visibile', a
   )
   const dialog = screen.getByRole('dialog')
   const topClose = within(dialog).getByRole('button', { name: 'Chiudi' })
-  expect(observer).toHaveBeenCalledWith(expect.any(Function), { root: dialog, threshold: 1 })
+  expect(observer).toHaveBeenCalledWith(expect.any(Function), { root: dialog.querySelector('.modal-scroll-content'), threshold: 1 })
   expect(observe).toHaveBeenCalledWith(topClose)
   const visibility = (ratio: number) => act(() => notify(
     [{ intersectionRatio: ratio } as IntersectionObserverEntry],

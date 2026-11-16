@@ -1131,11 +1131,25 @@ dialog::backdrop {
   font-size: 13px;
   margin-bottom: 20px;
 }
+dialog.scroll-close-modal {
+  --modal-padding: 25px;
+  padding: 0;
+  overflow: hidden;
+}
+dialog.scroll-close-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+.modal-scroll-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--modal-padding);
+}
 .modal-close-footer {
-  position: sticky;
-  bottom: 0;
-  margin-top: 20px;
-  padding-top: 12px;
+  flex: 0 0 auto;
+  padding: 12px var(--modal-padding) max(19px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
   background: var(--surface);
 }
@@ -1473,6 +1487,9 @@ fieldset {
   }
   dialog {
     padding: 19px;
+  }
+  dialog.scroll-close-modal {
+    --modal-padding: 19px;
   }
 }
 @media (prefers-color-scheme: dark) {
