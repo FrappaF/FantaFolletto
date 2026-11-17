@@ -6,7 +6,7 @@ Ricerca del **17 novembre 2026**, basata sui piani e sulla documentazione uffici
 
 ## Revisione richiesta il 17 novembre
 
-Il flusso iniziale descritto sotto è superato dalla richiesta di semplicità: un solo selettore, seguito da anteprima con griglia di ritaglio trascinabile/ridimensionabile, didascalia e «Carica foto». Un comando «Cambia foto» integrato nel riquadro usa lo stesso selettore, conserva didascalia e annullamento e azzera la griglia per la nuova foto valida. Rimosse le scelte di dimensione/data, i contatori del peso e i controlli esterni di ritaglio/rotazione. Standard 1600 px e giornata corrente italiana sono automatici al salvataggio. Nessuna modifica a Storage o database; revisione pronta per la pubblicazione. I dati e i file esistenti sono preservati.
+Il flusso iniziale descritto sotto è superato dalla richiesta di semplicità: un solo selettore, seguito da anteprima con griglia di ritaglio trascinabile/ridimensionabile, didascalia e «Carica foto». Un comando «Cambia foto» integrato nel riquadro usa lo stesso selettore, conserva didascalia e annullamento e azzera la griglia per la nuova foto valida. Rimosse le scelte di dimensione/data, i contatori del peso e i controlli esterni di ritaglio/rotazione. Standard 1600 px e giornata corrente italiana sono automatici al salvataggio. Nessuna modifica a Storage o database; revisione pubblicata con commit `2e11429` e deploy automatico riuscito alle 12:26 italiane del 17 novembre. I dati e i file esistenti sono preservati.
 
 ## Implementazione iniziale del 17 novembre 2026
 

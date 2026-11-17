@@ -6,7 +6,7 @@ Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 s
 
 ## Revisione — Upload semplificato
 
-Su richiesta dell’utente del 17 novembre: selettore unico, foto con griglia trascinabile e quattro maniglie al posto degli slider, didascalia e Carica foto. Il comando Cambia foto riusa il selettore e conserva la didascalia. Standard e oggi automatici, nessun campo di data/dimensione. Nessuna dipendenza o migrazione aggiunta. Superati 122 test e controlli Chromium con CSP di produzione, mouse/touch, sostituzione e annullamento, temi chiaro/scuro e larghezze 320/393/430/768 px. Pubblicazione in preparazione.
+Su richiesta dell’utente del 17 novembre: selettore unico, foto con griglia trascinabile e quattro maniglie al posto degli slider, didascalia e Carica foto. Il comando Cambia foto riusa il selettore e conserva la didascalia. Standard e oggi automatici, nessun campo di data/dimensione. Nessuna dipendenza o migrazione aggiunta. Superati 122 test e controlli Chromium con CSP di produzione, mouse/touch, sostituzione e annullamento, temi chiaro/scuro e larghezze 320/393/430/768 px. Pubblicata con commit `2e11429`, deploy `6badfc38-a321-49b3-bb73-4ba014ecd231` riuscito alle 12:26:06 italiane del 17 novembre.
 
 ## Prossimo incremento — Foto degli zerbini e Raccolte
 
