@@ -9,8 +9,7 @@ import {
   WifiOff,
   X,
   LogOut,
-  Smile,
-  NotebookPen,
+  Images,
 } from 'lucide-react'
 import { useDiary } from './hooks/useDiary'
 import {
@@ -35,8 +34,7 @@ import { SyncStatus, type RemoteState } from './components/SyncStatus'
 import { Rewards } from './components/Rewards'
 import { PwaPrompt } from './components/PwaPrompt'
 import { InstallHint } from './components/InstallHint'
-import { Combos } from './components/Combos'
-import { DailyNotes } from './components/DailyNotes'
+import { PhotoProvider, type PhotoConnection } from './photos/PhotoProvider'
 import { Brand } from './components/Brand'
 import {
   DiaryIcon,
@@ -47,7 +45,12 @@ import {
 
 const Admin = lazy(() => import('./components/Admin'))
 const RemoteApplication = lazy(() => import('./remote/RemoteApplication'))
-type Page = 'today' | 'records' | 'rewards' | 'combos' | 'notes'
+const Collections = lazy(() =>
+  import('./components/Collections').then((module) => ({
+    default: module.Collections,
+  })),
+)
+type Page = 'today' | 'records' | 'rewards' | 'collections'
 
 export function App() {
   const mode =
@@ -98,6 +101,24 @@ export type DiaryController = {
 }
 
 export function DiaryView({
+  photoConnection,
+  ...props
+}: {
+  controller: DiaryController
+  onLogout?: () => void
+  photoConnection?: PhotoConnection
+}) {
+  return (
+    <PhotoProvider
+      key={photoConnection?.scope ?? 'demo'}
+      connection={photoConnection}
+    >
+      <DiaryContent {...props} />
+    </PhotoProvider>
+  )
+}
+
+function DiaryContent({
   controller,
   onLogout,
 }: {
@@ -106,6 +127,13 @@ export function DiaryView({
 }) {
   const { diary, busy, error, execute, refresh, remote } = controller
   const [page, setPage] = useState<Page>('today')
+  const [collectionsOpened, setCollectionsOpened] = useState(false)
+  const scrollPositions = useRef<Record<Page, number>>({
+    today: 0,
+    records: 0,
+    rewards: 0,
+    collections: 0,
+  })
   const [admin, setAdmin] = useState(false)
   const [picker, setPicker] = useState(false)
   const [search, setSearch] = useState('')
@@ -137,9 +165,13 @@ export function DiaryView({
   }, [])
 
   function navigate(next: Page) {
+    scrollPositions.current[page] = window.scrollY
+    if (next === 'collections') setCollectionsOpened(true)
     setPage(next)
     setToast(undefined)
-    window.scrollTo({ top: 0 })
+    window.requestAnimationFrame(() =>
+      window.scrollTo({ top: scrollPositions.current[next] }),
+    )
     main.current?.focus()
   }
   async function undo(id: string) {
@@ -429,24 +461,19 @@ export function DiaryView({
                     }
                   />
                 )}
-                {page === 'notes' && (
-                  <DailyNotes
-                    diary={diary}
-                    now={now}
-                    busy={busy}
-                    error={error}
-                    execute={execute}
-                    shared={!!remote}
-                  />
-                )}
-                {page === 'combos' && (
-                  <Combos
-                    diary={diary}
-                    busy={busy}
-                    error={error}
-                    execute={execute}
-                    shared={!!remote}
-                  />
+                {collectionsOpened && (
+                  <div hidden={page !== 'collections'}>
+                    <Suspense fallback={<p role="status">Apro le raccolte…</p>}>
+                      <Collections
+                        diary={diary}
+                        now={now}
+                        busy={busy}
+                        error={error}
+                        execute={execute}
+                        shared={!!remote}
+                      />
+                    </Suspense>
+                  </div>
                 )}
                 {page === 'rewards' && (
                   <Rewards
@@ -472,8 +499,7 @@ export function DiaryView({
               { id: 'today', label: 'Oggi', icon: DiaryIcon },
               { id: 'records', label: 'Record', icon: RecordIcon },
               { id: 'rewards', label: 'Premi', icon: GiftIcon },
-              { id: 'combos', label: 'Combo', icon: Smile },
-              { id: 'notes', label: 'Note', icon: NotebookPen },
+              { id: 'collections', label: 'Raccolte', icon: Images },
             ] as const
           ).map((item) => (
             <button

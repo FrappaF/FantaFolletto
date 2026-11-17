@@ -1,6 +1,6 @@
 # FantaFolletto — contesto del progetto
 
-Ultimo aggiornamento: **16 novembre 2026**.
+Ultimo aggiornamento: **17 novembre 2026**.
 
 Questo documento consente di riprendere il progetto in una nuova chat senza ricostruire le decisioni precedenti. Va letto prima di ogni feature o cambiamento e mantenuto insieme al codice, come indicato in [AGENTS.md](../AGENTS.md).
 
@@ -31,6 +31,8 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 | Priorità | Esperienza iPhone veloce e stabile; hosting economico |
 | Cognomi divertenti | Sezione Combo: primo cognome obbligatorio, secondo cognome e nota facoltativi |
 | Note giornaliere | Sezione per annotare le cose successe durante la giornata |
+| Foto degli zerbini | Raccolta con elaborazione al caricamento per ridimensionare e ridurre il peso; il 17 novembre l’utente sceglie Supabase e autorizza l’implementazione |
+| Evoluzione navigazione | Ripensare la barra inferiore con l’arrivo delle foto: aggiungere una sesta voce sarebbe eccessivo |
 | Catalogo | 37 eventi approvati, sei categorie e rarità separata; escluso «Il civico fantasma» |
 | Selezione eventi | Dopo la registrazione la modale resta aperta conservando posizione, scorrimento, ricerca e categoria; pulsante «Chiudi» in basso quando la X non è visibile |
 | Riscatto premi | Scelta esplicita della giocatrice con addebito del costo; nessun riscatto automatico |
@@ -50,6 +52,8 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - CSS leggero, carattere di sistema per i testi operativi e Fraunces locale per l'identità e i titoli; icone SVG essenziali per il design.
 
 ### Stato reale dopo la pubblicazione
+
+- **Zerbini e Raccolte, implementazione del 17 novembre 2026:** dopo il confronto l’utente sceglie Supabase e richiede l’implementazione. Presenti localmente la barra Oggi/Record/Premi/Raccolte e Cognomi/Note/Zerbini, anche nell’admin. Editor senza nuove dipendenze: libreria/fotocamera, anteprima, rotazione, ritaglio, 1600/1280 px, WebP con ripiego JPEG, peso prima/dopo, miniatura da 400 px, data italiana e didascalia facoltativa. Foto condivise dai due ruoli senza punti, come baseline coerente con le altre raccolte. Nuovo IndexedDB separato per demo/progetto/account, con Blob e richiesta salvati insieme e coda foto indipendente dagli episodi. Migrazione locale `20261117105839_doormat_photos.sql`: metadati, bucket privato `doormats`, RLS, RPC, finalizzazione dopo entrambi i file e rimozione tracciata con pulizia ritentabile. Upload immutabili con digest verificato nei ritentativi e token fissato all’account. Letture con JWT e Blob temporanei, senza foto nel precache PWA; dopo la conferma si liberano i Blob locali, quindi non si promette tutta la galleria offline. Export admin con metadati separati, senza immagini. Superati 115 test, build demo/produzione e PWA; Chromium con foto fittizia da 5,6 MB → 151 kB prima del ritaglio, rotazione/ritaglio, riapertura e rimozione, layout chiaro/scuro a 320/393/430/768 px senza overflow o errori JavaScript. **Migrazione applicata al servizio il 17 novembre, frontend pronto per la pubblicazione.** Prove RPC/RLS ospitate superate con rollback; nessun file o dato di prova rimasto. Upload Auth/Storage effettivo e Safari/iPhone/HEIC reale da collaudare; nei browser senza decodifica HEIC si richiede un JPEG. Dettagli in [ZERBINI_RESEARCH.md](ZERBINI_RESEARCH.md) e [OPERATIONS.md](OPERATIONS.md).
 
 - **Correzione ancoraggio «Chiudi», 16 novembre 2026:** su nuova segnalazione dell’utente, la modale eventi usa un contenitore flex con catalogo scorrevole e barra di chiusura separata al fondo, al posto del precedente `position: sticky` dentro il contenuto. La visibilità dipende dalla X nell’area scorrevole; il pulsante rispetta la safe area inferiore e non copre gli eventi. Conservati blocco durante il salvataggio, ricerca, categoria e scorrimento dopo registrazioni ripetute. Verificati 100 test, build/PWA e Chromium a 320/393/768 CSS px nei due temi, incluso viewport alto solo 400 px: bordo inferiore della barra coincidente con quello interno della modale a quattro posizioni di scorrimento. Safari/iPhone reale non verificati. Correzione su `main` (`d1f8e7a`), pubblicata automaticamente con trigger `github:push`: deploy `e3fc5283-3f35-4612-94db-02e066472ed1`, build e deploy riusciti il 16 novembre alle 23:25:49 italiane.
 
@@ -154,15 +158,18 @@ Il 14 novembre 2026 l'utente ha richiesto un logo più curato. La proposta imple
 
 ### Navigazione della giocatrice
 
+La tabella descrive il codice pronto per il rilascio del 17 novembre; esito e identificativo della pubblicazione sono registrati in ACTIVATION.md.
+
 | Sezione | Contenuto e azione principale |
 | --- | --- |
 | Oggi | Punti del giorno, progresso settimanale, pulsante «Segna un evento», ultimi episodi |
 | Record | Migliori giornate, migliori settimane, storico personale |
 | Premi | Punti attuali, massimale storico, catalogo con costo e riscatto esplicito, storico dei riscatti e traguardi precedenti |
-| Combo | Raccolta dei cognomi divertenti; inserimento di un solo cognome o di una coppia, nota facoltativa e rimozione con conferma |
-| Note | Appunti della giornata, più note per data, testo libero e storico raggruppato per giorno |
+| Raccolte | Cognomi singoli o in coppia, Note giornaliere e foto ottimizzate degli Zerbini, senza assegnazione di punti |
 
 La navigazione principale rimane in basso. L'azione di inserimento è evidente e comoda da raggiungere con il pollice. Il catalogo presenta nome dell'evento e punti prima della selezione.
+
+**Evoluzione implementata localmente il 17 novembre 2026:** quattro voci, con Cognomi (prima chiamata Combo nella barra), Note e Zerbini dentro Raccolte. La voce Raccolte rimane selezionata nelle viste interne e conserva la raccolta aperta tornando dalle altre destinazioni. Nell’admin Cognomi e Note confluiscono in Raccolte con Zerbini; Combo mantiene le regole dei bonus. I dati già salvati di cognomi e note non vengono migrati o rinominati.
 
 La selezione di un evento lascia aperta la modale, nella stessa posizione e con scorrimento, ricerca e categoria conservati, per registrare altri episodi senza riaprire il catalogo. Quando la X in alto a destra non è interamente visibile, compare «Chiudi» nel fondo della modale, fisso durante lo scorrimento; scompare quando la X torna visibile. Durante il salvataggio gli eventi e i comandi di chiusura restano temporaneamente disabilitati.
 
@@ -270,6 +277,7 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 | Traccia amministrativa | Modifiche a catalogo, premi e rettifiche pertinenti |
 | Combo di cognomi | Raccolta condivisa tra i due ruoli, indipendente dai punteggi; autore, data e rimozioni conservati |
 | Note giornaliere | Appunti condivisi associati a una data di calendario, con autore, istante di creazione e rimozioni tracciate |
+| Foto degli zerbini | Metadati e stato uploading/ready/removed in `doormats`; due oggetti immutabili nel bucket privato, lettura separata dallo snapshot degli episodi e coda/Blob in IndexedDB per account |
 
 La tabella descrive le responsabilità concettuali; i nomi e i vincoli implementati si trovano nella migrazione SQL versionata. Per una sola giocatrice bastano query semplici; introdurre aggiornamenti in tempo reale solo se portano un beneficio concreto. Il pannello admin può aggiornarsi all'apertura, al ritorno in primo piano e su richiesta.
 
@@ -338,6 +346,7 @@ I test automatici su WebKit sono utili, ma non sostituiscono una verifica su iPh
 
 Risolverle quando servono alla feature, proseguendo con il lavoro indipendente possibile. Non riproporre domande già risolte dal contesto o dal codice.
 
+- Foto degli zerbini: Supabase scelto e implementazione locale completata. Migrazione applicata e RPC/RLS verificate sul servizio; da pubblicare il frontend e collaudare upload Auth/Storage effettivo, Safari/Home e HEIC sull’iPhone reale. Backup dei file separato dal JSON. La compatibilità HEIC usa la decodifica nativa, con messaggio che richiede JPEG nei browser non compatibili. Dettagli in [ZERBINI_RESEARCH.md](ZERBINI_RESEARCH.md).
 - Catalogo iniziale approvato e attivato; ulteriori aggiustamenti di punti e premi si fanno dall’admin. I dati della demo restano separati.
 - Eventuali estensioni a limiti diversi da una volta al giorno, retrodatazione, periodi personalizzati e normalizzazione dei record: fuori dalla versione attuale.
 - Collegamento dal browser ai due account Supabase già predisposti e condizioni Free; recupero assistito già predisposto, eventuale SMTP solo se richiesto.
@@ -348,6 +357,9 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 
 | Data | Decisione | Effetto |
 | --- | --- | --- |
+| 2026-11-17 | Utente richiede di proseguire con attivazione e pubblicazione | Migrazione Supabase applicata e prove RPC/RLS ospitate annullate con rollback; controlli locali ripetuti. Pubblicazione tramite pipeline Pages esistente; collaudo Auth/Storage e iPhone reale distinto dalle prove database |
+| 2026-11-17 | Utente sceglie Supabase e richiede l’avvio dell’implementazione | Implementati localmente migrazione per bucket privato/metadati/RPC, elaborazione prima dell’upload, coda foto separata e barra a quattro voci con Raccolte. Verifiche locali completate; incremento non attivato o pubblicato |
+| 2026-11-17 | Utente richiede foto degli zerbini divertenti, ricerca di un provider gratuito, elaborazione al caricamento e revisione della barra inferiore | Ricerca completata su Supabase Storage/ImageKit/Cloudinary. Proposti elaborazione nel browser e quattro voci Oggi/Record/Premi/Raccolte; implementazione e scelta finale ancora aperte, senza modifiche al servizio |
 | 2026-11-16 | Utente richiede che la modale eventi resti aperta nella stessa posizione dopo una selezione e una chiusura in basso quando la X non è visibile | Conservati scorrimento, ricerca e categoria dopo il salvataggio; pulsante «Chiudi» nel fondo durante lo scorrimento, senza dover tornare in alto. Implementazione e verifiche locali completate; su successiva richiesta esplicita dell’utente integrate su `main` e pubblicate su Pages (`a87dfa5`). Verifica iPhone reale non eseguita |
 | 2026-11-15 | Utente richiede scelta manuale dei premi, addebito dei punti e salvataggio di massimale e saldo attuale | Sostituita l’assegnazione automatica con riscatto confermato; saldo unico spendibile e massimo storico separati dai record; migrazione applicata e verificata sul servizio; frontend pubblicato su Cloudflare Pages (`b8acc81`) |
 | 2026-11-14 | Webapp con account e dati condivisi; React + Vite | Base applicativa scelta dall'utente |

@@ -1,4 +1,5 @@
 import { PGlite } from '@electric-sql/pglite'
+import { storageFixture } from './storage-fixture'
 import { readFileSync, readdirSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
@@ -23,6 +24,7 @@ async function prepare(target: PGlite, legacy = false) {
     grant usage on schema auth to anon,authenticated;
     insert into auth.users values('${player}'),('${admin}'),('${stranger}');
   `)
+  await storageFixture(target)
   for (const file of migrations.filter(
     (file) => !legacy || !file.includes('manual_reward_redemptions'),
   ))

@@ -47,6 +47,20 @@ Il client riprova quando attivo, al ritorno in primo piano, alla riconnessione e
 
 La prima versione scarica uno snapshot completo, adeguato al volume di una giocatrice. Quando lo storico diventerà grande, misurare tempi e dimensione e introdurre paginazione con totali lato server prima di raggiungere limiti di risposta. La RPC aggrega JSON nel database e non dipende dal limite REST standard di righe, ma non è pensata per uno storico illimitato.
 
+## Foto degli zerbini — codice locale del 17 novembre 2026
+
+La feature è implementata e verificata localmente. La migrazione `supabase/migrations/20261117105839_doormat_photos.sql` è applicata al progetto esistente e gli advisor non segnalano nuovi avvisi di sicurezza. RPC, ruoli e RLS ospitate sono verificate con prove annullate da rollback. Esito della pubblicazione in ACTIVATION.md; restano da collaudare upload Auth/Storage effettivo, lettura incrociata e rimozione dai due account. Non eseguire sul servizio gli stub `auth`/`storage` dei test PGlite. Il codice precedente continua a funzionare con lo schema aggiuntivo.
+
+Il bucket `doormats` deve restare **privato**, limitato a JPEG/WebP e a 1.000.000 byte per oggetto. La miniatura ha un limite applicativo di 100.000 byte; la finalizzazione controlla dimensioni dichiarate e MIME dei due oggetti. Il browser usa la chiave pubblica già esistente e il JWT dell’account, senza chiavi amministrative o trasformazioni Pro.
+
+I file hanno percorsi `autore/UUID/photo-digest` e `autore/UUID/thumb-digest`. I metadati sono in `public.doormats`: non eliminare righe manualmente per liberare spazio, perché i file resterebbero nel servizio. Dalla raccolta, rimuovere con conferma: l’app salva la rimozione e riprova la pulizia tramite API Storage. Gli oggetti rimangono immutabili, senza policy UPDATE. Una prenotazione incompleta è visibile solo all’autore; se il telefono ha perso i Blob, accedere con quell’account, rimuovere la scheda incompleta e scegliere nuovamente l’originale. Le rimozioni conservano metadati e autore, senza ricreare le foto su ritentativi tardivi.
+
+L’archivio locale `fantafolletto-photos`, versione 1, separa demo/progetto/account e salva Blob e richiesta nella stessa transazione. La coda è distinta da quella degli episodi. Logout e aggiornamenti conservano gli invii; non cancellare dati del sito per risolvere un problema. Dopo la conferma i Blob locali vengono liberati; le immagini confermate sono scaricate su richiesta e non entrano nel precache PWA. L’intera galleria non è garantita offline.
+
+L’export JSON admin include `doormats` con metadati e digest, **non i file immagine**. Per un backup ripristinabile conservare sia i dati della tabella sia i due oggetti Storage per foto, mantenendo i percorsi e le policy. Il backup del database non equivale al backup degli oggetti: scaricarli separatamente con dashboard/API Storage e custodirli fuori dal repository. Controllare lo spazio dalla dashboard Supabase, includendo miniature e upload incompleti. A quota esaurita liberare spazio o rivedere il piano senza upgrade automatici.
+
+Verifiche locali: 115 test, build demo/produzione e PWA; Chromium con foto fittizia da 5,6 MB a 151 kB prima del ritaglio, rotazione/ritaglio, riapertura e rimozione, temi chiaro/scuro a 320/393/430/768 px. Il test SQL usa uno schema Storage simulato; trasferimento al servizio, limiti del bucket ospitato, Safari/Home, HEIC e rimozione EXIF su iPhone reale restano da verificare.
+
 ## Registro verifiche iniziali
 
 | Ambito | Stato |

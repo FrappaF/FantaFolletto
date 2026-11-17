@@ -23,8 +23,8 @@ import { EmptyState, EventIcon, Modal, SectionHeading } from './ui'
 import { Timeline } from './Timeline'
 import { newId } from '../domain/ids'
 import { Awards } from './Awards'
-import { Combos } from './Combos'
-import { DailyNotes } from './DailyNotes'
+import { Collections } from './Collections'
+import { usePhotos } from '../photos/PhotoProvider'
 
 type Editor =
   | { kind: 'event'; value?: EventDefinition }
@@ -57,9 +57,10 @@ export default function Admin({
   refreshing?: boolean
 }) {
   const [tab, setTab] = useState<
-    'summary' | 'events' | 'rewards' | 'rules' | 'combos' | 'notes'
+    'summary' | 'events' | 'rewards' | 'rules' | 'collections'
   >('summary')
   const [editor, setEditor] = useState<Editor>()
+  const photos = usePhotos()
   const [archive, setArchive] = useState<ArchiveTarget>()
   const [category, setCategory] = useState('')
   const [showArchived, setShowArchived] = useState(false)
@@ -77,6 +78,9 @@ export default function Admin({
             exportedAt: new Date().toISOString(),
             mode: shared ? 'shared' : 'local-demo',
             diary,
+            doormats: photos.items,
+            photoExportNote:
+              'Solo metadati: le immagini vanno salvate separatamente. I percorsi si ricavano da autore, UUID e digest.',
           },
           null,
           2,
@@ -132,8 +136,7 @@ export default function Admin({
             ['events', 'Eventi'],
             ['rewards', 'Premi'],
             ['rules', 'Combo'],
-            ['combos', 'Cognomi'],
-            ['notes', 'Note'],
+            ['collections', 'Raccolte'],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -145,19 +148,10 @@ export default function Admin({
           </button>
         ))}
       </div>
-      {tab === 'notes' && (
-        <DailyNotes
+      {tab === 'collections' && (
+        <Collections
           diary={diary}
           now={now}
-          busy={busy}
-          error={error}
-          execute={execute}
-          shared={shared}
-        />
-      )}
-      {tab === 'combos' && (
-        <Combos
-          diary={diary}
           busy={busy}
           error={error}
           execute={execute}
@@ -191,12 +185,13 @@ export default function Admin({
                 {shared
                   ? 'Esporta gli ultimi dati ricevuti in JSON. È una copia consultabile, non un backup ripristinabile del database.'
                   : 'Esporta i dati demo in JSON. Il ripristino non è ancora disponibile.'}
+                {' '}Le immagini vanno salvate separatamente.
               </p>
             </div>
             <button
               className="secondary-button"
               onClick={download}
-              disabled={refreshing}
+              disabled={refreshing || !photos.ready || photos.syncing}
             >
               <Download size={18} />
               {shared ? 'Esporta diario' : 'Esporta demo'}

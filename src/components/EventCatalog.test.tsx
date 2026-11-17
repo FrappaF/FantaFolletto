@@ -2,11 +2,15 @@
 import { act, render, screen, within, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, afterEach, expect, it, vi } from 'vitest'
-import Admin from './Admin'
+import AdminView from './Admin'
+import 'fake-indexeddb/auto'
+import { PhotoProvider } from '../photos/PhotoProvider'
+import type { ComponentProps } from 'react'
 import { DiaryView } from '../App'
 import { applyCommand, initialDiary } from '../domain/model'
 import { Modal } from './ui'
 const now = new Date('2026-11-14T10:00:00Z')
+const Admin = (props: ComponentProps<typeof AdminView>) => <PhotoProvider><AdminView {...props} /></PhotoProvider>
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute('open', '')

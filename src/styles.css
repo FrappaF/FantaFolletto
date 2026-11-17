@@ -782,7 +782,7 @@ progress::-moz-progress-bar {
   justify-content: center;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .bottom-nav button[aria-current] {
   color: var(--green);
@@ -791,6 +791,176 @@ progress::-moz-progress-bar {
 }
 .bottom-nav button + button {
   margin-left: 5px;
+}
+.collection-index {
+  display: grid;
+  gap: 16px;
+}
+.collection-index .collection-link {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  margin: 0;
+  width: 100%;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.collection-symbol {
+  color: var(--green);
+  background: var(--green-soft);
+  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+.collection-link strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 23px;
+}
+.collection-link small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.collection-count {
+  font-size: 12px;
+  color: var(--green);
+}
+.doormat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.doormat-grid .doormat-card {
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.doormat-image {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 120px;
+  background: var(--green-soft);
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+}
+.doormat-image > span {
+  padding: 16px;
+  text-align: center;
+}
+.doormat-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 65vh;
+  object-fit: contain;
+}
+.doormat-thumbnail {
+  aspect-ratio: 4/3;
+}
+.doormat-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.doormat-caption {
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+.doormat-caption p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  font-size: 14px;
+}
+.doormat-caption time,
+.doormat-caption small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.doormat-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+.photo-source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.photo-editor-preview {
+  border-radius: 16px;
+  background: var(--green-soft);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.photo-editor-preview img {
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+}
+.photo-size {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--green);
+  margin: 0;
+}
+.photo-size span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.photo-crop {
+  border: 1px solid var(--line);
+  padding: 14px;
+  border-radius: 14px;
+}
+.photo-crop summary {
+  cursor: pointer;
+  min-height: 32px;
+  font-weight: 600;
+}
+.photo-crop label {
+  margin-top: 14px;
+  font-size: 13px;
+}
+.photo-crop input[type='range'] {
+  padding: 0;
+  min-height: 44px;
+  accent-color: var(--green);
+}
+.photo-editor .field-hint {
+  margin: 0;
+}
+.photo-sync {
+  display: grid;
+  gap: 8px;
+}
+.photo-sync p {
+  margin: 0;
+}
+@media (max-width: 359px) {
+  .doormat-grid {
+    grid-template-columns: 1fr;
+  }
+  .collection-index .collection-link {
+    gap: 10px;
+    padding: 18px;
+  }
 }
 .diary-collection {
   display: grid;

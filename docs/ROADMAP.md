@@ -1,8 +1,19 @@
 # Roadmap di FantaFolletto
 
-Aggiornata il **14 novembre 2026**. Il riferimento per i requisiti rimane [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+Aggiornata il **17 novembre 2026**. Il riferimento per i requisiti rimane [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
 Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 serve a provare l'esperienza; la versione da regalare richiede anche gli sprint 2–4.
+
+## Prossimo incremento — Foto degli zerbini e Raccolte
+
+**Stato: implementato e verificato localmente; migrazione applicata al servizio, frontend pronto per la pubblicazione.** L’utente sceglie Supabase e autorizza l’implementazione il 17 novembre. Confronto e dettagli in [ZERBINI_RESEARCH.md](ZERBINI_RESEARCH.md).
+
+- Supabase Storage privato con migrazione locale, editor Canvas e miniatura prima dell’upload; condivisione tra giocatrice e admin senza punti.
+- Navigazione Oggi/Record/Premi/Raccolte; Raccolte raggruppa Cognomi, Note e Zerbini e conserva la raccolta aperta passando alle altre destinazioni.
+- Blob e richieste persistenti per account, coda indipendente dagli episodi, upload immutabili con verifica dei digest, finalizzazione dopo i due file e rimozioni con pulizia ritentabile.
+- Verifiche: 115 test, build demo/produzione e PWA; Chromium a 320/393/430/768 px nei due temi, foto fittizia da 5,6 MB → 151 kB prima del ritaglio, rotazione/ritaglio, riapertura e rimozione.
+- Migrazione applicata e RPC/RLS ospitate verificate con rollback, senza oggetti Storage fittizi. Da completare: pubblicazione e upload Auth/Storage effettivo; collaudo iPhone/HEIC e backup dei file. PGlite simula lo schema Storage e non trasferisce file al servizio ospitato.
+- Criterio di uscita: foto leggibile e alleggerita, visibile ai ruoli autorizzati, invio riprendibile senza duplicati; nessuna perdita o commistione tra account e nessuna regressione di eventi/premi. Verificare Safari e Home sul telefono reale.
 
 ## Sprint 1 — Il Diario prende forma
 

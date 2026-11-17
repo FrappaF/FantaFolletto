@@ -1,4 +1,5 @@
 import { PGlite } from '@electric-sql/pglite'
+import { storageFixture } from './storage-fixture'
 import { readFileSync, readdirSync } from 'node:fs'
 import { beforeAll, beforeEach, afterAll, expect, it } from 'vitest'
 import { parseDiary } from '../domain/validation'
@@ -52,6 +53,7 @@ beforeAll(async () => {
     `create role anon; create role authenticated; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; create function public.rls_auto_enable() returns event_trigger language plpgsql security definer set search_path='' as $$ begin null; end $$; grant usage on schema auth to anon,authenticated; insert into auth.users values('${player}'),('${admin}');`,
   )
   const dir = new URL('../../supabase/migrations/', import.meta.url)
+  await storageFixture(db)
   for (const file of readdirSync(dir)
     .filter((file) => file.endsWith('.sql'))
     .sort())

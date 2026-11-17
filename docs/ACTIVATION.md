@@ -136,3 +136,14 @@ L’utente conferma di aver dato accesso al repository e di vedere Cloudflare tr
 Corretto il pulsante che non restava al fondo: catalogo scorrevole separato dalla barra di chiusura, layout flex e safe area inferiore; rimossa la dipendenza da sticky nel contenuto. Commit `d1f8e7acab3867ebf139ac0d1bc3f60081d54d58` inviato su `main`. Prima del push: 100 test, build/PWA e verifiche Chromium nei temi chiaro/scuro a 320/393/768 px, incluso schermo alto 400 px, quattro posizioni di scorrimento e registrazioni ripetute; nessuna sovrapposizione tra contenuto e barra. Nessuna verifica su Safari/iPhone reale.
 
 Deploy automatico `e3fc5283-3f35-4612-94db-02e066472ed1`, trigger `github:push`, build e deploy `success` alle **23:25:49 Europe/Rome** (22:25:49 UTC). Nessun avvio manuale, modifica ai dati o al database.
+
+
+## Zerbini e Raccolte — attivazione del 17 novembre 2026
+
+L’utente richiede di completare ciò che resta dopo l’implementazione locale: attivazione Supabase e pubblicazione. Applicata al progetto esistente la migrazione `20261117105839_doormat_photos.sql` (nome locale allineato alla cronologia remota), con tabella `doormats`, bucket privato, limite 1.000.000 byte e formati JPEG/WebP, RPC di prenotazione/finalizzazione/rimozione/lettura e policy Storage. Nessuna modifica a episodi, saldi, premi, note o cognomi.
+
+Prova ospitata con `ROLLBACK`: ruolo giocatrice/admin, prenotazione e ritentativo, rifiuto di peso e payload incompatibili, finalizzazione rifiutata senza i due file, divieto di scrittura diretta, prenotazione visibile solo all’autore, lettura e rimozione condivise di una riga temporanea pronta, tombstone che impedisce la resurrezione e account estranei esclusi. Per provare la lettura condivisa il test porta a ready soltanto la nuova riga non confermata, all’interno della transazione annullata; non crea o modifica oggetti in `storage.objects` e non trasferisce file S3. Dopo rollback: zero righe foto e zero oggetti nel nuovo bucket. Non è un login Auth né una prova di upload effettivo.
+
+Advisor sicurezza dopo l’attivazione: nessun nuovo rilievo. Rimangono le nove RPC privilegiate preesistenti e l’avviso di protezione password già documentato; le quattro nuove RPC pubbliche sono SECURITY INVOKER, senza EXECUTE anonimo. Le funzioni privilegiate interne verificano identità e ruolo.
+
+Prima della pubblicazione: 115 test automatici, build di produzione, verifica PWA e diff senza errori. Configurazione Pages confermata: `main`, produzione remota con URL e chiave pubblica Supabase già presenti. Il browser condiviso ha risposto “Browser Use could not read requirements” prima di caricare il sito; la richiesta HTTP pubblica è rifiutata dal proxy dell’ambiente (`CONNECT tunnel failed`, 403), non dal sito. Pubblicazione da confermare tramite API Cloudflare; Safari/iPhone/HEIC e upload effettivi con i due account restano distinti dalle prove SQL.

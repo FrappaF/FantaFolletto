@@ -1,4 +1,5 @@
 import { PGlite } from '@electric-sql/pglite'
+import { storageFixture } from './storage-fixture'
 import { readFileSync, readdirSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -54,6 +55,7 @@ beforeAll(async () => {
     insert into auth.users values ('${player}'), ('${admin}'), ('${stranger}');
   `)
   const migrations = new URL('../../supabase/migrations/', import.meta.url)
+  await storageFixture(db)
   for (const file of readdirSync(migrations)
     .filter((file) => file.endsWith('.sql'))
     .sort()) {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
 import { LogOut } from 'lucide-react'
@@ -7,6 +7,7 @@ import { Modal } from '../components/ui'
 import { Brand } from '../components/Brand'
 import { makeClient, type RemoteConfig } from './client'
 import { useRemoteDiary } from './useRemoteDiary'
+import { photoTransport } from '../photos/transport'
 
 export default function RemoteApplication({
   config,
@@ -166,6 +167,7 @@ export default function RemoteApplication({
         key={`${config.url}:${session.user.id}`}
         client={client}
         projectUrl={config.url}
+        config={config}
         userId={session.user.id}
         logout={logout}
         signingOut={signingOut}
@@ -178,6 +180,7 @@ export default function RemoteApplication({
 function ConnectedDiary({
   client,
   projectUrl,
+  config,
   userId,
   logout,
   signingOut,
@@ -185,17 +188,27 @@ function ConnectedDiary({
 }: {
   client: ReturnType<typeof makeClient>
   projectUrl: string
+  config: RemoteConfig
   userId: string
   logout: () => Promise<void>
   signingOut: boolean
   authError: string
 }) {
   const controller = useRemoteDiary(client, projectUrl, userId)
+  const photoConnection = useMemo(
+    () => ({
+      scope: `${projectUrl}:${userId}`,
+      userId,
+      transport: photoTransport(client, config, userId),
+    }),
+    [client, config, projectUrl, userId],
+  )
   const [confirmExit, setConfirmExit] = useState(false)
   return (
     <>
       <DiaryView
         controller={controller}
+        photoConnection={photoConnection}
         onLogout={() => setConfirmExit(true)}
       />
       {authError && (
@@ -212,7 +225,9 @@ function ConnectedDiary({
           <p className="modal-description">
             {controller.remote.queue.length
               ? `${controller.remote.queue.length} operazioni restano su questo telefono e riprenderanno quando accedi di nuovo con lo stesso account. Non saranno visibili a un altro account.`
-              : 'Potrai riaprire il diario con la tua email e password.'}
+              : 'Potrai riaprire il diario con la tua email e password.'}{' '}
+            Le eventuali foto in attesa restano su questo telefono e
+            riprenderanno con lo stesso account.
           </p>
           {authError && (
             <p className="form-error" role="alert">
