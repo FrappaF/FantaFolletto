@@ -6,7 +6,7 @@ Ricerca del **17 novembre 2026**, basata sui piani e sulla documentazione uffici
 
 ## Editor nella pagina e CropperJS 2 — 17 novembre 2026
 
-Dopo la ricerca l’utente approva il pacchetto suggerito e segnala che la modale rende piccoli foto e controlli. **Implementata localmente una pagina dedicata nella raccolta Zerbini**, con «Torna agli zerbini» e ritorno alla galleria dopo il salvataggio. L’apertura della foto già salvata e la conferma di rimozione mantengono le proprie modali. Pubblicazione dell’incremento da registrare.
+Dopo la ricerca l’utente approva il pacchetto suggerito e segnala che la modale rende piccoli foto e controlli. **Implementata localmente una pagina dedicata nella raccolta Zerbini**, con «Torna agli zerbini» e ritorno alla galleria dopo il salvataggio. L’apertura della foto già salvata e la conferma di rimozione mantengono le proprie modali. Pubblicato con commit `57d1747` e deploy automatico Pages `d5bd8e04-f1d9-41e0-9f25-c55bf0b82b58`, riuscito alle 13:16:51 Europe/Rome.
 
 - **CropperJS 2.3.1**, versione fissata nel lockfile, MIT, senza wrapper React aggiuntivi. Import dinamico dopo la scelta dell’immagine; bundle separato da circa 16,8 kB gzip, incluso nel precache statico PWA. Nessun servizio aggiunto.
 - Anteprima più ampia, adattata alle proporzioni originali con altezza minima/massima; maniglie con area di tocco 48×48 px e angoli ben visibili, pinch, trascinamento e pulsanti zoom sulla foto. Tastiera con frecce, Maiusc e più/meno. Il componente limita zoom e spostamenti e ingrandisce uniformemente la foto quando serve a coprire la griglia. Dopo un ridimensionamento il ritaglio si adatta allo spazio disponibile senza cambiare la porzione scelta.
