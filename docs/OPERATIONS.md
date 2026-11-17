@@ -47,9 +47,9 @@ Il client riprova quando attivo, al ritorno in primo piano, alla riconnessione e
 
 La prima versione scarica uno snapshot completo, adeguato al volume di una giocatrice. Quando lo storico diventerà grande, misurare tempi e dimensione e introdurre paginazione con totali lato server prima di raggiungere limiti di risposta. La RPC aggrega JSON nel database e non dipende dal limite REST standard di righe, ma non è pensata per uno storico illimitato.
 
-## Foto degli zerbini — codice locale del 17 novembre 2026
+## Foto degli zerbini — rilascio del 17 novembre 2026
 
-La feature è implementata e verificata localmente. La migrazione `supabase/migrations/20261117105839_doormat_photos.sql` è applicata al progetto esistente e gli advisor non segnalano nuovi avvisi di sicurezza. RPC, ruoli e RLS ospitate sono verificate con prove annullate da rollback. Esito della pubblicazione in ACTIVATION.md; restano da collaudare upload Auth/Storage effettivo, lettura incrociata e rimozione dai due account. Non eseguire sul servizio gli stub `auth`/`storage` dei test PGlite. Il codice precedente continua a funzionare con lo schema aggiuntivo.
+La feature è implementata, verificata localmente e pubblicata su Pages (`bf54120`, deploy automatico riuscito alle 11:03:22 UTC). La migrazione `supabase/migrations/20261117105839_doormat_photos.sql` è applicata al progetto esistente e gli advisor non segnalano nuovi avvisi di sicurezza. RPC, ruoli e RLS ospitate sono verificate con prove annullate da rollback. Esito della pubblicazione in ACTIVATION.md; restano da collaudare upload Auth/Storage effettivo, lettura incrociata e rimozione dai due account. Non eseguire sul servizio gli stub `auth`/`storage` dei test PGlite. Il codice precedente continua a funzionare con lo schema aggiuntivo.
 
 Il bucket `doormats` deve restare **privato**, limitato a JPEG/WebP e a 1.000.000 byte per oggetto. La miniatura ha un limite applicativo di 100.000 byte; la finalizzazione controlla dimensioni dichiarate e MIME dei due oggetti. Il browser usa la chiave pubblica già esistente e il JWT dell’account, senza chiavi amministrative o trasformazioni Pro.
 
@@ -60,6 +60,15 @@ L’archivio locale `fantafolletto-photos`, versione 1, separa demo/progetto/acc
 L’export JSON admin include `doormats` con metadati e digest, **non i file immagine**. Per un backup ripristinabile conservare sia i dati della tabella sia i due oggetti Storage per foto, mantenendo i percorsi e le policy. Il backup del database non equivale al backup degli oggetti: scaricarli separatamente con dashboard/API Storage e custodirli fuori dal repository. Controllare lo spazio dalla dashboard Supabase, includendo miniature e upload incompleti. A quota esaurita liberare spazio o rivedere il piano senza upgrade automatici.
 
 Verifiche locali: 115 test, build demo/produzione e PWA; Chromium con foto fittizia da 5,6 MB a 151 kB prima del ritaglio, rotazione/ritaglio, riapertura e rimozione, temi chiaro/scuro a 320/393/430/768 px. Il test SQL usa uno schema Storage simulato; trasferimento al servizio, limiti del bucket ospitato, Safari/Home, HEIC e rimozione EXIF su iPhone reale restano da verificare.
+
+### Collaudo sul telefono dopo la pubblicazione
+
+1. Completare eventuali invii, chiudere i moduli e usare «Aggiorna app» quando compare; non cancellare lo spazio del sito o IndexedDB.
+2. Da Safari e poi dalla Home verificare le quattro voci Oggi/Record/Premi/Raccolte. In Raccolte aprire Zerbini, scegliere una foto di prova e verificare scritta leggibile, orientamento, peso originale/finale e formato della data.
+3. Provare sia una foto della libreria iPhone (HEIC se disponibile) sia uno scatto. Controllare ritaglio e rotazione prima di salvare. Un formato non leggibile deve mostrare il messaggio di recupero, senza caricare l’originale.
+4. Salvare e attendere «Sincronizzata»; riaprire l’app e verificare la foto dal secondo account. Questa prova collauda Auth/PostgREST/Storage e non è sostituita dai test SQL con claim simulati.
+5. Con una foto di prova distinta, disattivare la rete, salvare e riaprire l’app: la scheda deve restare sul telefono. Riattivando la rete con l’app aperta deve arrivare una sola copia.
+6. Rimuovere solo la foto di prova con conferma, verificare la scomparsa dal secondo account e la pulizia dei due oggetti Storage. Controllare che episodi, punti, premi e vecchie raccolte rimangano utilizzabili.
 
 ## Registro verifiche iniziali
 

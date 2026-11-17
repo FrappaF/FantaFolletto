@@ -2,7 +2,7 @@
 
 Ricerca del **17 novembre 2026**, basata sui piani e sulla documentazione ufficiale consultati in questa data.
 
-**Stato aggiornato: Supabase scelto dall’utente, implementazione verificata localmente.** La ricerca sotto conserva il confronto che ha portato alla scelta. Requisiti e stato reale fanno riferimento a [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+**Stato aggiornato: Supabase scelto, migrazione applicata e frontend pubblicato il 17 novembre 2026.** La ricerca sotto conserva il confronto che ha portato alla scelta. Requisiti e stato reale fanno riferimento a [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
 ## Implementazione del 17 novembre 2026
 
@@ -13,7 +13,7 @@ Ricerca del **17 novembre 2026**, basata sui piani e sulla documentazione uffici
 - I file pendenti restano in IndexedDB; dopo la conferma vengono liberati e le immagini si scaricano su richiesta. Non si promette l’intera galleria offline. Le rimozioni in attesa ritentano la pulizia dei due file; nessun processo pianificato aggiunto.
 - Superati 115 test, build demo/produzione e PWA. Test SQL in PGlite con Storage simulato su ruoli, percorsi, finalizzazione e rimozione; test del trasporto/coda con timeout, digest e pulizia interrotta. Prova Chromium con immagine fittizia da 5,6 MB: 151 kB a 1600×1200 prima del ritaglio; verificati rotazione, ritaglio, riapertura e rimozione, layout a 320/393/430/768 px nei due temi, senza overflow o errori JavaScript.
 
-**Attivazione del 17 novembre:** migrazione applicata al servizio e RPC/RLS ospitate verificate con rollback; frontend pronto per la pubblicazione. Nessuna prova di upload Auth/Storage effettivo, Safari/Home o HEIC su iPhone reale. Esito del rilascio in ACTIVATION.md; manutenzione e backup in [OPERATIONS.md](OPERATIONS.md). I paragrafi seguenti conservano la ricerca iniziale: le differenze rispetto alla proposta sono descritte qui sopra.
+**Attivazione del 17 novembre:** migrazione applicata al servizio e RPC/RLS ospitate verificate con rollback; frontend pubblicato con commit `bf54120` e deploy automatico `9112e657-0b1f-4cac-aba7-d1e094235c6a`, riuscito alle 11:03:22 UTC. Nessuna prova di upload Auth/Storage effettivo, Safari/Home o HEIC su iPhone reale. Esito del rilascio in ACTIVATION.md; manutenzione e backup in [OPERATIONS.md](OPERATIONS.md). I paragrafi seguenti conservano la ricerca iniziale: le differenze rispetto alla proposta sono descritte qui sopra.
 
 Controllo Chromium aggiuntivo: un JPEG con orientamento EXIF 6 viene elaborato nel verso corretto (1200×1600 px); nella copia ricodificata non sono presenti EXIF o tag di orientamento. Un file HEIC fittizio illeggibile mantiene il salvataggio disabilitato e permette di scegliere una nuova foto. Quest’ultima prova verifica il recupero dall’errore, non la compatibilità con un HEIC reale.
 
