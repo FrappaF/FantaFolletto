@@ -4,7 +4,11 @@ Ricerca del **17 novembre 2026**, basata sui piani e sulla documentazione uffici
 
 **Stato aggiornato: Supabase scelto, migrazione applicata e frontend pubblicato il 17 novembre 2026.** La ricerca sotto conserva il confronto che ha portato alla scelta. Requisiti e stato reale fanno riferimento a [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
-## Implementazione del 17 novembre 2026
+## Revisione richiesta il 17 novembre
+
+Il flusso iniziale descritto sotto è superato dalla richiesta di semplicità: un solo selettore, seguito da anteprima con griglia di ritaglio trascinabile/ridimensionabile, didascalia e «Carica foto». Un comando «Cambia foto» integrato nel riquadro usa lo stesso selettore, conserva didascalia e annullamento e azzera la griglia per la nuova foto valida. Rimosse le scelte di dimensione/data, i contatori del peso e i controlli esterni di ritaglio/rotazione. Standard 1600 px e giornata corrente italiana sono automatici al salvataggio. Nessuna modifica a Storage o database; revisione pronta per la pubblicazione. I dati e i file esistenti sono preservati.
+
+## Implementazione iniziale del 17 novembre 2026
 
 - Presenti editor (scelta/scatto, rotazione, ritaglio, 1600/1280 px, WebP/JPEG e confronto del peso), galleria con miniature e apertura della foto, data/didascalia, rimozione e barra Oggi/Record/Premi/Raccolte. Le stesse raccolte sono disponibili nell’admin; nessun effetto sui punti.
 - Nessuna nuova dipendenza applicativa. Editor e raccolte si caricano su richiesta; Canvas usa una superficie di lavoro limitata. HEIC usa la decodifica del browser: se non disponibile viene richiesto un JPEG, senza upload dell’originale.

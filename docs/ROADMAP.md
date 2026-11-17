@@ -4,6 +4,10 @@ Aggiornata il **17 novembre 2026**. Il riferimento per i requisiti rimane [PROJE
 
 Gli sprint sono incrementi verificabili, senza scadenze inventate. Lo sprint 1 serve a provare l'esperienza; la versione da regalare richiede anche gli sprint 2–4.
 
+## Revisione — Upload semplificato
+
+Su richiesta dell’utente del 17 novembre: selettore unico, foto con griglia trascinabile e quattro maniglie al posto degli slider, didascalia e Carica foto. Il comando Cambia foto riusa il selettore e conserva la didascalia. Standard e oggi automatici, nessun campo di data/dimensione. Nessuna dipendenza o migrazione aggiunta. Superati 122 test e controlli Chromium con CSP di produzione, mouse/touch, sostituzione e annullamento, temi chiaro/scuro e larghezze 320/393/430/768 px. Pubblicazione in preparazione.
+
 ## Prossimo incremento — Foto degli zerbini e Raccolte
 
 **Stato: implementato, verificato localmente e pubblicato. Migrazione applicata; prove RPC/RLS ospitate superate con rollback.** Deploy automatico Pages `9112e657-0b1f-4cac-aba7-d1e094235c6a`, commit `bf54120`, successo il 17 novembre alle 11:03:22 UTC. L’utente sceglie Supabase e autorizza l’implementazione il 17 novembre. Confronto e dettagli in [ZERBINI_RESEARCH.md](ZERBINI_RESEARCH.md).

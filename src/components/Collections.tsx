@@ -33,7 +33,7 @@ export function Collections(props: {
         ) : page === 'notes' ? (
           <DailyNotes {...props} />
         ) : (
-          <Doormats now={props.now} />
+          <Doormats />
         )}
       </>
     )

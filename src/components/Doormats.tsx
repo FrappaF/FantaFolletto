@@ -1,24 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import {
-  Camera,
-  Check,
-  ImagePlus,
-  RotateCcw,
-  RotateCw,
-  Trash2,
-} from 'lucide-react'
+import { Check, ImagePlus, Trash2 } from 'lucide-react'
 import { dayKey } from '../domain/stats'
-import { validDay } from '../domain/validation'
 import { usePhotos } from '../photos/PhotoProvider'
-import {
-  decodePhoto,
-  noCrop,
-  processPhoto,
-  type Crop,
-  type ProcessedPhoto,
-} from '../photos/image'
+import { decodePhoto, noCrop, processPhoto, type Crop } from '../photos/image'
 import { formatBytes, type Doormat } from '../photos/model'
 import { EmptyState, Modal } from './ui'
+import { PhotoCropper } from './PhotoCropper'
 
 function useBlobUrl(blob?: Blob) {
   const [url, setUrl] = useState<string>()
@@ -114,41 +101,38 @@ function PhotoImage({
   )
 }
 
-function PhotoEditor({ now, onClose }: { now: Date; onClose: () => void }) {
+export function PhotoEditor({ onClose }: { onClose: () => void }) {
   const photos = usePhotos()
   const [source, setSource] = useState<HTMLImageElement>()
-  const [originalBytes, setOriginalBytes] = useState(0)
+  const [file, setFile] = useState<File>()
   const [crop, setCrop] = useState<Crop>(noCrop)
-  const [rotation, setRotation] = useState(0)
-  const [maximum, setMaximum] = useState<1280 | 1600>(1600)
-  const [processed, setProcessed] = useState<ProcessedPhoto>()
   const [preparing, setPreparing] = useState(false)
   const [error, setError] = useState('')
-  const [day, setDay] = useState(dayKey(now))
   const [caption, setCaption] = useState('')
+  const [attempted, setAttempted] = useState(false)
   const picker = useRef<HTMLInputElement>(null)
-  const camera = useRef<HTMLInputElement>(null)
   const sequence = useRef(0)
-  const url = useBlobUrl(processed?.photo)
+  const saving = useRef(false)
+  const url = useBlobUrl(file)
+  const working = preparing || photos.busy
   useEffect(
     () => () => {
       ++sequence.current
     },
     [],
   )
+
   async function select(file?: File) {
     if (!file) return
     const current = ++sequence.current
     setPreparing(true)
     setError('')
-    setSource(undefined)
-    setProcessed(undefined)
+    setAttempted(false)
     try {
       const decoded = await decodePhoto(file)
       if (sequence.current !== current) return
       setSource(decoded)
-      setOriginalBytes(file.size)
-      setRotation(0)
+      setFile(file)
       setCrop(noCrop)
     } catch (error) {
       if (sequence.current === current)
@@ -157,232 +141,113 @@ function PhotoEditor({ now, onClose }: { now: Date; onClose: () => void }) {
       if (sequence.current === current) setPreparing(false)
     }
   }
-  useEffect(() => {
-    if (!source) return
-    let active = true
-    setProcessed(undefined)
-    setPreparing(true)
-    const timer = window.setTimeout(() => {
-      void processPhoto(source, rotation, crop, maximum)
-        .then((value) => {
-          if (active) {
-            setProcessed(value)
-            setError('')
-          }
-        })
-        .catch((error) => {
-          if (active)
-            setError(
-              error instanceof Error
-                ? error.message
-                : 'Elaborazione non riuscita.',
-            )
-        })
-        .finally(() => {
-          if (active) setPreparing(false)
-        })
-    }, 150)
-    return () => {
-      active = false
-      window.clearTimeout(timer)
-    }
-  }, [source, rotation, crop, maximum])
   async function save(event: FormEvent) {
     event.preventDefault()
-    if (!processed || preparing || !validDay(day)) return
-    if (await photos.add(processed, day, caption)) onClose()
+    if (!source || working || saving.current) return
+    saving.current = true
+    setAttempted(true)
+    const current = sequence.current
+    setPreparing(true)
+    setError('')
+    try {
+      const processed = await processPhoto(source, 0, crop, 1600)
+      if (sequence.current !== current) return
+      if (await photos.add(processed, dayKey(new Date()), caption)) onClose()
+    } catch (error) {
+      if (sequence.current === current)
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Non riesco a preparare la foto. Riprova.',
+        )
+    } finally {
+      saving.current = false
+      if (sequence.current === current) setPreparing(false)
+    }
   }
   return (
-    <Modal
-      title="Uno zerbino da ricordare"
-      scrollCloseButton
-      busy={photos.busy}
-      onClose={onClose}
-    >
+    <Modal title="Aggiungi foto" busy={working} onClose={onClose}>
       <form
         className="collection-form photo-editor"
         onSubmit={(event) => void save(event)}
       >
-        <p className="modal-description">
-          Scegli la foto, sistema l’inquadratura e lascia a noi il peso.
-        </p>
         <input
+          className="photo-file-input"
           hidden
           ref={picker}
-          aria-label="Foto dalla libreria"
+          aria-label="Scegli foto"
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-          onChange={(event) => {
-            void select(event.target.files?.[0])
-            event.target.value = ''
-          }}
-        />
-        <input
-          hidden
-          ref={camera}
-          aria-label="Foto dalla fotocamera"
-          type="file"
-          capture="environment"
           accept="image/*"
+          disabled={working}
           onChange={(event) => {
             void select(event.target.files?.[0])
             event.target.value = ''
           }}
         />
-        <div className="photo-source-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={photos.busy}
-            onClick={() => picker.current?.click()}
-          >
-            <ImagePlus size={18} /> Scegli foto
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={photos.busy}
-            onClick={() => camera.current?.click()}
-          >
-            <Camera size={18} /> Scatta
-          </button>
-        </div>
-        {preparing && (
-          <p className="field-hint" role="status">
-            Preparo una foto più leggera…
-          </p>
-        )}
-        {url && processed && (
+        {source && url ? (
           <>
-            <div className="photo-editor-preview">
-              <img src={url} alt="Anteprima della foto da salvare" />
-            </div>
-            <p className="photo-size" role="status">
-              <strong>
-                {formatBytes(originalBytes)} →{' '}
-                {formatBytes(processed.photo.size)}
-              </strong>
-              <span>
-                {processed.width} × {processed.height} px · miniatura{' '}
-                {formatBytes(processed.thumbnail.size)}
-              </span>
-            </p>
-          </>
-        )}
-        {source && (
-          <fieldset disabled={photos.busy}>
-            <div className="photo-source-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setRotation((n) => (n + 90) % 360)
-                  setCrop(noCrop)
-                }}
-              >
-                <RotateCw size={17} /> Ruota
-              </button>
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  setRotation(0)
-                  setCrop(noCrop)
-                }}
-              >
-                <RotateCcw size={17} /> Ripristina
-              </button>
-            </div>
-            <details className="photo-crop">
-              <summary>Ritaglia la foto</summary>
-              <p className="field-hint">
-                Riduci i bordi per tenere solo lo zerbino. Controlla che la
-                scritta resti intera.
-              </p>
-              {(
-                [
-                  ['left', 'Bordo sinistro'],
-                  ['right', 'Bordo destro'],
-                  ['top', 'Bordo superiore'],
-                  ['bottom', 'Bordo inferiore'],
-                ] as const
-              ).map(([key, label]) => (
-                <label key={key}>
-                  {label} · {crop[key]}%
-                  <input
-                    type="range"
-                    min="0"
-                    max="45"
-                    step="1"
-                    value={crop[key]}
-                    onChange={(event) =>
-                      setCrop((value) => ({
-                        ...value,
-                        [key]: Number(event.target.value),
-                      }))
-                    }
-                  />
-                </label>
-              ))}
-            </details>
-            <label>
-              Dimensione
-              <select
-                value={maximum}
-                onChange={(event) =>
-                  setMaximum(Number(event.target.value) as 1280 | 1600)
-                }
-              >
-                <option value={1600}>Standard · fino a 1600 px</option>
-                <option value={1280}>Leggera · fino a 1280 px</option>
-              </select>
-            </label>
-            <label>
-              Giornata
-              <input
-                type="date"
-                required
-                min="0001-01-01"
-                max="9999-12-31"
-                value={day}
-                onChange={(event) => setDay(event.target.value)}
+            <div className="photo-preview-card">
+              <div className="photo-preview-toolbar">
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={working}
+                  onClick={() => picker.current?.click()}
+                >
+                  Cambia foto
+                </button>
+              </div>
+              <PhotoCropper
+                source={source}
+                url={url}
+                value={crop}
+                onChange={setCrop}
+                disabled={working}
               />
-            </label>
+            </div>
             <label>
               Didascalia (facoltativa)
               <textarea
                 maxLength={300}
-                rows={3}
+                rows={2}
                 value={caption}
+                disabled={working}
                 onChange={(event) => setCaption(event.target.value)}
                 placeholder="Quel benvenuto che ti ha fatto sorridere…"
               />
             </label>
-          </fieldset>
+            <button
+              className="primary-button full-width"
+              type="submit"
+              disabled={working}
+            >
+              {working ? 'Carico la foto…' : 'Carica foto'}
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            aria-label="Scegli una foto"
+            className="photo-choose"
+            disabled={working}
+            onClick={() => picker.current?.click()}
+          >
+            <ImagePlus size={32} aria-hidden="true" />
+            <strong>{preparing ? 'Apro la foto…' : 'Scegli una foto'}</strong>
+            <span>Dalla libreria o dalla fotocamera</span>
+          </button>
         )}
-        {(error || photos.error) && (
+        {(error || (attempted && photos.error)) && (
           <p className="form-error" role="alert">
             {error || photos.error}
           </p>
         )}
-        <p className="field-hint">
-          Si salva una copia ottimizzata, senza copiare i dati di posizione.
-          Le foto già nella tua libreria restano intatte.
-        </p>
-        <div className="form-actions">
-          <button
-            className="primary-button"
-            disabled={!processed || preparing || photos.busy || !validDay(day)}
-          >
-            {photos.busy ? 'Salvo…' : 'Salva foto'}
-          </button>
-        </div>
       </form>
     </Modal>
   )
 }
 
-export function Doormats({ now }: { now: Date }) {
+export function Doormats() {
   const photos = usePhotos()
   const [adding, setAdding] = useState(false)
   const [selected, setSelected] = useState<Doormat>()
@@ -517,7 +382,7 @@ export function Doormats({ now }: { now: Date }) {
           </EmptyState>
         </section>
       )}
-      {adding && <PhotoEditor now={now} onClose={() => setAdding(false)} />}
+      {adding && <PhotoEditor onClose={() => setAdding(false)} />}
       {selected && (
         <Modal
           title={selected.caption || 'Un benvenuto speciale'}

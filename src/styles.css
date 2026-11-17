@@ -895,56 +895,185 @@ progress::-moz-progress-bar {
   align-items: center;
   gap: 4px;
 }
-.photo-source-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+.photo-file-input[hidden] {
+  display: none;
 }
-.photo-editor-preview {
-  border-radius: 16px;
-  background: var(--green-soft);
-  overflow: hidden;
+.photo-choose {
   display: grid;
   place-items: center;
-}
-.photo-editor-preview img {
-  max-width: 100%;
-  max-height: 280px;
-  object-fit: contain;
-}
-.photo-size {
-  display: grid;
-  gap: 4px;
-  font-size: 14px;
+  gap: 12px;
+  min-height: 190px;
+  width: 100%;
+  border: 1px dashed var(--green);
+  border-radius: 18px;
+  background: var(--green-soft);
   color: var(--green);
-  margin: 0;
+  padding: 24px;
+  cursor: pointer;
 }
-.photo-size span {
-  font-size: 12px;
+.photo-choose strong {
+  font-size: 17px;
+}
+.photo-choose span {
+  font-size: 13px;
   color: var(--muted);
 }
-.photo-crop {
-  border: 1px solid var(--line);
-  padding: 14px;
+.photo-editor-image {
+  --photo-preview-height: min(320px, 40vh);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
   border-radius: 14px;
+  background: var(--surface-muted);
 }
-.photo-crop summary {
-  cursor: pointer;
-  min-height: 32px;
-  font-weight: 600;
+.photo-preview-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-muted);
 }
-.photo-crop label {
-  margin-top: 14px;
-  font-size: 13px;
+.photo-preview-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 10px;
 }
-.photo-crop input[type='range'] {
-  padding: 0;
+.photo-preview-toolbar button {
   min-height: 44px;
-  accent-color: var(--green);
 }
-.photo-editor .field-hint {
+.photo-preview-card .photo-editor-image {
+  border-radius: 0;
+}
+.photo-cropper {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.photo-cropper > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.photo-crop-selection {
+  position: absolute;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1000px #0008;
+}
+.photo-crop-move,
+.photo-crop-handle {
+  position: absolute;
   margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: white;
+  background: transparent;
+  touch-action: none;
+}
+.photo-crop-move {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.photo-crop-move:active {
+  cursor: grabbing;
+}
+.photo-crop-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to right,
+      transparent calc(100% / 3 - 0.5px),
+      #fff8 calc(100% / 3 - 0.5px),
+      #fff8 calc(100% / 3 + 0.5px),
+      transparent calc(100% / 3 + 0.5px),
+      transparent calc(200% / 3 - 0.5px),
+      #fff8 calc(200% / 3 - 0.5px),
+      #fff8 calc(200% / 3 + 0.5px),
+      transparent calc(200% / 3 + 0.5px)
+    ),
+    linear-gradient(
+      to bottom,
+      transparent calc(100% / 3 - 0.5px),
+      #fff8 calc(100% / 3 - 0.5px),
+      #fff8 calc(100% / 3 + 0.5px),
+      transparent calc(100% / 3 + 0.5px),
+      transparent calc(200% / 3 - 0.5px),
+      #fff8 calc(200% / 3 - 0.5px),
+      #fff8 calc(200% / 3 + 0.5px),
+      transparent calc(200% / 3 + 0.5px)
+    );
+}
+.photo-crop-handle {
+  width: 44px;
+  height: 44px;
+  max-width: 50%;
+  max-height: 50%;
+}
+.photo-crop-handle::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid white;
+  filter: drop-shadow(0 1px 2px #0008);
+}
+.photo-crop-nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+.photo-crop-ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+.photo-crop-sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+.photo-crop-se {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+.photo-crop-nw::after {
+  left: 2px;
+  top: 2px;
+  border-left-width: 3px;
+  border-top-width: 3px;
+}
+.photo-crop-ne::after {
+  right: 2px;
+  top: 2px;
+  border-right-width: 3px;
+  border-top-width: 3px;
+}
+.photo-crop-sw::after {
+  left: 2px;
+  bottom: 2px;
+  border-left-width: 3px;
+  border-bottom-width: 3px;
+}
+.photo-crop-se::after {
+  right: 2px;
+  bottom: 2px;
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+}
+.photo-crop-move:focus-visible,
+.photo-crop-handle:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: -5px;
 }
 .photo-sync {
   display: grid;

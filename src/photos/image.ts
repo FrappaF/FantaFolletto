@@ -10,7 +10,11 @@ export type ProcessedPhoto = PhotoFiles & {
 
 export function cropBounds(width: number, height: number, crop: Crop) {
   if (
-    !Object.values(crop).every((n) => Number.isFinite(n) && n >= 0 && n <= 45)
+    !Object.values(crop).every(
+      (n) => Number.isFinite(n) && n >= 0 && n <= 100,
+    ) ||
+    crop.left + crop.right >= 100 ||
+    crop.top + crop.bottom >= 100
   )
     throw new Error('Il ritaglio non è valido.')
   return {
@@ -77,7 +81,7 @@ function encode(canvas: HTMLCanvasElement, mime: string, quality: number) {
           ? resolve(blob)
           : reject(
               new Error(
-                'Non riesco a preparare la foto. Prova una dimensione più leggera.',
+                'Non riesco a preparare la foto. Riprova o scegli un’altra immagine.',
               ),
             ),
       mime,
@@ -147,7 +151,7 @@ export async function processPhoto(
     }
     if (photo.size > 1_000_000 || photo.type !== mime)
       throw new Error(
-        'La foto resta troppo pesante. Prova la dimensione Leggera o ritagliala.',
+        'La foto resta troppo pesante. Ritaglia una parte più piccola oppure scegli un’altra foto.',
       )
     draw(thumbnail, 400)
     let thumb = await encode(thumbnail, mime, 0.72)

@@ -64,8 +64,8 @@ Verifiche locali: 115 test, build demo/produzione e PWA; Chromium con foto fitti
 ### Collaudo sul telefono dopo la pubblicazione
 
 1. Completare eventuali invii, chiudere i moduli e usare «Aggiorna app» quando compare; non cancellare lo spazio del sito o IndexedDB.
-2. Da Safari e poi dalla Home verificare le quattro voci Oggi/Record/Premi/Raccolte. In Raccolte aprire Zerbini, scegliere una foto di prova e verificare scritta leggibile, orientamento, peso originale/finale e formato della data.
-3. Provare sia una foto della libreria iPhone (HEIC se disponibile) sia uno scatto. Controllare ritaglio e rotazione prima di salvare. Un formato non leggibile deve mostrare il messaggio di recupero, senza caricare l’originale.
+2. Da Safari e poi dalla Home verificare le quattro voci Oggi/Record/Premi/Raccolte. In Raccolte aprire Zerbini, scegliere una foto di prova e verificare foto intera e scritta leggibile, griglia trascinabile e didascalia. Standard e giornata corrente italiana non richiedono selettori.
+3. Provare sia una foto della libreria iPhone (HEIC se disponibile) sia uno scatto. Provare i quattro angoli e il centro della griglia, poi «Cambia foto»: la didascalia deve rimanere, la griglia deve azzerarsi per il nuovo file e annullare la scelta deve conservare la foto precedente. Un formato non leggibile deve mostrare il messaggio di recupero, senza caricare l’originale.
 4. Salvare e attendere «Sincronizzata»; riaprire l’app e verificare la foto dal secondo account. Questa prova collauda Auth/PostgREST/Storage e non è sostituita dai test SQL con claim simulati.
 5. Con una foto di prova distinta, disattivare la rete, salvare e riaprire l’app: la scheda deve restare sul telefono. Riattivando la rete con l’app aperta deve arrivare una sola copia.
 6. Rimuovere solo la foto di prova con conferma, verificare la scomparsa dal secondo account e la pulizia dei due oggetti Storage. Controllare che episodi, punti, premi e vecchie raccolte rimangano utilizzabili.
