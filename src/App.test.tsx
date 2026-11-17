@@ -27,6 +27,29 @@ beforeAll(() => {
 afterEach(cleanup)
 afterAll(() => vi.unstubAllEnvs())
 
+it('apre l’upload nella pagina e conserva l’editor passando alle altre tab', async () => {
+  const user = userEvent.setup()
+  render(<App />)
+  await user.click(await screen.findByRole('button', { name: 'Raccolte' }))
+  await user.click(await screen.findByRole('button', { name: 'Apri Zerbini' }))
+  await user.click(await screen.findByRole('button', { name: 'Aggiungi foto' }))
+  expect(screen.getByRole('heading', { name: 'Aggiungi foto.' })).toBeTruthy()
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(
+    screen.queryByRole('button', { name: 'Torna alle raccolte' }),
+  ).toBeNull()
+  await user.click(screen.getByRole('button', { name: 'Record' }))
+  await user.click(screen.getByRole('button', { name: 'Raccolte' }))
+  expect(screen.getByRole('button', { name: 'Scegli una foto' })).toBeTruthy()
+  await user.click(screen.getByRole('button', { name: 'Torna agli zerbini' }))
+  expect(
+    screen.getByRole('heading', { name: 'Zerbini da ricordare.' }),
+  ).toBeTruthy()
+  expect(
+    screen.getByRole('button', { name: 'Torna alle raccolte' }),
+  ).toBeTruthy()
+})
+
 it('percorre il Diario: registra, annulla, ricarica, modifica catalogo e gestisce premi', async () => {
   const user = userEvent.setup()
   const view = render(

@@ -15,7 +15,40 @@ const mocks = vi.hoisted(() => ({
   add: vi.fn(),
   decode: vi.fn(),
   process: vi.fn(),
+  editorReady: true,
 }))
+// Form tests isolate the editor; real CropperJS gestures/export are checked in Chromium.
+vi.mock('./PhotoCropper', async () => {
+  const { useEffect } = await import('react')
+  return {
+    PhotoCropper: ({
+      source,
+      url,
+      onChange,
+      onReadyChange,
+    }: {
+      source: HTMLImageElement
+      url: string
+      onChange: (crop: typeof noCrop) => void
+      onReadyChange: (ready: boolean) => void
+    }) => {
+      useEffect(() => {
+        onReadyChange(mocks.editorReady)
+      }, [source, onReadyChange])
+      return (
+        <div>
+          <img src={url} alt="Foto scelta" />
+          <button
+            type="button"
+            onClick={() => onChange({ left: 1, top: 1, right: 0, bottom: 0 })}
+          >
+            Ritaglio simulato
+          </button>
+        </div>
+      )
+    },
+  }
+})
 vi.mock('../photos/PhotoProvider', () => ({
   usePhotos: () => ({ add: mocks.add, busy: false, error: '' }),
 }))
@@ -32,17 +65,13 @@ const processed = {
   mime: 'image/webp',
 }
 beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function () {
-    this.setAttribute('open', '')
-  }
-  HTMLDialogElement.prototype.close = function () {
-    this.removeAttribute('open')
-  }
+  window.scrollTo = vi.fn()
   URL.createObjectURL = vi.fn(() => 'blob:foto-test')
   URL.revokeObjectURL = vi.fn()
 })
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.editorReady = true
   mocks.decode.mockResolvedValue({ naturalWidth: 4000, naturalHeight: 3000 })
   mocks.process.mockResolvedValue(processed)
   mocks.add.mockResolvedValue(true)
@@ -57,6 +86,8 @@ it('usa un solo selettore e dopo la scelta mostra foto, didascalia e caricamento
   const user = userEvent.setup()
   const close = vi.fn()
   render(<PhotoEditor onClose={close} />)
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(screen.getByRole('heading', { name: 'Aggiungi foto.' })).toBeTruthy()
   expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1)
   await user.upload(
     screen.getByLabelText('Scegli foto'),
@@ -72,14 +103,14 @@ it('usa un solo selettore e dopo la scelta mostra foto, didascalia e caricamento
     screen.getByLabelText('Didascalia (facoltativa)'),
     'Benvenuti!',
   )
-  // The modal was opened yesterday in Italy: the day is evaluated at saving.
+  // The page was opened yesterday in Italy: the day is evaluated at saving.
   vi.setSystemTime(new Date('2026-11-16T23:00:01Z'))
   await user.click(screen.getByRole('button', { name: 'Carica foto' }))
   expect(mocks.process).toHaveBeenCalledWith(expect.anything(), 0, noCrop, 1600)
   expect(mocks.add).toHaveBeenCalledWith(processed, '2026-11-17', 'Benvenuti!')
   expect(close).toHaveBeenCalledOnce()
 })
-it('applica il ritaglio accessibile sulla foto e conserva immagine e didascalia se il salvataggio fallisce', async () => {
+it('inoltra il ritaglio dell’editor e conserva immagine e didascalia se il salvataggio fallisce', async () => {
   mocks.add.mockResolvedValue(false)
   const user = userEvent.setup()
   const close = vi.fn()
@@ -89,10 +120,7 @@ it('applica il ritaglio accessibile sulla foto e conserva immagine e didascalia 
     new File(['foto'], 'zerbino.jpg', { type: 'image/jpeg' }),
   )
   await screen.findByAltText(/Foto scelta/)
-  screen
-    .getByRole('button', { name: 'Angolo superiore sinistro del ritaglio' })
-    .focus()
-  await user.keyboard('{ArrowRight}{ArrowDown}')
+  await user.click(screen.getByRole('button', { name: 'Ritaglio simulato' }))
   await user.type(
     screen.getByLabelText('Didascalia (facoltativa)'),
     'Da conservare',
@@ -106,7 +134,9 @@ it('applica il ritaglio accessibile sulla foto e conserva immagine e didascalia 
   )
   expect(close).not.toHaveBeenCalled()
   expect(
-    within(screen.getByRole('dialog')).getByAltText(/Foto scelta/),
+    within(
+      screen.getByRole('form', { name: 'Carica uno zerbino' }),
+    ).getByAltText(/Foto scelta/),
   ).toBeTruthy()
   expect(
     (screen.getByLabelText('Didascalia (facoltativa)') as HTMLTextAreaElement)
@@ -139,10 +169,7 @@ it('cambia foto dallo stesso selettore, mantiene la didascalia e azzera solo il 
     new File(['prima'], 'prima.jpg', { type: 'image/jpeg' }),
   )
   await screen.findByAltText(/Foto scelta/)
-  screen
-    .getByRole('button', { name: 'Angolo superiore sinistro del ritaglio' })
-    .focus()
-  await user.keyboard('{ArrowRight}')
+  await user.click(screen.getByRole('button', { name: 'Ritaglio simulato' }))
   await user.type(
     screen.getByLabelText('Didascalia (facoltativa)'),
     'La mia didascalia',
@@ -152,19 +179,53 @@ it('cambia foto dallo stesso selettore, mantiene la didascalia e azzera solo il 
   expect(click).toHaveBeenCalledOnce()
   fireEvent.change(input, { target: { files: [] } })
   expect(screen.getByAltText(/Foto scelta/)).toBeTruthy()
-  expect(
-    document.querySelector<HTMLElement>('.photo-crop-selection')!.style.left,
-  ).toBe('1%')
+  mocks.add.mockResolvedValueOnce(false)
+  await user.click(screen.getByRole('button', { name: 'Carica foto' }))
+  expect(mocks.process).toHaveBeenLastCalledWith(
+    expect.anything(),
+    0,
+    { left: 1, top: 1, right: 0, bottom: 0 },
+    1600,
+  )
   mocks.decode.mockResolvedValueOnce(replacement)
   await user.upload(
     input,
     new File(['seconda'], 'seconda.jpg', { type: 'image/jpeg' }),
   )
   expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1)
-  expect(
-    document.querySelector<HTMLElement>('.photo-crop-selection')!.style.left,
-  ).toBe('0%')
   await user.click(screen.getByRole('button', { name: 'Carica foto' }))
-  expect(mocks.process).toHaveBeenCalledWith(replacement, 0, noCrop, 1600)
-  expect(mocks.add.mock.calls[0][2]).toBe('La mia didascalia')
+  expect(mocks.process).toHaveBeenLastCalledWith(replacement, 0, noCrop, 1600)
+  expect(mocks.add.mock.calls[1][2]).toBe('La mia didascalia')
+})
+
+it('attende l’anteprima pronta prima di consentire il caricamento', async () => {
+  mocks.editorReady = false
+  const user = userEvent.setup()
+  render(<PhotoEditor onClose={() => {}} />)
+  await user.upload(
+    screen.getByLabelText('Scegli foto'),
+    new File(['foto'], 'prima.jpg', { type: 'image/jpeg' }),
+  )
+  await screen.findByAltText(/Foto scelta/)
+  expect(
+    (screen.getByRole('button', { name: 'Carica foto' }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true)
+  fireEvent.submit(
+    screen.getByRole('button', { name: 'Carica foto' }).closest('form')!,
+  )
+  expect(mocks.process).not.toHaveBeenCalled()
+  mocks.editorReady = true
+  mocks.decode.mockResolvedValueOnce({
+    naturalWidth: 3000,
+    naturalHeight: 4000,
+  })
+  await user.upload(
+    screen.getByLabelText('Scegli foto'),
+    new File(['foto'], 'seconda.jpg', { type: 'image/jpeg' }),
+  )
+  expect(
+    (screen.getByRole('button', { name: 'Carica foto' }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(false)
 })

@@ -919,7 +919,6 @@ progress::-moz-progress-bar {
   color: var(--muted);
 }
 .photo-editor-image {
-  --photo-preview-height: min(320px, 40vh);
   display: flex;
   justify-content: center;
   overflow: hidden;
@@ -943,137 +942,150 @@ progress::-moz-progress-bar {
 .photo-preview-card .photo-editor-image {
   border-radius: 0;
 }
-.photo-cropper {
+/* CropperJS supplies pointer/pinch handling; these rules keep controls in the photo. */
+.photo-cropper-frame {
   position: relative;
-  flex: 0 1 auto;
+  width: 100%;
+  min-height: 260px;
+  max-height: min(68svh, 620px);
   min-width: 0;
   max-width: 100%;
-  line-height: 0;
-  user-select: none;
-  -webkit-user-select: none;
 }
-.photo-cropper > img {
-  display: block;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
-.photo-crop-selection {
-  position: absolute;
-  border: 2px solid white;
-  box-shadow: 0 0 0 1000px #0008;
-}
-.photo-crop-move,
-.photo-crop-handle {
-  position: absolute;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  color: white;
-  background: transparent;
-  touch-action: none;
-}
-.photo-crop-move {
-  inset: 0;
+.photo-cropper,
+.photo-cropper cropper-canvas {
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.photo-cropper cropper-image {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.photo-cropper cropper-selection {
+  --theme-color: white;
+}
+.photo-cropper cropper-handle {
+  --theme-color: white;
+}
+.photo-cropper cropper-handle[action='move'] {
   cursor: grab;
 }
-.photo-crop-move:active {
+.photo-cropper cropper-handle[action='move']:active {
   cursor: grabbing;
 }
-.photo-crop-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      to right,
-      transparent calc(100% / 3 - 0.5px),
-      #fff8 calc(100% / 3 - 0.5px),
-      #fff8 calc(100% / 3 + 0.5px),
-      transparent calc(100% / 3 + 0.5px),
-      transparent calc(200% / 3 - 0.5px),
-      #fff8 calc(200% / 3 - 0.5px),
-      #fff8 calc(200% / 3 + 0.5px),
-      transparent calc(200% / 3 + 0.5px)
-    ),
-    linear-gradient(
-      to bottom,
-      transparent calc(100% / 3 - 0.5px),
-      #fff8 calc(100% / 3 - 0.5px),
-      #fff8 calc(100% / 3 + 0.5px),
-      transparent calc(100% / 3 + 0.5px),
-      transparent calc(200% / 3 - 0.5px),
-      #fff8 calc(200% / 3 - 0.5px),
-      #fff8 calc(200% / 3 + 0.5px),
-      transparent calc(200% / 3 + 0.5px)
-    );
+.photo-cropper cropper-handle[action$='-resize'] {
+  width: 48px;
+  height: 48px;
 }
-.photo-crop-handle {
-  width: 44px;
-  height: 44px;
-  max-width: 50%;
-  max-height: 50%;
-}
-.photo-crop-handle::after {
-  content: '';
-  position: absolute;
-  width: 14px;
-  height: 14px;
+.photo-cropper cropper-handle[action$='-resize']::after {
+  width: 18px;
+  height: 18px;
+  background: transparent;
   border: 0 solid white;
+  transform: none;
   filter: drop-shadow(0 1px 2px #0008);
 }
-.photo-crop-nw {
-  top: 0;
-  left: 0;
-  cursor: nwse-resize;
-}
-.photo-crop-ne {
-  top: 0;
-  right: 0;
-  cursor: nesw-resize;
-}
-.photo-crop-sw {
-  bottom: 0;
-  left: 0;
-  cursor: nesw-resize;
-}
-.photo-crop-se {
-  bottom: 0;
-  right: 0;
-  cursor: nwse-resize;
-}
-.photo-crop-nw::after {
-  left: 2px;
-  top: 2px;
+.photo-cropper cropper-handle.photo-crop-nw::after {
+  left: 3px;
+  top: 3px;
   border-left-width: 3px;
   border-top-width: 3px;
 }
-.photo-crop-ne::after {
-  right: 2px;
-  top: 2px;
+.photo-cropper cropper-handle.photo-crop-ne::after {
+  left: auto;
+  right: 3px;
+  top: 3px;
   border-right-width: 3px;
   border-top-width: 3px;
 }
-.photo-crop-sw::after {
-  left: 2px;
-  bottom: 2px;
+.photo-cropper cropper-handle.photo-crop-sw::after {
+  left: 3px;
+  top: auto;
+  bottom: 3px;
   border-left-width: 3px;
   border-bottom-width: 3px;
 }
-.photo-crop-se::after {
-  right: 2px;
-  bottom: 2px;
+.photo-cropper cropper-handle.photo-crop-se::after {
+  left: auto;
+  right: 3px;
+  top: auto;
+  bottom: 3px;
   border-right-width: 3px;
   border-bottom-width: 3px;
 }
-.photo-crop-move:focus-visible,
-.photo-crop-handle:focus-visible {
-  outline: 3px solid var(--green);
+.photo-cropper cropper-handle[class*='photo-crop-n'] {
+  top: 0;
+}
+.photo-cropper cropper-handle[class*='photo-crop-s'] {
+  bottom: 0;
+}
+.photo-cropper cropper-handle.photo-crop-nw,
+.photo-cropper cropper-handle.photo-crop-sw {
+  left: 0;
+}
+.photo-cropper cropper-handle.photo-crop-ne,
+.photo-cropper cropper-handle.photo-crop-se {
+  right: 0;
+}
+.photo-cropper cropper-handle:focus-visible {
+  outline: 3px solid white;
   outline-offset: -5px;
+  box-shadow: inset 0 0 0 7px #20382a;
+}
+.photo-zoom {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  border-radius: 24px;
+  background: #16281fe6;
+  box-shadow: 0 1px 5px #0004;
+}
+.photo-zoom button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  color: white;
+}
+.photo-crop-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  background: var(--surface-muted);
+}
+.photo-upload-page {
+  padding-top: 0;
+}
+.photo-upload-page > .back-link {
+  justify-self: start;
+  margin: 0;
+}
+.photo-upload-page .photo-preview-card {
+  margin-inline: -12px;
+}
+.photo-upload-page h1:focus,
+.diary-collection h1:focus {
+  outline: none;
+}
+.photo-editor {
+  margin: 0;
+}
+.photo-crop-hint {
+  padding: 12px 14px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
 }
 .photo-sync {
   display: grid;

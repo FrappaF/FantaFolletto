@@ -15,25 +15,28 @@ export function Collections(props: {
   shared: boolean
 }) {
   const [page, setPage] = useState<'combos' | 'notes' | 'doormats'>()
+  const [editingPhoto, setEditingPhoto] = useState(false)
   const photos = usePhotos()
   if (page)
     return (
       <>
-        <button
-          className="text-button back-link"
-          onClick={() => {
-            setPage(undefined)
-            window.scrollTo({ top: 0 })
-          }}
-        >
-          <ArrowLeft size={17} /> Torna alle raccolte
-        </button>
+        {!editingPhoto && (
+          <button
+            className="text-button back-link"
+            onClick={() => {
+              setPage(undefined)
+              window.scrollTo({ top: 0 })
+            }}
+          >
+            <ArrowLeft size={17} /> Torna alle raccolte
+          </button>
+        )}
         {page === 'combos' ? (
           <Combos {...props} />
         ) : page === 'notes' ? (
           <DailyNotes {...props} />
         ) : (
-          <Doormats />
+          <Doormats onEditingChange={setEditingPhoto} />
         )}
       </>
     )

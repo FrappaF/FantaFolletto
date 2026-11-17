@@ -1,11 +1,21 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Check, ImagePlus, Trash2 } from 'lucide-react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react'
+import { ArrowLeft, Check, ImagePlus, Trash2 } from 'lucide-react'
 import { dayKey } from '../domain/stats'
 import { usePhotos } from '../photos/PhotoProvider'
 import { decodePhoto, noCrop, processPhoto, type Crop } from '../photos/image'
 import { formatBytes, type Doormat } from '../photos/model'
 import { EmptyState, Modal } from './ui'
-import { PhotoCropper } from './PhotoCropper'
+const PhotoCropper = lazy(() =>
+  import('./PhotoCropper').then((module) => ({ default: module.PhotoCropper })),
+)
 
 function useBlobUrl(blob?: Blob) {
   const [url, setUrl] = useState<string>()
@@ -101,11 +111,20 @@ function PhotoImage({
   )
 }
 
-export function PhotoEditor({ onClose }: { onClose: () => void }) {
+export function PhotoEditor({
+  onClose,
+}: {
+  onClose: (saved?: boolean) => void
+}) {
   const photos = usePhotos()
-  const [source, setSource] = useState<HTMLImageElement>()
-  const [file, setFile] = useState<File>()
+  const [chosen, setChosen] = useState<{
+    source: HTMLImageElement
+    url: string
+  }>()
+  const source = chosen?.source
+  const url = chosen?.url
   const [crop, setCrop] = useState<Crop>(noCrop)
+  const [cropReady, setCropReady] = useState(false)
   const [preparing, setPreparing] = useState(false)
   const [error, setError] = useState('')
   const [caption, setCaption] = useState('')
@@ -113,8 +132,19 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
   const picker = useRef<HTMLInputElement>(null)
   const sequence = useRef(0)
   const saving = useRef(false)
-  const url = useBlobUrl(file)
+  const heading = useRef<HTMLHeadingElement>(null)
+  const headingId = useId()
   const working = preparing || photos.busy
+  useEffect(() => {
+    if (heading.current?.getClientRects().length) {
+      heading.current.focus({ preventScroll: true })
+      window.scrollTo({ top: 0 })
+    }
+  }, [])
+  useEffect(() => {
+    if (!url) return
+    return () => URL.revokeObjectURL(url)
+  }, [url])
   useEffect(
     () => () => {
       ++sequence.current
@@ -131,9 +161,10 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
     try {
       const decoded = await decodePhoto(file)
       if (sequence.current !== current) return
-      setSource(decoded)
-      setFile(file)
+      // Keep the decoded source and its live preview URL in one update.
+      setChosen({ source: decoded, url: URL.createObjectURL(file) })
       setCrop(noCrop)
+      setCropReady(false)
     } catch (error) {
       if (sequence.current === current)
         setError(error instanceof Error ? error.message : 'Foto non leggibile.')
@@ -143,7 +174,7 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
   }
   async function save(event: FormEvent) {
     event.preventDefault()
-    if (!source || working || saving.current) return
+    if (!source || !cropReady || working || saving.current) return
     saving.current = true
     setAttempted(true)
     const current = sequence.current
@@ -152,7 +183,8 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
     try {
       const processed = await processPhoto(source, 0, crop, 1600)
       if (sequence.current !== current) return
-      if (await photos.add(processed, dayKey(new Date()), caption)) onClose()
+      if (await photos.add(processed, dayKey(new Date()), caption))
+        onClose(true)
     } catch (error) {
       if (sequence.current === current)
         setError(
@@ -166,9 +198,27 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
     }
   }
   return (
-    <Modal title="Aggiungi foto" busy={working} onClose={onClose}>
+    <section
+      className="diary-collection photo-upload-page"
+      aria-labelledby={headingId}
+    >
+      <button
+        type="button"
+        className="text-button back-link"
+        disabled={working}
+        onClick={() => onClose()}
+      >
+        <ArrowLeft size={18} aria-hidden="true" /> Torna agli zerbini
+      </button>
+      <div className="page-title">
+        <span className="eyebrow">Un nuovo ricordo</span>
+        <h1 id={headingId} ref={heading} tabIndex={-1}>
+          Aggiungi foto<span className="green-dot">.</span>
+        </h1>
+      </div>
       <form
         className="collection-form photo-editor"
+        aria-label="Carica uno zerbino"
         onSubmit={(event) => void save(event)}
       >
         <input
@@ -197,13 +247,20 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
                   Cambia foto
                 </button>
               </div>
-              <PhotoCropper
-                source={source}
-                url={url}
-                value={crop}
-                onChange={setCrop}
-                disabled={working}
-              />
+              <Suspense fallback={<p role="status">Apro la foto…</p>}>
+                <PhotoCropper
+                  source={source}
+                  url={url}
+                  onChange={setCrop}
+                  onReadyChange={setCropReady}
+                  onError={setError}
+                  disabled={working}
+                />
+              </Suspense>
+              <p className="photo-crop-hint">
+                Trascina gli angoli per ritagliare. Allarga con due dita per
+                ingrandire.
+              </p>
             </div>
             <label>
               Didascalia (facoltativa)
@@ -219,7 +276,7 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
             <button
               className="primary-button full-width"
               type="submit"
-              disabled={working}
+              disabled={working || !cropReady}
             >
               {working ? 'Carico la foto…' : 'Carica foto'}
             </button>
@@ -243,17 +300,22 @@ export function PhotoEditor({ onClose }: { onClose: () => void }) {
           </p>
         )}
       </form>
-    </Modal>
+    </section>
   )
 }
 
-export function Doormats() {
+export function Doormats({
+  onEditingChange,
+}: {
+  onEditingChange?: (editing: boolean) => void
+}) {
   const photos = usePhotos()
   const [adding, setAdding] = useState(false)
   const [selected, setSelected] = useState<Doormat>()
   const [removing, setRemoving] = useState<Doormat>()
   const [limit, setLimit] = useState(24)
   const [message, setMessage] = useState('')
+  const heading = useRef<HTMLHeadingElement>(null)
   const items = photos.items
     .filter((p) => p.status !== 'removed')
     .sort(
@@ -263,11 +325,32 @@ export function Doormats() {
         a.id.localeCompare(b.id),
     )
   const failures = photos.queue.filter((p) => p.error)
+  if (adding)
+    return (
+      <PhotoEditor
+        onClose={(saved) => {
+          setAdding(false)
+          onEditingChange?.(false)
+          if (saved)
+            setMessage(
+              photos.shared
+                ? 'Foto salvata sul telefono, pronta per l’invio.'
+                : 'Foto salvata nella raccolta.',
+            )
+          window.requestAnimationFrame(() => {
+            if (heading.current?.getClientRects().length) {
+              heading.current.focus({ preventScroll: true })
+              window.scrollTo({ top: 0 })
+            }
+          })
+        }}
+      />
+    )
   return (
     <section className="diary-collection">
       <div className="page-title">
         <span className="eyebrow">Un sorriso sulla soglia</span>
-        <h1>
+        <h1 ref={heading} tabIndex={-1}>
           Zerbini da ricordare<span className="green-dot">.</span>
         </h1>
         <p>I benvenuti più buffi incontrati lungo la strada.</p>
@@ -279,6 +362,7 @@ export function Doormats() {
           onClick={() => {
             setMessage('')
             setAdding(true)
+            onEditingChange?.(true)
           }}
         >
           <ImagePlus size={21} /> Aggiungi foto
@@ -382,7 +466,6 @@ export function Doormats() {
           </EmptyState>
         </section>
       )}
-      {adding && <PhotoEditor onClose={() => setAdding(false)} />}
       {selected && (
         <Modal
           title={selected.caption || 'Un benvenuto speciale'}

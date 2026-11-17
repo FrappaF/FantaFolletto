@@ -4,9 +4,48 @@ Ricerca del **17 novembre 2026**, basata sui piani e sulla documentazione uffici
 
 **Stato aggiornato: Supabase scelto, migrazione applicata e frontend pubblicato il 17 novembre 2026.** La ricerca sotto conserva il confronto che ha portato alla scelta. Requisiti e stato reale fanno riferimento a [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
 
-## Revisione richiesta il 17 novembre
+## Editor nella pagina e CropperJS 2 — 17 novembre 2026
+
+Dopo la ricerca l’utente approva il pacchetto suggerito e segnala che la modale rende piccoli foto e controlli. **Implementata localmente una pagina dedicata nella raccolta Zerbini**, con «Torna agli zerbini» e ritorno alla galleria dopo il salvataggio. L’apertura della foto già salvata e la conferma di rimozione mantengono le proprie modali. Pubblicazione dell’incremento da registrare.
+
+- **CropperJS 2.3.1**, versione fissata nel lockfile, MIT, senza wrapper React aggiuntivi. Import dinamico dopo la scelta dell’immagine; bundle separato da circa 16,8 kB gzip, incluso nel precache statico PWA. Nessun servizio aggiunto.
+- Anteprima più ampia, adattata alle proporzioni originali con altezza minima/massima; maniglie con area di tocco 48×48 px e angoli ben visibili, pinch, trascinamento e pulsanti zoom sulla foto. Tastiera con frecce, Maiusc e più/meno. Il componente limita zoom e spostamenti e ingrandisce uniformemente la foto quando serve a coprire la griglia. Dopo un ridimensionamento il ritaglio si adatta allo spazio disponibile senza cambiare la porzione scelta.
+- I margini selezionati sono convertiti nelle percentuali già accettate dall’elaborazione Canvas. Conservati Standard 1600 px, miniatura 400 px, oggi in Italia al salvataggio, compressione, coda persistente, Storage e metadati. Nessuna migrazione o modifica ai dati salvati.
+- Unico selettore nativo; Cambia foto conserva didascalia, selezione e foto precedente in caso di annullamento/file illeggibile. Una scelta valida aggiorna insieme fonte e URL vivo dell’anteprima e azzera il ritaglio. Attesa dell’editor pronto prima di consentire il caricamento; pulizia di istanza, observer, listener, richieste e URL alla sostituzione/uscita.
+- Foto, didascalia e ritaglio restano in memoria passando alle altre tab e tornando a Raccolte. «Torna alle raccolte» è nascosto durante l’upload, lasciando il ritorno esplicito agli zerbini. Una bozza non caricata non è dichiarata persistente dopo chiusura o ricaricamento dell’app.
+
+Verifiche locali: **127 test automatici**; build demo/produzione e verifica PWA; Chromium con la CSP di produzione invariata, mouse, tastiera e touch/pinch, copertura dei bordi durante i gesti, layout chiaro/scuro a 320/393/430/768 CSS px, cambio tab senza perdere la bozza (anche caricando il modulo con ritardo mentre la pagina è nascosta), sostituzione/annullamento/file non leggibile, chiusure rapide e riapertura della foto salvata. Nessun errore JavaScript o violazione CSP nel controllo completo. Provata anche l’inizializzazione in sviluppo React Strict Mode, con una sola istanza del componente. Il JPEG sintetico da 4,4 MB produce **34,3 kB, 1600×1181 px**, per il particolare ritaglio di prova; il confronto con l’esportazione dell’anteprima CropperJS ha differenza media assoluta di circa 1,76 livelli su 255, compatibile con ricodifica/ridimensionamento. Questo dato non è una promessa per tutte le foto. Safari, Home e HEIC su iPhone reale non verificati.
+
+## Prima revisione richiesta il 17 novembre
 
 Il flusso iniziale descritto sotto è superato dalla richiesta di semplicità: un solo selettore, seguito da anteprima con griglia di ritaglio trascinabile/ridimensionabile, didascalia e «Carica foto». Un comando «Cambia foto» integrato nel riquadro usa lo stesso selettore, conserva didascalia e annullamento e azzera la griglia per la nuova foto valida. Rimosse le scelte di dimensione/data, i contatori del peso e i controlli esterni di ritaglio/rotazione. Standard 1600 px e giornata corrente italiana sono automatici al salvataggio. Nessuna modifica a Storage o database; revisione pubblicata con commit `2e11429` e deploy automatico riuscito alle 12:26 italiane del 17 novembre. I dati e i file esistenti sono preservati.
+
+## Componente di ritaglio: ricerca del 17 novembre 2026
+
+Richiesta successiva dell’utente: la foto deve ingrandirsi/riposizionarsi per coprire i bordi della griglia durante le modifiche; valutare un componente esistente, mantenuto e testato. Questa sezione conserva la ricerca precedente alla scelta e integrazione descritte sopra: nella sola fase di ricerca non erano state installate dipendenze o pubblicate modifiche al componente.
+
+Verificati documentazione ufficiale, release GitHub e registro npm (`version`, data della versione, licenza e peer dependency). La data sotto è la pubblicazione del pacchetto, non l’ultimo commit del repository.
+
+| Pacchetto | Ultima versione npm verificata | Licenza | Corrispondenza con la richiesta |
+| --- | --- | --- | --- |
+| **CropperJS** | **2.3.1 — 16 ottobre 2026** | MIT | Selezione libera con maniglie, movimento e zoom dell’immagine, componenti personalizzabili. La v2 è attiva secondo la guida ufficiale. Da integrare in React tramite un componente locale; non richiede un wrapper React aggiuntivo |
+| **react-easy-crop** | **6.2.5 — 9 novembre 2026** | MIT | Componente React con trascinamento, zoom, touch e tastiera; foto sotto un riquadro fisso. Non offre le maniglie libere attuali. Peer React >=16.4 compatibile con la versione dichiarata dal progetto; integrazione effettiva da verificare |
+| **react-image-crop** | **11.1.2 — 21 giugno 2026** | ISC | Selezione libera o proporzionale, touch e tastiera. Buono per il ritaglio tradizionale, ma il movimento/zoom della foto sotto la griglia richiederebbe altro lavoro |
+| **React Advanced Cropper** | **0.20.1 — 1 marzo 2025** | MIT | Include auto-zoom e selezione personalizzabile. Documentazione con avvertenza API beta; ultima versione distribuita sensibilmente meno recente. Non considerarlo abbandonato soltanto in base alla data, ma non è la prima scelta per questa integrazione |
+
+**Raccomandazione per il comportamento richiesto: CropperJS 2.** Conserva la possibilità di spostare/ridimensionare la griglia e offre la gestione dell’immagine che manca al componente manuale. Il repository contiene test Jest e lo script di rilascio include test, lint e build: è un’indicazione concreta di verifica del progetto, non una garanzia di assenza di difetti nella nostra app. Il riempimento continuo della selezione va configurato e verificato; non presumere che una singola opzione `cover` sul contenitore risolva anche ogni ridimensionamento della griglia.
+
+**Alternativa per un’interfaccia ancora più essenziale: react-easy-crop.** Il riquadro resta fisso e si trascina/ingrandisce la foto al suo interno, anche con due dita. `restrictPosition` e il dimensionamento di copertura permettono di vincolare la foto; questa scelta cambia però l’interazione rispetto alle quattro maniglie. Il progetto contiene prove Cypress. Per la CSP attuale disabilitare l’iniezione automatica degli stili e importare il CSS nel bundle.
+
+Per l’eventuale integrazione:
+
+- Caricare l’editor su richiesta, mantenere un solo selettore e «Cambia foto», didascalia, oggi e Standard automatici.
+- Conservare la compressione Canvas e la generazione della miniatura esistenti; il componente di ritaglio non sostituisce né Storage né la compressione.
+- Verificare la corrispondenza del ritaglio esportato con l’anteprima e l’assenza di bordi vuoti dopo trascinamento, zoom e ridimensionamento, incluse immagini verticali, orizzontali e piccole.
+- Provare React 19/Strict Mode, apertura e chiusura della modale, sostituzione/annullamento della foto, pulizia delle risorse e CSP di produzione. CropperJS 2 usa Web Components e stili interni: compatibilità CSP da verificare nel prototipo.
+- Verificare tastiera, zoom touch, scorrimento della modale, layout chiaro/scuro e Safari/Home su iPhone reale. Nessuna prova di integrazione o su iPhone svolta durante questa ricerca.
+
+Fonti: [CropperJS: guida e stato delle versioni](https://fengyuanchen.github.io/cropperjs/guide.html), [release](https://github.com/fengyuanchen/cropperjs/releases), [selezione](https://fengyuanchen.github.io/cropperjs/api/cropper-selection.html), [immagine](https://fengyuanchen.github.io/cropperjs/api/cropper-image.html), [script di verifica](https://github.com/fengyuanchen/cropperjs/blob/main/package.json), [npm CropperJS](https://www.npmjs.com/package/cropperjs); [react-easy-crop: funzioni e limiti](https://github.com/ValentinH/react-easy-crop), [release](https://github.com/ValentinH/react-easy-crop/releases), [npm](https://www.npmjs.com/package/react-easy-crop); [react-image-crop](https://github.com/dominictobias/react-image-crop), [npm](https://www.npmjs.com/package/react-image-crop); [React Advanced Cropper](https://github.com/advanced-cropper/react-advanced-cropper), [npm](https://www.npmjs.com/package/react-advanced-cropper).
 
 ## Implementazione iniziale del 17 novembre 2026
 
