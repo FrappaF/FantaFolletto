@@ -32,6 +32,8 @@ import type { Command, Diary } from './domain/model'
 import { readConfig } from './remote/config'
 import { SyncStatus, type RemoteState } from './components/SyncStatus'
 import { Rewards } from './components/Rewards'
+import { PledgeNotice } from './components/Pledges'
+import { isPledgesDemo } from './data/pledges-demo'
 import { PwaPrompt } from './components/PwaPrompt'
 import { InstallHint } from './components/InstallHint'
 import { PhotoProvider, type PhotoConnection } from './photos/PhotoProvider'
@@ -93,6 +95,7 @@ function DemoApplication() {
 
 export type DiaryController = {
   diary?: Diary
+  confirmedDiary?: Diary
   busy: boolean
   error: string
   execute: (command: Command) => Promise<boolean>
@@ -127,6 +130,7 @@ function DiaryContent({
 }) {
   const { diary, busy, error, execute, refresh, remote } = controller
   const [page, setPage] = useState<Page>('today')
+  const [rewardsView, setRewardsView] = useState<'rewards' | 'pledges'>('rewards')
   const [collectionsOpened, setCollectionsOpened] = useState(false)
   const scrollPositions = useRef<Record<Page, number>>({
     today: 0,
@@ -237,7 +241,8 @@ function DiaryContent({
       {!remote && (
         <div className="demo-banner">
           <span className="demo-dot" />
-          Versione demo <span className="demo-divider">·</span> Dati solo su
+          {isPledgesDemo() ? 'Anteprima Pegni' : 'Versione demo'}
+          <span className="demo-divider">·</span> Dati solo su
           questo browser
         </div>
       )}
@@ -345,6 +350,8 @@ function DiaryContent({
                   onExit={() => setAdmin(false)}
                   shared={!!remote}
                   refreshing={remote?.syncing}
+                  waiting={!!remote?.queue.length}
+                  pledgeDiary={controller.confirmedDiary ?? diary}
                 />
               </Suspense>
             ) : (
@@ -413,6 +420,15 @@ function DiaryContent({
                             : 'Punti confermati nel diario condiviso'
                           : 'Diario salvato su questo dispositivo'}
                     </div>
+                    <PledgeNotice
+                      diary={controller.confirmedDiary ?? diary}
+                      now={now}
+                      onOpen={() => {
+                        setRewardsView('pledges')
+                        scrollPositions.current.rewards = 0
+                        navigate('rewards')
+                      }}
+                    />
                     <section className="panel">
                       <SectionHeading
                         title="Le ultime piccole avventure"
@@ -485,6 +501,9 @@ function DiaryContent({
                     canRedeem={!remote || remote.role === 'player'}
                     shared={!!remote}
                     waiting={!!remote?.queue.length}
+                    pledgeDiary={controller.confirmedDiary ?? diary}
+                    view={rewardsView}
+                    onViewChange={setRewardsView}
                   />
                 )}
               </>

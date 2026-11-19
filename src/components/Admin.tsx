@@ -25,6 +25,7 @@ import { newId } from '../domain/ids'
 import { Awards } from './Awards'
 import { Collections } from './Collections'
 import { usePhotos } from '../photos/PhotoProvider'
+import { Pledges, PledgeNotice } from './Pledges'
 
 type Editor =
   | { kind: 'event'; value?: EventDefinition }
@@ -46,6 +47,8 @@ export default function Admin({
   onExit,
   shared = false,
   refreshing = false,
+  waiting = false,
+  pledgeDiary = diary,
 }: {
   diary: Diary
   now: Date
@@ -55,9 +58,11 @@ export default function Admin({
   onExit: () => void
   shared?: boolean
   refreshing?: boolean
+  waiting?: boolean
+  pledgeDiary?: Diary
 }) {
   const [tab, setTab] = useState<
-    'summary' | 'events' | 'rewards' | 'rules' | 'collections'
+    'summary' | 'events' | 'rewards' | 'pledges' | 'rules' | 'collections'
   >('summary')
   const [editor, setEditor] = useState<Editor>()
   const photos = usePhotos()
@@ -135,6 +140,7 @@ export default function Admin({
             ['summary', 'Riepilogo'],
             ['events', 'Eventi'],
             ['rewards', 'Premi'],
+            ['pledges', 'Pegni'],
             ['rules', 'Combo'],
             ['collections', 'Raccolte'],
           ] as const
@@ -158,9 +164,21 @@ export default function Admin({
           shared={shared}
         />
       )}
+      {tab === 'pledges' && (
+        <Pledges
+          diary={pledgeDiary}
+          now={now}
+          admin
+          busy={busy}
+          error={error}
+          execute={execute}
+          canManage={!refreshing && !waiting}
+        />
+      )}
       {tab === 'summary' && (
         <>
           <PointBalance diary={diary} confirmed={shared} />
+          <PledgeNotice diary={pledgeDiary} now={now} onOpen={() => setTab('pledges')} />
           <div className="stat-grid">
             <article>
               <span>Punti oggi</span>

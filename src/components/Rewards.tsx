@@ -4,6 +4,7 @@ import { pointBalance, redemptionProgress } from '../domain/rewards'
 import { newId } from '../domain/ids'
 import { Awards } from './Awards'
 import { EmptyState, Modal, RewardCard, SectionHeading } from './ui'
+import { Pledges } from './Pledges'
 
 export function PointBalance({
   diary,
@@ -39,6 +40,9 @@ export function Rewards({
   canRedeem,
   shared,
   waiting,
+  pledgeDiary = diary,
+  view = 'rewards',
+  onViewChange,
 }: {
   diary: Diary
   now: Date
@@ -48,6 +52,9 @@ export function Rewards({
   canRedeem: boolean
   shared: boolean
   waiting: boolean
+  pledgeDiary?: Diary
+  view?: 'rewards' | 'pledges'
+  onViewChange?: (view: 'rewards' | 'pledges') => void
 }) {
   const [selected, setSelected] = useState<Reward>()
   const [message, setMessage] = useState('')
@@ -76,115 +83,152 @@ export function Rewards({
   }
   return (
     <>
-      <div className="page-title">
-        <span className="eyebrow">Un pensiero, tutto per te</span>
-        <h1>
-          Le cose belle
-          <br />
-          che ti aspettano<span className="green-dot">.</span>
-        </h1>
-        <p>Scegli i tuoi premi e usa i punti che hai raccolto.</p>
-      </div>
-      <div className="rewards-content">
-        <PointBalance diary={diary} confirmed={shared} />
-        {waiting && (
-          <p className="section-description" role="status">
-            Attendi la conferma delle operazioni prima di riscattare un altro
-            premio.
-          </p>
-        )}
-        {message && <p role="status">{message}</p>}
-        {rewards.length ? (
-          <div className="reward-list">
-            {rewards.map((reward) => (
-              <RewardCard
-                key={reward.id}
-                diary={diary}
-                reward={reward}
-                now={now}
-                busy={blocked}
-                onRedeem={
-                  canRedeem
-                    ? () => {
-                        setSelected(reward)
-                        setMessage('')
-                      }
-                    : undefined
-                }
-              />
-            ))}
+      {onViewChange && (
+        <div className="segmented" role="group" aria-label="Premi e pegni">
+          <button
+            aria-pressed={view === 'rewards'}
+            onClick={() => onViewChange('rewards')}
+          >
+            Premi
+          </button>
+          <button
+            aria-pressed={view === 'pledges'}
+            onClick={() => onViewChange('pledges')}
+          >
+            Pegni
+          </button>
+        </div>
+      )}
+      {view === 'pledges' ? (
+        <>
+          <div className="page-title">
+            <span className="eyebrow">Una piccola sfida tra voi</span>
+            <h1>
+              I tuoi pegni<span className="green-dot">.</span>
+            </h1>
+            <p>Tieni d’occhio la quota e la prossima scadenza.</p>
           </div>
-        ) : (
-          <section className="panel">
-            <EmptyState title="Le sorprese sono in preparazione" icon="gift">
-              Qui troverai i premi scelti per te.
-            </EmptyState>
-          </section>
-        )}
-        <section className="panel awards-panel">
-          <SectionHeading title="I premi riscattati" />
-          <Awards
-            awards={(diary.awards ?? []).filter(
-              (award) => award.redeemedAt || award.deliveredAt,
-            )}
-          />
-        </section>
-        {(diary.awards ?? []).some(
-          (award) => !award.redeemedAt && !award.deliveredAt,
-        ) && (
-          <section className="panel">
-            <SectionHeading title="Traguardi precedenti" />
-            <p className="section-description">
-              Questi premi erano stati assegnati automaticamente. Nessun punto è
-              stato scalato: scegli dal catalogo cosa riscattare.
-            </p>
-            <Awards
-              awards={(diary.awards ?? []).filter(
-                (award) => !award.redeemedAt && !award.deliveredAt,
-              )}
-            />
-          </section>
-        )}
-        {!shared && (
-          <p className="demo-footnote">
-            Premi di esempio. Riscatti e punti sono salvati solo in questo
-            browser.
-          </p>
-        )}
-      </div>
-      {selected && (
-        <Modal
-          title={`Riscattare ${selected.name}?`}
-          busy={busy}
-          onClose={() => setSelected(undefined)}
-        >
-          <p className="modal-description">
-            Userai {selected.target} punti. Dopo il riscatto avrai{' '}
-            {pointBalance(diary).current - selected.target} punti attuali. Il
-            massimale resta salvato.
-          </p>
-          {error && (
-            <p className="form-error" role="alert">
-              {error}
+          <Pledges diary={pledgeDiary} now={now} />
+          {waiting && (
+            <p className="section-description" role="status">
+              I pegni usano i punti confermati. Attendi l’invio degli episodi per
+              aggiornare il progresso.
             </p>
           )}
-          <div className="form-actions">
-            <button
-              className="secondary-button"
-              disabled={busy}
-              onClick={() => setSelected(undefined)}
-            >
-              Torna indietro
-            </button>
-            <button
-              className="primary-button"
-              disabled={blocked || !progress?.available}
-              onClick={() => void redeem()}
-            >
-              Conferma riscatto
-            </button>
+        </>
+      ) : (
+        <>
+          <div className="page-title">
+            <span className="eyebrow">Un pensiero, tutto per te</span>
+            <h1>
+              Le cose belle
+              <br />
+              che ti aspettano<span className="green-dot">.</span>
+            </h1>
+            <p>Scegli i tuoi premi e usa i punti che hai raccolto.</p>
           </div>
-        </Modal>
+          <div className="rewards-content">
+            <PointBalance diary={diary} confirmed={shared} />
+            {waiting && (
+              <p className="section-description" role="status">
+                Attendi la conferma delle operazioni prima di riscattare un altro
+                premio.
+              </p>
+            )}
+            {message && <p role="status">{message}</p>}
+            {rewards.length ? (
+              <div className="reward-list">
+                {rewards.map((reward) => (
+                  <RewardCard
+                    key={reward.id}
+                    diary={diary}
+                    reward={reward}
+                    now={now}
+                    busy={blocked}
+                    onRedeem={
+                      canRedeem
+                        ? () => {
+                            setSelected(reward)
+                            setMessage('')
+                          }
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <section className="panel">
+                <EmptyState title="Le sorprese sono in preparazione" icon="gift">
+                  Qui troverai i premi scelti per te.
+                </EmptyState>
+              </section>
+            )}
+            <section className="panel awards-panel">
+              <SectionHeading title="I premi riscattati" />
+              <Awards
+                awards={(diary.awards ?? []).filter(
+                  (award) => award.redeemedAt || award.deliveredAt,
+                )}
+              />
+            </section>
+            {(diary.awards ?? []).some(
+              (award) => !award.redeemedAt && !award.deliveredAt,
+            ) && (
+              <section className="panel">
+                <SectionHeading title="Traguardi precedenti" />
+                <p className="section-description">
+                  Questi premi erano stati assegnati automaticamente. Nessun punto è
+                  stato scalato: scegli dal catalogo cosa riscattare.
+                </p>
+                <Awards
+                  awards={(diary.awards ?? []).filter(
+                    (award) => !award.redeemedAt && !award.deliveredAt,
+                  )}
+                />
+              </section>
+            )}
+            {!shared && (
+              <p className="demo-footnote">
+                Premi di esempio. Riscatti e punti sono salvati solo in questo
+                browser.
+              </p>
+            )}
+          </div>
+          {selected && (
+            <Modal
+              title={`Riscattare ${selected.name}?`}
+              busy={busy}
+              onClose={() => setSelected(undefined)}
+            >
+              <p className="modal-description">
+                Userai {selected.target} punti. Dopo il riscatto avrai{' '}
+                {pointBalance(diary).current - selected.target} punti attuali. Il
+                massimale resta salvato.
+              </p>
+              {error && (
+                <p className="form-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="form-actions">
+                <button
+                  className="secondary-button"
+                  disabled={busy}
+                  onClick={() => setSelected(undefined)}
+                >
+                  Torna indietro
+                </button>
+                <button
+                  className="primary-button"
+                  disabled={blocked || !progress?.available}
+                  onClick={() => void redeem()}
+                >
+                  Conferma riscatto
+                </button>
+              </div>
+            </Modal>
+          )}
+        </>
       )}
     </>
   )

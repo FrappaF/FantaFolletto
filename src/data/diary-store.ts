@@ -1,5 +1,6 @@
 import { withPointBalance } from '../domain/rewards'
 import { parseDiary } from '../domain/validation'
+import { isPledgesDemo, pledgesDemoDiary } from './pledges-demo'
 import {
   applyCommand,
   initialDiary,
@@ -7,7 +8,8 @@ import {
   type Diary,
 } from '../domain/model'
 
-const DB_NAME = 'fantafolletto-demo'
+const pledgesPreview = isPledgesDemo()
+const DB_NAME = pledgesPreview ? 'fantafolletto-demo-pegni' : 'fantafolletto-demo'
 const STORE = 'diary'
 const KEY = 'local-demo'
 let database: Promise<IDBDatabase> | undefined
@@ -38,7 +40,8 @@ function openDatabase(): Promise<IDBDatabase> {
 
 // Never replace an unreadable diary with an empty one.
 function readState(value: unknown): Diary {
-  if (value === undefined) return initialDiary()
+  if (value === undefined)
+    return pledgesPreview ? pledgesDemoDiary() : initialDiary()
   return withPointBalance(parseDiary(value))
 }
 

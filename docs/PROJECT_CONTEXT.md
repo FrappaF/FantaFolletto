@@ -1,6 +1,6 @@
 # FantaFolletto — contesto del progetto
 
-Ultimo aggiornamento: **17 novembre 2026**.
+Ultimo aggiornamento: **19 novembre 2026**.
 
 Questo documento consente di riprendere il progetto in una nuova chat senza ricostruire le decisioni precedenti. Va letto prima di ogni feature o cambiamento e mantenuto insieme al codice, come indicato in [AGENTS.md](../AGENTS.md).
 
@@ -38,6 +38,7 @@ Questo documento consente di riprendere il progetto in una nuova chat senza rico
 | Catalogo | 37 eventi approvati, sei categorie e rarità separata; escluso «Il civico fantasma» |
 | Selezione eventi | Dopo la registrazione la modale resta aperta conservando posizione, scorrimento, ricerca e categoria; pulsante «Chiudi» in basso quando la X non è visibile |
 | Riscatto premi | Scelta esplicita della giocatrice con addebito del costo; nessun riscatto automatico |
+| Pegni | Premi inversi richiesti il 19 novembre: quota settimanale o mensile, scadenze per la giocatrice e avviso in home; solo l’admin ne conferma la riscossione quando la quota non viene raggiunta |
 | Saldo punti | Salvare punti attuali spendibili e massimale storico dei punti accumulati |
 | Combo giornaliera | Stesso evento ripetuto nello stesso giorno italiano: incremento percentuale lineare e tetto entrambi modificabili dall’admin; modifiche dal giorno seguente |
 
@@ -54,6 +55,8 @@ Le scelte seguenti costituiscono il punto di partenza tecnico consigliato dalla 
 - CSS leggero, carattere di sistema per i testi operativi e Fraunces locale per l'identità e i titoli; icone SVG essenziali per il design.
 
 ### Stato reale dopo la pubblicazione
+
+- **Pegni, incremento locale del 19 novembre 2026:** nome scelto per i premi inversi. Sezione Pegni dentro Premi, avviso con collegamento nella home e nel riepilogo admin; catalogo, creazione, modifica, archiviazione e riscossione nell’area admin. Le quote riguardano i punti guadagnati nel periodo italiano, indipendenti dal saldo spendibile e dal costo dei premi. Settimana lunedì–domenica o mese di calendario; nuove definizioni, modifiche e archiviazioni decorrono dal successivo periodo completo. Versioni conservate: nessuna modifica ai periodi già iniziati, periodicità fissa per ogni pegno. La riscossione conferma che l’admin ha ricevuto il pegno, solo dopo la chiusura sotto quota, senza scalare punti e una volta per pegno/periodo. Invii tardivi e annullamenti aggiornano il conteggio; se dopo una riscossione la quota risulta raggiunta, rimane una segnalazione da verificare nello storico. In modalità condivisa si usa lo snapshot confermato, separato dalle combo provvisorie della coda. Nessun servizio o cron aggiunto: le scadenze si ricavano dalle versioni e dagli episodi anche dopo periodi senza aperture. Migrazione SQL e codice preparati localmente; **non applicati al servizio ospitato e non pubblicati**. Collaudo iPhone reale non eseguito. Esiti delle verifiche locali nel registro operativo dell’incremento.
 
 - **Editor foto nella pagina con CropperJS, 17 novembre 2026:** l’utente approva il pacchetto suggerito e chiede di valutare il superamento della modale, che riduce larghezza e comodità dei controlli. Adottata una pagina interna a Zerbini: foto più ampia, maniglie e zoom da 48 px, ritorno alla galleria e caricamento seguito da conferma. **CropperJS 2.3.1**, MIT, caricato soltanto dopo la scelta della foto (circa 16,8 kB gzip); gestisce i gesti e il ritaglio libero. Vincoli di copertura senza deformazioni e ingrandimento dell’anteprima dopo il ridimensionamento, conservando i pixel scelti. Tastiera, pinch e pulsanti zoom sull’immagine. Unico selettore, Cambia foto, didascalia, oggi e Standard automatici; compressione/coda/backend invariati. Foto e didascalia restano passando alle altre tab e tornando a Raccolte. Fonte decodificata e URL dell’anteprima aggiornati insieme per evitare caricamenti residui alla sostituzione. Verificati 127 test, build demo/produzione, PWA e Chromium con CSP di produzione, mouse/touch, confronto anteprima/file, sostituzione/annullamento e 320/393/430/768 px nei due temi; Safari/iPhone reale non verificati. Pubblicato con commit `57d1747` e deploy automatico Pages `d5bd8e04-f1d9-41e0-9f25-c55bf0b82b58`, build/deploy riusciti alle 13:16:51 Europe/Rome.
 
@@ -173,6 +176,7 @@ La tabella descrive la navigazione pubblicata il 17 novembre; esito e identifica
 | Oggi | Punti del giorno, progresso settimanale, pulsante «Segna un evento», ultimi episodi |
 | Record | Migliori giornate, migliori settimane, storico personale |
 | Premi | Punti attuali, massimale storico, catalogo con costo e riscatto esplicito, storico dei riscatti e traguardi precedenti |
+| Pegni (dentro Premi, incremento locale) | Quote settimanali/mensili, scadenze, pegni da onorare e storico; riscossione riservata all’admin |
 | Raccolte | Cognomi singoli o in coppia, Note giornaliere e foto ottimizzate degli Zerbini, senza assegnazione di punti |
 
 La navigazione principale rimane in basso. L'azione di inserimento è evidente e comoda da raggiungere con il pollice. Il catalogo presenta nome dell'evento e punti prima della selezione.
@@ -254,6 +258,7 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 - Modellare annullamenti e rettifiche in modo tracciabile e idempotente, anche se l'evento originale è ancora in attesa di sincronizzazione.
 - Un annullamento ricalcola il saldo senza cancellare il riscatto né restituirne automaticamente il costo. Se il saldo diventa negativo, la UI lo mostra e segnala i riscatti da verificare; i nuovi punti recuperano il debito prima di poter essere spesi. I precedenti traguardi automatici senza riscatto conservano le vecchie regole di revoca/segnalazione.
 - Salvare istante dell'evento e istante di ricezione. Usare `Europe/Rome` per giorni e settimane, gestendo ora legale e invii successivi alla mezzanotte.
+- I pegni non spendono punti né dipendono dal saldo: quota sui punti confermati guadagnati nella settimana o nel mese italiano. Si attivano dal prossimo periodo completo; modifiche/archiviazioni conservano condizioni e riscossioni dei periodi precedenti. Solo l’admin può confermare la riscossione a periodo concluso sotto quota. Una correzione successiva che raggiunge la quota segnala la riscossione da verificare senza eliminarla.
 
 ### Regole operative della prima versione
 
@@ -282,6 +287,7 @@ Il primo accesso e il recupero di una sessione non valida richiedono rete. Se se
 | Definizioni premi | Descrizione, condizioni, periodo e stato di disponibilità |
 | Premi assegnati/riscattati | Condizioni storiche, UUID del riscatto, istante, costo addebitato ed eventuale consegna; vecchie assegnazioni preservate |
 | Saldo punti | Proprietario, punti attuali e massimale storico persistente; scrittura solo tramite RPC autorizzate |
+| Pegni e riscossioni (incremento locale) | Versioni con decorrenza sul prossimo periodo completo, quota e periodicità; riscossione admin unica per pegno/periodo con condizioni e punti originali, controllo aggiornato delle correzioni |
 | Traccia amministrativa | Modifiche a catalogo, premi e rettifiche pertinenti |
 | Combo di cognomi | Raccolta condivisa tra i due ruoli, indipendente dai punteggi; autore, data e rimozioni conservati |
 | Note giornaliere | Appunti condivisi associati a una data di calendario, con autore, istante di creazione e rimozioni tracciate |
@@ -366,6 +372,8 @@ Risolverle quando servono alla feature, proseguendo con il lavoro indipendente p
 
 | Data | Decisione | Effetto |
 | --- | --- | --- |
+| 2026-11-19 | Utente chiede di vedere lo staging prima della pubblicazione | Preparata anteprima su branch `staging-pegni`, in modalità demo senza Supabase. Il parametro `?anteprima=pegni` attiva esempi fittizi relativi alla data corrente in un IndexedDB separato; produzione e migrazione ospitata restano in attesa della revisione |
+| 2026-11-19 | Utente richiede premi inversi settimanali/mensili riscuotibili dall’admin, con scadenze e avviso home per la giocatrice; nome lasciato alla scelta dell’agente | Implementazione locale «Pegni»: punti guadagnati indipendenti dalle spese, periodi italiani completi dal successivo, condizioni versionate, riscossioni uniche con storico e verifica dopo correzioni. Nessuna attivazione o pubblicazione remota in questo incremento |
 | 2026-11-17 | Utente approva il pacchetto suggerito e chiede più spazio rispetto alla modale | Integrato CropperJS 2.3.1 e adottato upload nella pagina di Zerbini, con controlli da 48 px, copertura della griglia e auto-zoom dell’anteprima. Conservati selettore unico, didascalia, Standard/oggi automatici e bozza passando alle altre tab. Incremento verificato e pubblicato automaticamente su Pages da `main` (`57d1747`) |
 | 2026-11-17 | Utente richiede copertura della griglia durante la modifica e ricerca online di un componente mantenuto | Confrontati quattro pacchetti; CropperJS 2 proposto per griglia libera e zoom, react-easy-crop per riquadro fisso. Ricerca conclusa senza installazioni o modifiche al componente operativo |
 | 2026-11-17 | Utente richiede upload più semplice e chiarisce come sostituire una foto scelta | Unico selettore e anteprima con griglia, didascalia e caricamento; Standard e oggi automatici. Cambia foto riapre il selettore senza perdere la didascalia o la foto se si annulla |

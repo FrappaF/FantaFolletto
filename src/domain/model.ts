@@ -1,5 +1,6 @@
 import { validDay } from './validation'
 import { pointBalance, redemptionProgress, withPointBalance } from './rewards'
+import { applyPledgeCommand, withPledgeReviews } from './pledges'
 
 import {
   previewEvent,
@@ -40,6 +41,45 @@ export type Reward = {
   archived: boolean
   version?: number
 }
+
+export type Pledge = {
+  id: string
+  name: string
+  description: string
+  target: number
+  period: 'week' | 'month'
+  version: number
+  archived: boolean
+  effectiveFrom: string
+}
+
+export type PledgeClaim = {
+  id: string
+  pledgeId: string
+  pledgeVersion: number
+  name: string
+  description: string
+  target: number
+  period: Pledge['period']
+  periodKey: string
+  points: number
+  redeemedAt: string
+  needsReview: boolean
+}
+
+export type PledgeCommand =
+  | {
+      type: 'save-pledge'
+      value: Pick<Pledge, 'id' | 'name' | 'description' | 'target' | 'period'>
+    }
+  | { type: 'archive-pledge'; id: string }
+  | {
+      type: 'redeem-pledge'
+      id: string
+      pledgeId: string
+      periodKey: string
+      at: string
+    }
 
 export type Entry = {
   id: string
@@ -112,11 +152,14 @@ export type Diary = {
   awards?: Award[]
   combos?: SurnameCombo[]
   notes?: DailyNote[]
+  pledges?: Pledge[]
+  pledgeClaims?: PledgeClaim[]
 }
 
 export type Command = (
   | ComboCommand
   | NoteCommand
+  | PledgeCommand
   | {
       type: 'record'
       id: string
@@ -282,11 +325,17 @@ function checkInteger(value: number, min: number, max: number) {
 }
 
 export function applyCommand(state: Diary, command: Command): Diary {
-  return withPointBalance(apply(withPointBalance(state), command))
+  return withPledgeReviews(
+    withPointBalance(apply(withPointBalance(state), command)),
+  )
 }
 
 function apply(state: Diary, command: Command): Diary {
   switch (command.type) {
+    case 'save-pledge':
+    case 'archive-pledge':
+    case 'redeem-pledge':
+      return applyPledgeCommand(state, command)
     case 'redeem-reward': {
       const previous = state.awards?.find((award) => award.id === command.id)
       if (previous) {

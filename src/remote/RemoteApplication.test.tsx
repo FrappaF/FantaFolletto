@@ -19,6 +19,7 @@ const config = {
   key: 'sb_publishable_test',
 }
 const controller = () => ({
+  confirmedDiary: undefined,
   diary: {
     ...initialDiary(),
     awards: [],

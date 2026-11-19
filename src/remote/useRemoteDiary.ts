@@ -14,6 +14,7 @@ import { transportFor, type Client } from './client'
 import { projectDiary, type AccountCache } from './types'
 import { synchronize } from './sync'
 import { statistics } from '../domain/stats'
+import { latestPledges } from '../domain/pledges'
 
 export function useRemoteDiary(
   client: Client,
@@ -236,6 +237,14 @@ export function useRemoteDiary(
       } else {
         if (current.snapshot.role !== 'admin')
           throw new Error('Operazione riservata all’admin.')
+        if (command.type.includes('pledge')) {
+          if (!current.snapshot.pledges || !current.snapshot.pledgeClaims)
+            throw new Error('Aggiorna il diario prima di gestire i pegni.')
+          if (current.queue.length)
+            throw new Error(
+              'Attendi la conferma delle operazioni prima di gestire i pegni.',
+            )
+        }
         const id =
           command.type === 'save-scoring'
             ? ''
@@ -251,10 +260,13 @@ export function useRemoteDiary(
                   (rule) => rule.version,
                 ),
               )
-            : command.type.includes('event')
-              ? current.snapshot.events.find((item) => item.id === id)?.version
-              : current.snapshot.rewards.find((item) => item.id === id)
-                  ?.version) ??
+            : command.type.includes('pledge')
+              ? latestPledges(current.snapshot).find((item) => item.id === id)
+                  ?.version
+              : command.type.includes('event')
+                ? current.snapshot.events.find((item) => item.id === id)?.version
+                : current.snapshot.rewards.find((item) => item.id === id)
+                    ?.version) ??
           0
         await transport.manage({ ...command, expectedVersion })
         channel.current?.postMessage('changed')
@@ -349,6 +361,8 @@ export function useRemoteDiary(
 
   return {
     diary: projectDiary(cache),
+    // I pegni si basano sui punteggi confermati, senza proiezioni delle combo in coda.
+    confirmedDiary: cache.snapshot,
     busy,
     error,
     execute,

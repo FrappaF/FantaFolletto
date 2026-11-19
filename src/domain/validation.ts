@@ -60,6 +60,57 @@ export function parseDiary(value: unknown): Diary {
         ['week', 'all'].includes(item.period) &&
         typeof item.archived === 'boolean',
     ) &&
+    (state.pledges === undefined ||
+      (Array.isArray(state.pledges) &&
+        state.pledges.every(
+          (item) =>
+            item &&
+            text(item.id, 100) &&
+            text(item.name, 60) &&
+            text(item.description, 180, false) &&
+            number(item.target, 1, 100000) &&
+            ['week', 'month'].includes(item.period) &&
+            number(item.version, 1, Number.MAX_SAFE_INTEGER) &&
+            typeof item.archived === 'boolean' &&
+            validDay(item.effectiveFrom) &&
+            (item.period === 'month'
+              ? item.effectiveFrom.endsWith('-01')
+              : new Date(`${item.effectiveFrom}T12:00:00Z`).getUTCDay() === 1),
+        ) &&
+        new Set(state.pledges.map((item) => `${item.id}:${item.version}`))
+          .size === state.pledges.length &&
+        state.pledges.every((item) =>
+          state.pledges!.every(
+            (other) => other.id !== item.id || other.period === item.period,
+          ),
+        ))) &&
+    (state.pledgeClaims === undefined ||
+      (Array.isArray(state.pledgeClaims) &&
+        state.pledgeClaims.every(
+          (item) =>
+            item &&
+            text(item.id, 100) &&
+            text(item.pledgeId, 100) &&
+            text(item.name, 60) &&
+            text(item.description, 180, false) &&
+            number(item.target, 1, 100000) &&
+            ['week', 'month'].includes(item.period) &&
+            number(item.pledgeVersion, 1, Number.MAX_SAFE_INTEGER) &&
+            validDay(item.periodKey) &&
+            number(
+              item.points,
+              -Number.MAX_SAFE_INTEGER,
+              Number.MAX_SAFE_INTEGER,
+            ) &&
+            validDate(item.redeemedAt) &&
+            typeof item.needsReview === 'boolean',
+        ) &&
+        uniqueIds(state.pledgeClaims) &&
+        new Set(
+          state.pledgeClaims.map(
+            (item) => `${item.pledgeId}:${item.periodKey}`,
+          ),
+        ).size === state.pledgeClaims.length)) &&
     state.entries.every(
       (item) =>
         item &&

@@ -2018,3 +2018,161 @@ fieldset {
   margin-top: 16px;
   width: 100%;
 }
+.pledges-content {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+  margin-top: 28px;
+}
+.pledges-content > .panel {
+  margin: 0;
+}
+.pledges-intro h2 {
+  margin: 6px 0 12px;
+  font-size: 27px;
+}
+.pledges-intro p,
+.pledge-info {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.pledges-intro p + p {
+  margin-top: 8px;
+}
+.pledge-list {
+  display: grid;
+  gap: 14px;
+}
+.pledge-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 17px;
+}
+.pledge-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 13px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.pledge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--gold);
+}
+.pledge-card h3 {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+}
+.pledge-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.pledge-card .pledge-period {
+  font-variant-numeric: tabular-nums;
+}
+.pledge-card .pledge-result {
+  color: var(--ink);
+  font-weight: 600;
+}
+.pledge-card .progress-meta {
+  margin-top: 18px;
+}
+.pledge-card > button {
+  margin-top: 16px;
+}
+.pledge-due,
+.pledge-due-panel {
+  border-color: var(--gold);
+}
+.pledge-due .pledge-status,
+.pledge-card .pledge-review {
+  color: var(--gold);
+}
+.pledge-avoided .pledge-status {
+  color: var(--green);
+}
+.pledge-upcoming {
+  background: var(--surface-muted);
+}
+.pledge-history > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 19px;
+}
+.pledge-history > summary::after {
+  content: '+';
+  color: var(--green);
+}
+.pledge-history[open] > summary::after {
+  content: '−';
+}
+.pledge-history > summary span {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.pledge-history > .pledge-list {
+  margin-top: 16px;
+}
+.pledge-catalog > .pledge-info {
+  margin: 16px 0 20px;
+}
+.pledge-archive-filter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+.pledge-archive-filter input {
+  width: 20px;
+  height: 20px;
+}
+.pledge-notice {
+  display: flex;
+  gap: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  background: var(--gold-soft);
+}
+.pledge-notice > svg {
+  flex-shrink: 0;
+  color: var(--gold);
+}
+.pledge-notice > div {
+  min-width: 0;
+}
+.pledge-notice strong {
+  display: block;
+  font-size: 13px;
+}
+.pledge-notice p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.pledge-notice-due {
+  border-color: var(--gold);
+}
